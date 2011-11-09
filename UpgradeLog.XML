@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="DbAccess">
+</Property><Property Name="Solution File" Value="C:\Development\MDART_Versions\ApeAccessVbNet\DbAccess.sln">
+</Property><Property Name="Date" Value="Tuesday, September 27, 2011">
+</Property><Property Name="Time" Value="7:42:28 AM">
+</Property></Properties><Event ErrorLevel="0" Project="DbAccess" Source="DbAccess.vbproj" Description="Project file successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\DbAccess.vbproj">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="clsLogTools.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\clsLogTools.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="clsXMLSchema.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\clsXMLSchema.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="ColumnSchema.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\ColumnSchema.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="IndexSchema.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\IndexSchema.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\AssemblyInfo.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\AssemblyInfo.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Application.Designer.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Application.Designer.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Resources.Designer.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Resources.Designer.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Settings.Designer.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Settings.Designer.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="SqliteToAccess.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\SqliteToAccess.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="SqlServerToSQLite.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\SqlServerToSQLite.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="TableSchema.vb" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\TableSchema.vb">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Application.myapp" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Application.myapp">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Settings.settings" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Settings.settings">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="My Project\Resources.resx" Description="File successfully backed up as C:\Development\MDART_Versions\ApeAccessVbNet\Backup\My Project\Resources.resx">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="DbAccess.vbproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="DbAccess" Source="DbAccess.vbproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="DbAccess" Source="DbAccess.vbproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>
