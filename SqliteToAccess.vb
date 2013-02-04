@@ -2011,6 +2011,8 @@ Public Class SqliteToAccess
                     'dataType = "single"
                 ElseIf dataType = "integer" Then
                     dataType = "integer"
+                ElseIf dataType = "int" Then
+                    dataType = "integer"
                 ElseIf dataType = "text" Then
                     dataType = "text"
                 ElseIf dataType = "varchar" Then
@@ -2048,7 +2050,7 @@ Public Class SqliteToAccess
     ''' <param name="dataType">The datatype to validate.</param>
     Private Shared Sub ValidateSQLiteDataType(ByVal dataType As String, ByVal tableName As String, ByVal fieldName As String)
         dataType = dataType.ToLower
-        If dataType = "datetime" OrElse dataType = "numeric" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "integer" OrElse dataType = "text" OrElse dataType = "char" OrElse dataType = "smallint" OrElse dataType = "double" OrElse dataType = "single" OrElse dataType = "varchar" Then
+        If dataType = "datetime" OrElse dataType = "numeric" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "integer" OrElse dataType = "text" OrElse dataType = "char" OrElse dataType = "smallint" OrElse dataType = "double" OrElse dataType = "single" OrElse dataType = "varchar" OrElse dataType = "int" Then
             Exit Sub
         End If
         If dataType = "" Then

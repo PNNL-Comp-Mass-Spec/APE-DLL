@@ -79,8 +79,17 @@
     <Reference Include="log4net">
       <HintPath>bin\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Mage">
+      <HintPath>lib\Mage.dll</HintPath>
+    </Reference>
+    <Reference Include="MageDisplayLib">
+      <HintPath>lib\MageDisplayLib.dll</HintPath>
+    </Reference>
     <Reference Include="PRISM">
       <HintPath>bin\PRISM.dll</HintPath>
+    </Reference>
+    <Reference Include="RangerLib">
+      <HintPath>lib\RangerLib.dll</HintPath>
     </Reference>
     <Reference Include="SQLite.NET">
       <HintPath>bin\SQLite.NET.dll</HintPath>
@@ -91,6 +100,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -103,6 +114,9 @@
     </Reference>
     <Reference Include="TableFunctions">
       <HintPath>bin\TableFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="ZedGraph">
+      <HintPath>lib\ZedGraph.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="clsLogTools.vb" />
+    <Compile Include="clsWorkflow.vb" />
     <Compile Include="clsXMLSchema.vb" />
     <Compile Include="ColumnSchema.vb" />
     <Compile Include="IndexSchema.vb" />
@@ -148,6 +163,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>

@@ -38,6 +38,53 @@ Ape
 	<param name="sqlitePath"></param>
 	<param name="handler"></param>
 	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.ConvertSqlServerToSQLiteDatabaseUI(System.String,System.String,System.String,Ape.SqlConversionHandler,Ape.SqlTableSelectionHandler,System.Boolean)">
+	<summary>
+ This method takes as input the connection string to an SQL Server database
+ and creates a corresponding SQLite database file with a schema derived from
+ the SQL Server database.
+ </summary>
+	<param name="sqlServerConnString">The connection string to the SQL Server database.</param>
+	<param name="sqlitePath">The path to the SQLite database file that needs to get created.</param>
+	<param name="password">The password to use or NULL if no password should be used to encrypt the DB</param>
+	<param name="handler">A handler delegate for progress notifications.</param>
+	<param name="selectionHandler">The selection handler that allows the user to select which
+ tables to convert</param>
+	<remarks>The method continues asynchronously in the background and the caller returned
+ immediatly.</remarks>
+</member><member name="M:Ape.SqlServerToSQLite.Functions(System.Object)">
+	<summary>
+	</summary>
+	<param name="state"></param>
+	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.ConvertDatasetToSQLiteFileUI(System.Collections.Generic.List{System.String},System.Int32,System.String,System.String,System.String,Ape.SqlConversionHandler)">
+	<summary>
+	</summary>
+	<param name="dsIndex"></param>
+	<param name="sqlServerConnString"></param>
+	<param name="MDIDList"></param>
+	<param name="sqlitePath"></param>
+	<param name="handler"></param>
+	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.FunctionsNew(System.Object)">
+	<summary>
+	</summary>
+	<param name="state"></param>
+	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.StartWorkflowUI(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,Ape.SqlConversionHandler)">
+	<summary>
+	</summary>
+	<param name="WorflowStepList"></param>
+	<param name="WorkFlow"></param>
+	<param name="originalSqlitePath"></param>
+	<param name="sqlitePath"></param>
+	<param name="handler"></param>
+	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.FunctionWF(System.Object)">
+	<summary>
+	</summary>
+	<param name="state"></param>
+	<remarks></remarks>
 </member><member name="M:Ape.SqlServerToSQLite.StartWorkflow(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,Ape.SqlConversionHandler)">
 	<summary>
 	</summary>
@@ -53,6 +100,11 @@ Ape
 	<param name="OriginalFilename"></param>
 	<param name="NewFilename"></param>
 	<param name="handler"></param>
+	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.FunctionsCIT(System.Object)">
+	<summary>
+	</summary>
+	<param name="state"></param>
 	<remarks></remarks>
 </member><member name="M:Ape.SqlServerToSQLite.ConvertSqlServerDatabaseToSQLiteFile(System.String,System.String,System.String,Ape.SqlConversionHandler,Ape.SqlTableSelectionHandler,System.Boolean)">
 	<summary>
@@ -132,6 +184,18 @@ Ape
 	<param name="sqlitePath"></param>
 	<param name="handler"></param>
 	<remarks></remarks>
+</member><member name="M:Ape.SqlServerToSQLite.HandleStatusMessageUpdated(System.Object,Mage.MageStatusEventArgs)">
+	<summary>
+ handle the status update messages from the currently running pipeline
+ </summary>
+	<param name="sender">(ignored))</param>
+	<param name="args">(ignored)</param>
+</member><member name="M:Ape.SqlServerToSQLite.HandlePipelineCompletion(System.Object,Mage.MageStatusEventArgs)">
+	<summary>
+ handle the status completion message from the currently running pipeline
+ </summary>
+	<param name="sender">(ignored)</param>
+	<param name="args">Contains status information to be displayed</param>
 </member><member name="M:Ape.SqlServerToSQLite.BuildCrosstabTableQuery(System.String,System.String[])">
 	<summary>
 	</summary>

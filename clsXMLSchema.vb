@@ -32,7 +32,7 @@ End Class
 ''' <remarks></remarks>
 Public Class clsXMLFields
 
-    Public Const MDART_WORKFLOW As String = "MdartWorkflow"
+    Public Const APE_WORKFLOW As String = "MdartWorkflow"
 
     Public Const TITLE As String = "Title"
 
