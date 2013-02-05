@@ -592,43 +592,51 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Function BuildStepList(workflowStepList As String, wf As List(Of clsXMLStepSchema)) As Hashtable
         Dim stepsToRun As New Hashtable
-        Dim startStep, endStep, stp As Integer
+		Dim startStep As Integer, endStep As Integer
 
-        Dim Steps As String()
-        If workflowStepList.ToLower.Contains("all") Or String.IsNullOrWhiteSpace(workflowStepList) Then
-            'Workflow is zero based so subtract 1
-            startStep = 0
-            endStep = wf.Count - 1
-            For i = startStep To endStep
-                stepsToRun.Add(i, "")
-            Next
-        Else
-            For Each stepList As String In workflowStepList.Split(","c)
-                If stepList.Contains("-") Then
-                    Steps = stepList.Split("-"c)
-                    'Workflow is zero based so subtract 1
-                    startStep = Convert.ToInt16(Steps(0)) - 1
-                    endStep = Convert.ToInt16(Steps(1)) - 1
-                    For i = startStep To endStep
-                        If Not stepsToRun.ContainsKey(i) Then
-                            stepsToRun.Add(i, "")
-                        End If
-                    Next
-                Else
-                    'Workflow is zero based so subtract 1
-                    startStep = 0
-                    endStep = wf.Count - 1
-                    For i = startStep To endStep
-                        If wf.Item(i).WorkflowGroup.Trim = stepList.Trim() Then
-                            stp = Convert.ToInt32(wf.Item(i).StepNo) - 1
-                            If Not stepsToRun.ContainsKey(stp) Then
-                                stepsToRun.Add(stp, "")
-                            End If
-                        End If
-                    Next
-                End If
-            Next
-        End If
+		If workflowStepList.ToLower.Contains("all") Or String.IsNullOrWhiteSpace(workflowStepList) Then
+			startStep = wf.Item(0).StepNum
+			endStep = wf.Item(wf.Count - 1).StepNum
+			For i = startStep To endStep
+				If Not stepsToRun.ContainsKey(wf.Item(i).StepNum) Then
+					stepsToRun.Add(wf.Item(i).StepNum, "")
+				End If
+			Next
+		Else
+			For Each stepItem As String In workflowStepList.Split(","c)
+				If stepItem.Contains("-") Then
+					' This parameter specifies a range of steps to perform
+					' For example, 20-54
+					Dim StepStartStop As String()
+					StepStartStop = stepItem.Split("-"c)
+					If StepStartStop.Count < 2 Then
+						Throw New InvalidCastException("Workflow step contains a dash, but does not contain a number before and after the dash: " & stepItem)
+					End If
+
+					If Not Integer.TryParse(StepStartStop(0), startStep) Then
+						Throw New InvalidCastException("Error extracting number before dash in workflow step: " & stepItem)
+					End If
+
+					If Not Integer.TryParse(StepStartStop(1), endStep) Then
+						Throw New InvalidCastException("Error extracting number after dash in workflow step: " & stepItem)					
+					End If
+
+					For i = startStep To endStep
+						If Not stepsToRun.ContainsKey(i) Then
+							stepsToRun.Add(i, "")
+						End If
+					Next
+				Else
+					For i = 0 To wf.Count - 1
+						If wf.Item(i).WorkflowGroup.ToLower().Trim() = stepItem.ToLower().Trim() Then
+							If Not stepsToRun.ContainsKey(wf.Item(i).StepNum) Then
+								stepsToRun.Add(wf.Item(i).StepNum, "")
+							End If
+						End If
+					Next
+				End If
+			Next
+		End If
 
         Return stepsToRun
 
@@ -732,6 +740,17 @@ Public Class SqlServerToSQLite
 
 	End Sub
 
+	Private Shared Sub CBoolSafe(ByVal strStepNumber As String, ByVal strValueName As String, ByVal strValue As String, ByRef blnValue As Boolean)
+
+		If String.IsNullOrEmpty(strValue) Then
+			blnValue = False
+		Else
+			If Not Boolean.TryParse(strValue, blnValue) Then
+				Throw New InvalidCastException("Error converting " & strValueName & " value '" & strValue & "' in step " & strStepNumber & " to True or False")
+			End If
+		End If
+
+	End Sub
 	''' <summary>
 	''' 
 	''' </summary>
@@ -742,10 +761,11 @@ Public Class SqlServerToSQLite
 	''' <param name="handler"></param>
 	''' <remarks></remarks>
     Private Shared Sub RunWorkflow(ByVal stepsToRun As Hashtable, ByVal workflowTotalSteps As Integer, ByVal Workflow As List(Of clsXMLStepSchema), ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
-        Dim stp, sql, trgTbl, desc, src As String
+		Dim sql, src As String
         Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
-        Dim startStep, endStep As Integer
-        Dim tblList As List(Of String)
+		Dim startStep, endStep As Integer
+		Dim iCurrentStepNum As Integer = 0
+		Dim tblList As List(Of String)
         Dim indxList As List(Of String)
         Dim ExistingIndexName As String
         Dim SkipQuery As Boolean
@@ -759,136 +779,132 @@ Public Class SqlServerToSQLite
         Dim conn As New SQLiteConnection
         Try
             conn.ConnectionString = sqliteConnString
-            tblList = GetTablesFromDb(sqlitePath)
-            conn.Open()
-            startStep = 0
-            endStep = Workflow.Count - 1
+
+			' This Linq query assures that items in tblList have lowercase names
+			tblList = (From item In GetTablesFromDb(sqlitePath) Select item.ToLower()).ToList()
+			conn.Open()
+
+			startStep = Workflow.Item(0).StepNum
+			endStep = Workflow.Item(Workflow.Count - 1).StepNum
+
             'Drop all the tables not needed
-            If Not Workflow Is Nothing Then
-                For i = startStep To endStep
-                    If stepsToRun.ContainsKey(i) Then
-                        stp = Workflow.Item(i).StepNo
-                        sql = Workflow.Item(i).SQL
-                        trgTbl = Workflow.Item(i).TargetTable
-                        UpdateProgress(handler, False, True, CInt((100.0R * i / Workflow.Count)), "Dropping temporary table for Step " & stp)
-                        If Not String.IsNullOrEmpty(trgTbl) AndAlso tblList.Contains(Trim(trgTbl)) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & trgTbl & " from step: " & stp)
-                            sql = "Drop Table " & trgTbl
-                            Dim cmdDrop As New SQLiteCommand(sql, conn)
-                            cmdDrop.ExecuteNonQuery()
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & trgTbl & " from step: " & stp)
-                        End If
-                        CheckCancelled()
-                    End If
-                Next
-                conn.Close()
+			If Not Workflow Is Nothing Then
+				iCurrentStepNum = 0
+				For Each wfStep In Workflow
+					iCurrentStepNum += 1
+					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+						sql = wfStep.SQL
 
-                'Run each SQL statement for each step
-                indxList = GetIndexesFromDb(sqlitePath)
-                conn.Open()
-                For i = startStep To endStep
-                    If stepsToRun.ContainsKey(i) Then
-                        SkipQuery = False
-                        ExistingIndexName = ""
-                        stp = Workflow.Item(i).StepNo
-                        mStep = stp
-                        sql = Workflow.Item(i).SQL
-                        sql = sql.Replace("''", "'") 'Don't need this anymore
-                        mSQL = sql
-                        trgTbl = Workflow.Item(i).TargetTable
-                        If String.IsNullOrEmpty(kTrgtTble) Then
-                            kTrgtTble = False
-                        Else
-                            kTrgtTble = CBool(Workflow.Item(i).KeepTargetTable)
-                        End If
-                        PivotTble = Workflow.Item(i).PivotTable
-                        If String.IsNullOrEmpty(PivotTble) Then
-                            PivotTble = False
-                        Else
-                            PivotTble = CBool(Workflow.Item(i).PivotTable)
-                        End If
-                        desc = Workflow.Item(i).Description
-                        If Not String.IsNullOrEmpty(trgTbl) AndAlso PivotTble AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
-                            sql = BuildCrosstabTableQuery(sqliteConnString, sql.Split(";"))
-                        End If
-                        FunctionTble = Workflow.Item(i).FunctionTable
-                        If String.IsNullOrEmpty(PivotTble) Then
-                            FunctionTble = False
-                        Else
-                            FunctionTble = CBool(Workflow.Item(i).FunctionTable)
-                        End If
-                        IterationTbl = Workflow.Item(i).IterationTable
-                        If String.IsNullOrEmpty(IterationTbl) Then
-                            IterationTbl = False
-                        Else
-                            IterationTbl = CBool(Workflow.Item(i).IterationTable)
-                        End If
-                        src = Workflow.Item(i).Source
-                        If IterationTbl Then 'AndAlso Not String.IsNullOrEmpty(trgTbl) Then
-                            RunCreateIterationTable(sql, trgTbl, conn, sqlitePath, handler)
-                        ElseIf FunctionTble AndAlso Not String.IsNullOrEmpty(trgTbl) Then
-                            RunCreateDataTableFromFunctionList(sql, trgTbl, conn, sqlitePath, handler)
-                        ElseIf src = "RANGER" Then
-                            RunRangerPipeline(Workflow.Item(i).SQL, trgTbl, sqlitePath)
-                        ElseIf src = "PLOT" Then
-                            RunPlotting(Workflow.Item(i).SQL, trgTbl, sqlitePath, sqliteConnString, handler)
-                        Else
-                            If Not String.IsNullOrEmpty(trgTbl) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
-                                sql = "Create table " & trgTbl & " as " & sql
-                            Else
-                                'if an index name is returned, then we should skip the query
-                                ExistingIndexName = CheckForExistingIndex(sql, indxList)
-                                If Not String.IsNullOrEmpty(ExistingIndexName) Then
-                                    SkipQuery = True
-                                End If
-                            End If
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(wfStep.TargetTable.ToLower().Trim()) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+							UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Dropping temporary table for Step " & wfStep.StepNo)
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+							sql = "Drop Table " & wfStep.TargetTable
+							Dim cmdDrop As New SQLiteCommand(sql, conn)
+							cmdDrop.ExecuteNonQuery()
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+						End If
+						CheckCancelled()
+					End If
+				Next
+				conn.Close()
 
-                            UpdateProgress(handler, False, True, CInt((100.0R * i / Workflow.Count)), "Running Step " & stp & " to " & endStep + 1)
-                            CheckCancelled()
+				'Run each SQL statement for each step
+				indxList = GetIndexesFromDb(sqlitePath)
+				conn.Open()
+				iCurrentStepNum = 0
+				For Each wfStep In Workflow
+					iCurrentStepNum += 1
 
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Starting step: " & stp & " Query: " & sql)
-                            ' Execute the query in order to actually create the table.
-                            If SkipQuery Then
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Query skipped: " & stp)
-                            Else
-                                Dim cmd As New SQLiteCommand(sql, conn)
-                                cmd.ExecuteNonQuery()
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished step: " & stp)
-                            End If
+					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+						SkipQuery = False
+						ExistingIndexName = ""
+						mStep = wfStep.StepNo
+						sql = wfStep.SQL
+						sql = sql.Replace("''", "'") 'Don't need this anymore
+						mSQL = sql
 
-                        End If
-                    End If
-                Next
-                conn.Close()
-                conn.Open()
+						CBoolSafe(wfStep.StepNo, "KeepTargetTable", wfStep.KeepTargetTable, kTrgtTble)
 
-                tblList = GetTablesFromDb(sqlitePath)
-                'Drop all the tables not needed
-                For i = startStep To endStep
-                    If stepsToRun.ContainsKey(i) Then
-                        stp = Workflow.Item(i).StepNo
-                        sql = Workflow.Item(i).SQL
-                        trgTbl = Workflow.Item(i).TargetTable
-                        If String.IsNullOrEmpty(kTrgtTble) Then
-                            kTrgtTble = False
-                        Else
-                            kTrgtTble = CBool(Workflow.Item(i).KeepTargetTable)
-                        End If
-                        UpdateProgress(handler, False, True, CInt((100.0R * i / Workflow.Count)), "Cleaning up database for Step " & stp)
+						CBoolSafe(wfStep.StepNo, "PivotTable", wfStep.PivotTable, PivotTble)
 
-                        If Not String.IsNullOrEmpty(trgTbl) AndAlso tblList.Contains(Trim(trgTbl)) AndAlso Not kTrgtTble AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & trgTbl & " from step: " & stp)
-                            sql = "Drop Table " & trgTbl
-                            Dim cmdDrop As New SQLiteCommand(sql, conn)
-                            cmdDrop.ExecuteNonQuery()
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & trgTbl & " from step: " & stp)
-                        ElseIf Not String.IsNullOrEmpty(trgTbl) AndAlso kTrgtTble AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Keeping temp table: " & trgTbl & " from step: " & stp)
-                        End If
-                        CheckCancelled()
-                    End If
-                Next
-            End If
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso PivotTble AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+							sql = BuildCrosstabTableQuery(sqliteConnString, sql.Split(";"))
+						End If
+
+						CBoolSafe(wfStep.StepNo, "FunctionTable", wfStep.FunctionTable, FunctionTble)
+
+						CBoolSafe(wfStep.StepNo, "IterationTable", wfStep.IterationTable, IterationTbl)
+
+						src = wfStep.Source.ToUpper()
+
+						If IterationTbl Then
+							RunCreateIterationTable(sql, wfStep.TargetTable, conn, sqlitePath, handler)
+						ElseIf FunctionTble AndAlso Not String.IsNullOrEmpty(wfStep.TargetTable) Then
+							RunCreateDataTableFromFunctionList(sql, wfStep.TargetTable, conn, sqlitePath, handler)
+						ElseIf src = "RANGER" Then
+							RunRangerPipeline(wfStep.SQL, wfStep.TargetTable, sqlitePath)
+						ElseIf src = "PLOT" Then
+							RunPlotting(wfStep.SQL, wfStep.TargetTable, sqlitePath, sqliteConnString, handler)
+						Else
+							If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+								sql = "Create table " & wfStep.TargetTable & " as " & sql
+							Else
+								'if an index name is returned, then we should skip the query
+								ExistingIndexName = CheckForExistingIndex(sql, indxList)
+								If Not String.IsNullOrEmpty(ExistingIndexName) Then
+									SkipQuery = True
+								End If
+							End If
+
+							UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Running Step " & wfStep.StepNo & " to " & endStep)
+							CheckCancelled()
+
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Starting step: " & wfStep.StepNo & " Query: " & sql)
+							' Execute the query in order to actually create the table.
+							If SkipQuery Then
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Query skipped: " & wfStep.StepNo)
+							Else
+								Dim cmd As New SQLiteCommand(sql, conn)
+								cmd.ExecuteNonQuery()
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished step: " & wfStep.StepNo)
+							End If
+
+						End If
+					End If
+				Next
+				conn.Close()
+				conn.Open()
+
+				' This Linq query assures that items in tblList have lowercase names
+				tblList = (From item In GetTablesFromDb(sqlitePath) Select item.ToLower()).ToList()
+
+				'Drop all the tables not needed
+				iCurrentStepNum = 0
+				For Each wfStep In Workflow
+					iCurrentStepNum += 1
+					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+						sql = wfStep.SQL
+
+						CBoolSafe(wfStep.StepNo, "KeepTargetTable", wfStep.KeepTargetTable, kTrgtTble)
+
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(wfStep.TargetTable.ToLower().Trim()) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
+							If Not kTrgtTble Then
+								UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Cleaning up database for Step " & wfStep.StepNo)
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+								sql = "Drop Table " & wfStep.TargetTable
+								Dim cmdDrop As New SQLiteCommand(sql, conn)
+								cmdDrop.ExecuteNonQuery()
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+							Else
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Keeping temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+							End If
+
+							CheckCancelled()
+						End If
+
+					End If
+				Next
+			End If
             conn.Close()
 
         Catch ex As Exception

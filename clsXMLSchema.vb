@@ -4,7 +4,8 @@
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsXMLStepSchema
-    Public StepNo As String
+	Protected mStepNumText As String
+	Protected mStepNumValue As Integer
 
     Public Source As String
 
@@ -24,6 +25,21 @@ Public Class clsXMLStepSchema
 
     Public WorkflowGroup As String
 
+	Public Property StepNo As String
+		Get
+			Return mStepNumText
+		End Get
+		Set(value As String)
+			mStepNumText = value
+			Integer.TryParse(mStepNumText, mStepNumValue)
+		End Set
+	End Property
+
+	Public ReadOnly Property StepNum
+		Get
+			Return mStepNumValue
+		End Get
+	End Property
 End Class
 
 ''' <summary>
