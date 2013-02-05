@@ -793,15 +793,18 @@ Public Class SqlServerToSQLite
 				For Each wfStep In Workflow
 					iCurrentStepNum += 1
 					If stepsToRun.ContainsKey(wfStep.StepNum) Then
-						sql = wfStep.SQL
+						sql = wfStep.SQL.Trim()
 
-						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(wfStep.TargetTable.ToLower().Trim()) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+						Dim tableNameLCase As String = wfStep.TargetTable.ToLower().Trim()
+
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(tableNameLCase) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
 							UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Dropping temporary table for Step " & wfStep.StepNo)
 							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
 							sql = "Drop Table " & wfStep.TargetTable
 							Dim cmdDrop As New SQLiteCommand(sql, conn)
 							cmdDrop.ExecuteNonQuery()
 							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+							tblList.Remove(tableNameLCase)
 						End If
 						CheckCancelled()
 					End If
@@ -819,7 +822,7 @@ Public Class SqlServerToSQLite
 						SkipQuery = False
 						ExistingIndexName = ""
 						mStep = wfStep.StepNo
-						sql = wfStep.SQL
+						sql = wfStep.SQL.Trim()
 						sql = sql.Replace("''", "'") 'Don't need this anymore
 						mSQL = sql
 
@@ -827,7 +830,7 @@ Public Class SqlServerToSQLite
 
 						CBoolSafe(wfStep.StepNo, "PivotTable", wfStep.PivotTable, PivotTble)
 
-						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso PivotTble AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso PivotTble AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
 							sql = BuildCrosstabTableQuery(sqliteConnString, sql.Split(";"))
 						End If
 
@@ -846,7 +849,7 @@ Public Class SqlServerToSQLite
 						ElseIf src = "PLOT" Then
 							RunPlotting(wfStep.SQL, wfStep.TargetTable, sqlitePath, sqliteConnString, handler)
 						Else
-							If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.Contains("update") Or sql.ToLower.Contains("delete")) Then
+							If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
 								sql = "Create table " & wfStep.TargetTable & " as " & sql
 							Else
 								'if an index name is returned, then we should skip the query
@@ -883,18 +886,21 @@ Public Class SqlServerToSQLite
 				For Each wfStep In Workflow
 					iCurrentStepNum += 1
 					If stepsToRun.ContainsKey(wfStep.StepNum) Then
-						sql = wfStep.SQL
+						sql = wfStep.SQL.Trim()
 
 						CBoolSafe(wfStep.StepNo, "KeepTargetTable", wfStep.KeepTargetTable, kTrgtTble)
+						Dim tableNameLCase As String = wfStep.TargetTable.ToLower().Trim()
 
-						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(wfStep.TargetTable.ToLower().Trim()) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
+						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(tableNameLCase) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
 							If Not kTrgtTble Then
+
 								UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Cleaning up database for Step " & wfStep.StepNo)
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
 								sql = "Drop Table " & wfStep.TargetTable
 								Dim cmdDrop As New SQLiteCommand(sql, conn)
 								cmdDrop.ExecuteNonQuery()
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+								tblList.Remove(tableNameLCase)
 							Else
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Keeping temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
 							End If
