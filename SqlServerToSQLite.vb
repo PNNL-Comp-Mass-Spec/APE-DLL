@@ -562,7 +562,7 @@ Public Class SqlServerToSQLite
 
         Dim wf As List(Of clsXMLStepSchema)
         Dim wfString As String
-        Dim wfStepList As Hashtable
+		Dim wfStepList As Generic.SortedSet(Of Integer)
 		Dim wfDescription As String = "Unknown Workflow"
 
 		If String.IsNullOrEmpty(Workflow) Then
@@ -597,8 +597,8 @@ Public Class SqlServerToSQLite
     ''' <param name="workflowStepList"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function BuildStepList(workflowStepList As String, wf As List(Of clsXMLStepSchema)) As Hashtable
-        Dim stepsToRun As New Hashtable
+	Private Shared Function BuildStepList(workflowStepList As String, wf As List(Of clsXMLStepSchema)) As Generic.SortedSet(Of Integer)
+		Dim stepsToRun As New Generic.SortedSet(Of Integer)
 		Dim startStep As Integer, endStep As Integer
 
 		If String.IsNullOrWhiteSpace(workflowStepList) OrElse workflowStepList.ToLower().Contains("all") Then
@@ -607,8 +607,8 @@ Public Class SqlServerToSQLite
 
 			For Each stepItem As clsXMLStepSchema In wf
 				If stepItem.StepNum >= startStep AndAlso stepItem.StepNum <= endStep Then
-					If Not stepsToRun.ContainsKey(stepItem.StepNum) Then
-						stepsToRun.Add(stepItem.StepNum, "")
+					If Not stepsToRun.Contains(stepItem.StepNum) Then
+						stepsToRun.Add(stepItem.StepNum)
 					End If
 				End If
 			Next
@@ -633,15 +633,15 @@ Public Class SqlServerToSQLite
 					End If
 
 					For i = startStep To endStep
-						If Not stepsToRun.ContainsKey(i) Then
-							stepsToRun.Add(i, "")
+						If Not stepsToRun.Contains(i) Then
+							stepsToRun.Add(i)
 						End If
 					Next
 				Else
 					For i = 0 To wf.Count - 1
 						If wf.Item(i).WorkflowGroup.ToLower().Trim() = stepItem.ToLower().Trim() Then
-							If Not stepsToRun.ContainsKey(wf.Item(i).StepNum) Then
-								stepsToRun.Add(wf.Item(i).StepNum, "")
+							If Not stepsToRun.Contains(wf.Item(i).StepNum) Then
+								stepsToRun.Add(wf.Item(i).StepNum)
 							End If
 						End If
 					Next
@@ -651,7 +651,7 @@ Public Class SqlServerToSQLite
 
 		Return stepsToRun
 
-    End Function
+	End Function
 
     ''' <summary>
     ''' 
@@ -771,26 +771,26 @@ Public Class SqlServerToSQLite
 	''' <param name="sqlitePath"></param>
 	''' <param name="handler"></param>
 	''' <remarks></remarks>
-    Private Shared Sub RunWorkflow(ByVal stepsToRun As Hashtable, ByVal workflowTotalSteps As Integer, ByVal Workflow As List(Of clsXMLStepSchema), ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+	Private Shared Sub RunWorkflow(ByVal stepsToRun As Generic.SortedSet(Of Integer), ByVal workflowTotalSteps As Integer, ByVal Workflow As List(Of clsXMLStepSchema), ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
 		Dim sql, src As String
-        Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
+		Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
 		Dim startStep, endStep As Integer
 		Dim iCurrentStepNum As Integer = 0
 		Dim tblList As List(Of String)
-        Dim indxList As List(Of String)
-        Dim ExistingIndexName As String
-        Dim SkipQuery As Boolean
-        ' make new pipeline to generate parameter table
-        Dim ptg As New ParamTableGenerator()
+		Dim indxList As List(Of String)
+		Dim ExistingIndexName As String
+		Dim SkipQuery As Boolean
+		' make new pipeline to generate parameter table
+		Dim ptg As New ParamTableGenerator()
 
-        If Not File.Exists(sqlitePath) Then
-            Exit Sub
+		If Not File.Exists(sqlitePath) Then
+			Exit Sub
 		End If
 
-        Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-        Dim conn As New SQLiteConnection
-        Try
-            conn.ConnectionString = sqliteConnString
+		Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
+		Dim conn As New SQLiteConnection
+		Try
+			conn.ConnectionString = sqliteConnString
 
 			' This Linq query assures that items in tblList have lowercase names
 			tblList = (From item In GetTablesFromDb(sqlitePath) Select item.ToLower()).ToList()
@@ -799,12 +799,12 @@ Public Class SqlServerToSQLite
 			startStep = Workflow.Item(0).StepNum
 			endStep = Workflow.Item(Workflow.Count - 1).StepNum
 
-            'Drop all the tables not needed
+			'Drop all the tables not needed
 			If Not Workflow Is Nothing Then
 				iCurrentStepNum = 0
 				For Each wfStep In Workflow
 					iCurrentStepNum += 1
-					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+					If stepsToRun.Contains(wfStep.StepNum) Then
 						sql = wfStep.SQL.Trim()
 
 						Dim tableNameLCase As String = wfStep.TargetTable.ToLower().Trim()
@@ -830,7 +830,7 @@ Public Class SqlServerToSQLite
 				For Each wfStep In Workflow
 					iCurrentStepNum += 1
 
-					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+					If stepsToRun.Contains(wfStep.StepNum) Then
 						SkipQuery = False
 						ExistingIndexName = ""
 						mStep = wfStep.StepNo
@@ -907,7 +907,7 @@ Public Class SqlServerToSQLite
 				iCurrentStepNum = 0
 				For Each wfStep In Workflow
 					iCurrentStepNum += 1
-					If stepsToRun.ContainsKey(wfStep.StepNum) Then
+					If stepsToRun.Contains(wfStep.StepNum) Then
 						sql = wfStep.SQL.Trim()
 
 						CBoolSafe(wfStep.StepNo, "KeepTargetTable", wfStep.KeepTargetTable, kTrgtTble)
@@ -933,16 +933,16 @@ Public Class SqlServerToSQLite
 					End If
 				Next
 			End If
-            conn.Close()
+			conn.Close()
 
-        Catch ex As Exception
+		Catch ex As Exception
 			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "The following error occured while running workflow step: " & mStep & " - " & ex.Message & "; Sql: " & mSQL)
-            If Not conn Is Nothing Then
-                conn.Close()
-            End If
-            Throw
-        End Try
-    End Sub
+			If Not conn Is Nothing Then
+				conn.Close()
+			End If
+			Throw
+		End Try
+	End Sub
 
     Private Shared Sub RunPlotting(plotDefinition As String, tblName As String, dbPath As String, sqliteConn As String, handler As SqlConversionHandler)
         Dim i As Integer
