@@ -563,17 +563,24 @@ Public Class SqlServerToSQLite
         Dim wf As List(Of clsXMLStepSchema)
         Dim wfString As String
         Dim wfStepList As Hashtable
+		Dim wfDescription As String = "Unknown Workflow"
 
-        If String.IsNullOrEmpty(Workflow) Then
-            wfString = GetWorkflowFromDb(sqlitePath)
-        ElseIf Workflow.Contains(".xml") Then
-            wfString = GetWorkflowFromFile(Workflow)
-            'SaveWorkflowToDatabase(wfString, sqlitePath)
-        Else
-            wfString = Workflow
-        End If
+		If String.IsNullOrEmpty(Workflow) Then
+			wfDescription = "Table T_Workflow in " & sqlitePath
+			wfString = GetWorkflowFromDb(sqlitePath)
+		ElseIf Workflow.Contains(".xml") Then
+			wfDescription = String.Copy(Workflow)
+			wfString = GetWorkflowFromFile(Workflow)
+			'SaveWorkflowToDatabase(wfString, sqlitePath)
+		Else
+			wfString = Workflow
+		End If
 
-        wf = ReadWorkflow(wfString, xmlDocType.wString, False)
+		wf = ReadWorkflow(wfString, xmlDocType.wString, False)
+		If wf Is Nothing OrElse wf.Count = 0 Then
+			Throw New System.InvalidOperationException("Workflow is empty: " & wfDescription)
+		End If
+
         wfStepList = BuildStepList(WorkflowStepList, wf)
 
         RunWorkflow(wfStepList, 0, wf, sqlitePath, handler)
@@ -594,14 +601,18 @@ Public Class SqlServerToSQLite
         Dim stepsToRun As New Hashtable
 		Dim startStep As Integer, endStep As Integer
 
-		If workflowStepList.ToLower.Contains("all") Or String.IsNullOrWhiteSpace(workflowStepList) Then
+		If String.IsNullOrWhiteSpace(workflowStepList) OrElse workflowStepList.ToLower().Contains("all") Then
 			startStep = wf.Item(0).StepNum
 			endStep = wf.Item(wf.Count - 1).StepNum
-			For i = startStep To endStep
-				If Not stepsToRun.ContainsKey(wf.Item(i).StepNum) Then
-					stepsToRun.Add(wf.Item(i).StepNum, "")
+
+			For Each stepItem As clsXMLStepSchema In wf
+				If stepItem.StepNum >= startStep AndAlso stepItem.StepNum <= endStep Then
+					If Not stepsToRun.ContainsKey(stepItem.StepNum) Then
+						stepsToRun.Add(stepItem.StepNum, "")
+					End If
 				End If
 			Next
+
 		Else
 			For Each stepItem As String In workflowStepList.Split(","c)
 				If stepItem.Contains("-") Then
@@ -618,7 +629,7 @@ Public Class SqlServerToSQLite
 					End If
 
 					If Not Integer.TryParse(StepStartStop(1), endStep) Then
-						Throw New InvalidCastException("Error extracting number after dash in workflow step: " & stepItem)					
+						Throw New InvalidCastException("Error extracting number after dash in workflow step: " & stepItem)
 					End If
 
 					For i = startStep To endStep
@@ -638,7 +649,7 @@ Public Class SqlServerToSQLite
 			Next
 		End If
 
-        Return stepsToRun
+		Return stepsToRun
 
     End Function
 
@@ -774,7 +785,8 @@ Public Class SqlServerToSQLite
 
         If Not File.Exists(sqlitePath) Then
             Exit Sub
-        End If
+		End If
+
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
         Dim conn As New SQLiteConnection
         Try
@@ -831,7 +843,15 @@ Public Class SqlServerToSQLite
 						CBoolSafe(wfStep.StepNo, "PivotTable", wfStep.PivotTable, PivotTble)
 
 						If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso PivotTble AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
-							sql = BuildCrosstabTableQuery(sqliteConnString, sql.Split(";"))
+							sql = BuildCrosstabTableQuery(sqliteConnString, sql)
+							If String.IsNullOrEmpty(sql) Then
+								Continue For
+							ElseIf sql = NUM_FIELDS_EXCEEDED_MESSAGE Then
+								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Pivot query would return over 1000 fields: " & sql)
+								Continue For
+							End If
+
+							mSQL = sql
 						End If
 
 						CBoolSafe(wfStep.StepNo, "FunctionTable", wfStep.FunctionTable, FunctionTble)
@@ -851,6 +871,7 @@ Public Class SqlServerToSQLite
 						Else
 							If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
 								sql = "Create table " & wfStep.TargetTable & " as " & sql
+								mSQL = sql
 							Else
 								'if an index name is returned, then we should skip the query
 								ExistingIndexName = CheckForExistingIndex(sql, indxList)
@@ -863,6 +884,7 @@ Public Class SqlServerToSQLite
 							CheckCancelled()
 
 							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Starting step: " & wfStep.StepNo & " Query: " & sql)
+
 							' Execute the query in order to actually create the table.
 							If SkipQuery Then
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Query skipped: " & wfStep.StepNo)
@@ -914,7 +936,7 @@ Public Class SqlServerToSQLite
             conn.Close()
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "The following error occured while running workflow step: " & mStep & " - " & ex.Message & mSQL)
+			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "The following error occured while running workflow step: " & mStep & " - " & ex.Message & "; Sql: " & mSQL)
             If Not conn Is Nothing Then
                 conn.Close()
             End If
@@ -935,8 +957,8 @@ Public Class SqlServerToSQLite
         Dim zgc As New ZedGraphControl
         Dim myPane As GraphPane = zgc.GraphPane
         Dim pltExtension As String = ""
-        Dim labels As String()
-        Dim x As Double()
+		Dim labels As String() = Nothing
+		Dim x As Double() = Nothing
         Dim list = New PointPairList()
         Dim sql As String = String.Empty
 
@@ -1053,7 +1075,7 @@ Public Class SqlServerToSQLite
         UpdateProgress(handler, False, True, 0, "Preparing to load plotting data...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Preparing to load plotting data...")
 
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader
+		Dim SQLreader As System.Data.SQLite.SQLiteDataReader = Nothing
         Dim xValue As String
         Dim yValue As Double
         Dim i As Integer = 0
@@ -1747,78 +1769,96 @@ Public Class SqlServerToSQLite
     ''' 
     ''' </summary>
     ''' <param name="connString"></param>
-    ''' <param name="sql"></param>
+	''' <param name="pivotDefinition"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function BuildCrosstabTableQuery(ByVal connString As String, ByVal sql As String()) As String
-        Dim valueField As String = String.Empty
-        Dim colHeading As String = String.Empty
-        Dim Table As String = String.Empty
-        Dim qry As String = Nothing
-        Dim fldList As String = String.Empty
-        Dim grpBy As String = String.Empty
-        Dim fldQry As String = String.Empty
-        Dim caseQry As String = String.Empty
-        Dim numColumns As Integer = 0
-        Dim i As Integer
-        Dim rows() As String
+	Private Shared Function BuildCrosstabTableQuery(ByVal connString As String, ByVal pivotDefinition As String) As String
+		Dim valueField As String = String.Empty
+		Dim colHeading As String = String.Empty
+		Dim Table As String = String.Empty
+		Dim qry As String = Nothing
+		Dim fldList As String = String.Empty
+		Dim grpBy As String = String.Empty
+		Dim fldQry As String = String.Empty
+		Dim caseQry As String = String.Empty
+		Dim numColumns As Integer = 0
+		Dim i As Integer
+		Dim pivotDefItems() As String
 
-        Try
-            If sql.Count > 0 Then
-                'First sort the columns
-                For i = 0 To sql.Count - 1
-                    'ignore first line which should be a select
-                    If Not String.IsNullOrEmpty(sql(i).ToString) Then
-                        rows = sql(i).ToString.Split(",")
-                        If Trim(rows(crosstabFields.wCrosstab)) = VALUE Then
-                            valueField = Trim(rows(crosstabFields.wField))
-                            Table = Trim(rows(crosstabFields.wTable))
-                        End If
-                        If Trim(rows(crosstabFields.wCrosstab)) = COLUMN_HEADING Then
-                            colHeading = Trim(rows(crosstabFields.wField))
-                        End If
-                        If Trim(rows(crosstabFields.wCrosstab)) = ROW_HEADING Then
-                            fldList += Trim(rows(crosstabFields.wField)) & "," & vbCrLf
-                        End If
-                    End If
-                Next
-                qry = "Select distinct " & colHeading & " From " & Table
+		Try
+			Dim sqlTerms As String() = pivotDefinition.Split(";")
 
-                Using conn As New SQLiteConnection(connString)
-                    conn.Open()
+			If sqlTerms.Count > 0 Then
+				'First sort the columns
+				For i = 0 To sqlTerms.Count - 1
+					'ignore first line which should be a select
+					If Not String.IsNullOrEmpty(sqlTerms(i).ToString) Then
+						pivotDefItems = sqlTerms(i).ToString.Split(",")
+						If pivotDefItems.Count < 3 Then
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Pivot definition does not contain 3 entries: " & sqlTerms(i))
+						Else
+							If Trim(pivotDefItems(crosstabFields.wCrosstab)) = VALUE Then
+								valueField = Trim(pivotDefItems(crosstabFields.wField))
+								Table = Trim(pivotDefItems(crosstabFields.wTable))
+							End If
+							If Trim(pivotDefItems(crosstabFields.wCrosstab)) = COLUMN_HEADING Then
+								colHeading = Trim(pivotDefItems(crosstabFields.wField))
+							End If
+							If Trim(pivotDefItems(crosstabFields.wCrosstab)) = ROW_HEADING Then
+								fldList += Trim(pivotDefItems(crosstabFields.wField)) & "," & vbCrLf
+							End If
+						End If
+					End If
+				Next
 
-                    Dim cmd As New SQLiteCommand
-                    cmd = conn.CreateCommand
-                    cmd.CommandText = qry
-                    Using reader As SQLiteDataReader = cmd.ExecuteReader()
-                        While reader.Read()
-                            fldQry += "ifnull(Max([" & reader.GetValue(0) & "]),'') as [" & reader.GetValue(0) & "]" & "," & vbCrLf
-                            caseQry += "Case when " & colHeading & " = '" & reader.GetValue(0) & "' then " & valueField & " end as '" & reader.GetValue(0) & "'," & vbCrLf
-                            numColumns += 1
-                        End While
-                    End Using
-                    conn.Close()
-                End Using
+				If String.IsNullOrEmpty(fldList) Then
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Pivot definition did not contain '" & ROW_HEADING & "': " & pivotDefinition)
+					Return String.Empty
+				End If
 
-                caseQry = caseQry.Substring(0, caseQry.LastIndexOf(","c))
-                fldQry = fldQry.Substring(0, fldQry.LastIndexOf(","c))
+				qry = "Select distinct " & colHeading & " From " & Table
+				mSQL = qry
 
-                grpBy = " Group By " & fldList.Substring(0, fldList.LastIndexOf(","c))
+				Using conn As New SQLiteConnection(connString)
+					conn.Open()
 
-                qry = "Select " & vbCrLf & fldList & fldQry & " From ( Select " & vbCrLf & fldList & vbCrLf & caseQry & vbCrLf & " From " & Table & vbCrLf & ")" & vbCrLf & grpBy
-                If numColumns > NUM_FIELDS_ALLOWED Then
-                    qry = NUM_FIELDS_EXCEEDED_MESSAGE
-                End If
-            End If
+					Dim cmd As New SQLiteCommand
+					cmd = conn.CreateCommand
+					cmd.CommandText = qry
+					Using reader As SQLiteDataReader = cmd.ExecuteReader()
+						While reader.Read()
+							fldQry += "ifnull(Max([" & reader.GetValue(0) & "]),'') as [" & reader.GetValue(0) & "]" & "," & vbCrLf
+							caseQry += "Case when " & colHeading & " = '" & reader.GetValue(0) & "' then " & valueField & " end as '" & reader.GetValue(0) & "'," & vbCrLf
+							numColumns += 1
+						End While
+					End Using
+					conn.Close()
+				End Using
 
-        Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "An error has occurred: " & ex.Message)
-            Throw
-        End Try
+				If String.IsNullOrEmpty(caseQry) Then
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "No results were returned by query: " & qry)
+					Return String.Empty
+				End If
 
-        Return qry
+				caseQry = caseQry.Substring(0, caseQry.LastIndexOf(","c))
+				fldQry = fldQry.Substring(0, fldQry.LastIndexOf(","c))
 
-    End Function
+				grpBy = " Group By " & fldList.Substring(0, fldList.LastIndexOf(","c))
+
+				qry = "Select " & vbCrLf & fldList & fldQry & " From ( Select " & vbCrLf & fldList & vbCrLf & caseQry & vbCrLf & " From " & Table & vbCrLf & ")" & vbCrLf & grpBy
+				If numColumns > NUM_FIELDS_ALLOWED Then
+					qry = NUM_FIELDS_EXCEEDED_MESSAGE
+				End If
+			End If
+
+		Catch ex As Exception
+			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "An error has occurred: " & ex.Message)
+			Throw
+		End Try
+
+		Return qry
+
+	End Function
 
     ''' <summary>
     ''' 
@@ -3568,7 +3608,7 @@ Public Class SqlServerToSQLite
     ''' <param name="chunkSize"></param>
     ''' <remarks></remarks>
     Private Shared Sub CreateMTBCacheTableFromProcInChunks(ByVal paramList As List(Of String), ByVal sprocParam As String, ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler, ByVal StoredProcName As String, ByVal tblNames As List(Of String), ByVal chunkSize As Integer)
-        Dim TblSchema As List(Of TableSchema)
+		Dim TblSchema As List(Of TableSchema) = Nothing
         Dim arrayList() As String
         Dim tmpMD_ID_List As String = ""
         Dim counter As Integer = 0
@@ -3593,7 +3633,8 @@ Public Class SqlServerToSQLite
                 End If
                 tmpMD_ID_List = ""
             End If
-        Next
+		Next
+
         If tmpMD_ID_List <> "" Then
             If tblCreated = False Then
                 TblSchema = ReturnTableSchemaFromStoredProc(paramList, sprocParam, sqlConnString, tblNames, StoredProcName, tmpMD_ID_List, handler)
