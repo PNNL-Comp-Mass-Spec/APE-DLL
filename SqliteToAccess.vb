@@ -800,7 +800,7 @@ Public Class SqliteToAccess
                                 If counter Mod 1000 = 0 Then
                                     CheckCancelled()
                                     tx.Commit()
-                                    handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+									handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                                     tx = slconn.BeginTransaction()
                                 End If
                                 ' while
@@ -869,7 +869,7 @@ Public Class SqliteToAccess
                                 If counter Mod 1000 = 0 Then
                                     CheckCancelled()
                                     tx.Commit()
-                                    handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+									handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                                     tx = slconn.BeginTransaction()
                                 End If
                                 ' while
@@ -955,7 +955,7 @@ Public Class SqliteToAccess
                     If counter Mod 1000 = 0 Then
                         CheckCancelled()
                         tx.Commit()
-                        handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+						handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                         tx = slconn.BeginTransaction()
                     End If
                     cnt += 1
@@ -1034,10 +1034,15 @@ Public Class SqliteToAccess
         ' Prepare a CREATE TABLE DDL statement
         Dim stmt As String = BuildAccessCreateTableQuery(dt)
 
-        ' Execute the query in order to actually create the table.
-        Dim cmd As New OleDbCommand(stmt, conn)
-        cmd.ExecuteNonQuery()
-    End Sub
+		Try
+			' Execute the query in order to actually create the table.
+			Dim cmd As New OleDbCommand(stmt, conn)
+			cmd.ExecuteNonQuery()
+		Catch ex As Exception
+			Throw New Exception(ex.Message & "; " & stmt)
+		End Try
+		
+	End Sub
 
     ''' <summary>
     ''' 
@@ -1080,7 +1085,12 @@ Public Class SqliteToAccess
         Dim sb As New StringBuilder()
         sb.Append(vbTab & "[" & col.ColumnName & "]" & vbTab & vbTab)
 
-        sb.Append(col.ColumnType)
+		If col.ColumnType.ToLower() = "num" Then
+			sb.Append("text")
+		Else
+			sb.Append(col.ColumnType)
+		End If
+
 
         Return sb.ToString()
     End Function
@@ -1134,7 +1144,7 @@ Public Class SqliteToAccess
                                 If counter Mod 1000 = 0 Then
                                     CheckCancelled()
                                     tx.Commit()
-                                    handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+									handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                                     tx = accessconn.BeginTransaction()
                                 End If
                                 ' while
@@ -1292,7 +1302,7 @@ Public Class SqliteToAccess
                                 If counter Mod 1000 = 0 Then
                                     CheckCancelled()
                                     'tx.Commit()
-                                    handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+									handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                                     'tx = sl2conn.BeginTransaction()
                                 End If
                                 ' while
@@ -1372,43 +1382,48 @@ Public Class SqliteToAccess
     ''' <remarks></remarks>
     Private Shared Function GetAccessDbTypeOfColumn(ByVal cs As ColumnSchema) As DbType 'System.Data.OleDb.OleDbType ' 
 
-        If cs.ColumnType.ToLower() = "text" Then
-            Return DbType.[String] 'OleDb.OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "float" Then
-            Return DbType.[Single] 'OleDb.OleDbType.Single 
-        End If
-        If cs.ColumnType.ToLower() = "single" Then
-            Return DbType.[Single] ' OleDb.OleDbType.Single 
-        End If
-        If cs.ColumnType.ToLower() = "double" Then
-            Return DbType.[Double] 'OleDb.OleDbType.Double  
-        End If
-        If cs.ColumnType.ToLower() = "real" Then
-            Return DbType.[Double] 'OleDb.OleDbType.Double  
-        End If
-        If cs.ColumnType.ToLower() = "decimal" Then
-            Return DbType.[Decimal] 'OleDbType.Decimal 
-        End If
-        If cs.ColumnType.ToLower() = "timestamp" OrElse cs.ColumnType.ToLower() = "datetime" Then
-            Return DbType.DateTime 'OleDbType.DBTimeStamp 
-        End If
-        If cs.ColumnType.ToLower() = "nchar" OrElse cs.ColumnType.ToLower() = "char" Then
-            Return DbType.[String] 'OleDbType.Char 
-        End If
-        If cs.ColumnType.ToLower() = "uniqueidentifier" Then
-            Return DbType.[String] 'OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "xml" Then
-            Return DbType.[String] 'OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "sql_variant" Then
-            Return DbType.[Object] 'OleDbType.Variant 
-        End If
-        If cs.ColumnType.ToLower() = "integer" Then
-            Return DbType.Int32 'OleDbType.Integer 
-        End If
+		Select Case cs.ColumnType.ToLower()
+			Case "text"
+				Return DbType.[String]		'OleDb.OleDbType.VarChar 
 
+			Case "float"
+				Return DbType.[Single]		'OleDb.OleDbType.Single 
+
+			Case "single"
+				Return DbType.[Single]		' OleDb.OleDbType.Single 
+
+			Case "double"
+				Return DbType.[Double]		'OleDb.OleDbType.Double  
+
+			Case "real"
+				Return DbType.[Double]		'OleDb.OleDbType.Double  
+
+			Case "decimal"
+				Return DbType.[Decimal]			'OleDbType.Decimal 
+
+			Case "timestamp", "datetime"
+				Return DbType.DateTime		'OleDbType.DBTimeStamp 
+
+			Case "nchar", "char"
+				Return DbType.[String]		'OleDbType.Char 
+
+			Case "uniqueidentifier"
+				Return DbType.[String]		'OleDbType.VarChar 
+
+			Case "xml"
+				Return DbType.[String]		'OleDbType.VarChar 
+
+			Case "sql_variant"
+				Return DbType.[Object]		'OleDbType.Variant 
+
+			Case "integer", "int"
+				Return DbType.Int32			'OleDbType.Integer 
+
+			Case "num"
+				Return DbType.[String]		' Generic number; treat it as text
+
+		End Select
+        
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "GetAccessDbTypeOfColumn: illegal db type found (" & cs.ColumnType & ")")
         Throw New ApplicationException("GetAccessDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
     End Function
@@ -1592,49 +1607,55 @@ Public Class SqliteToAccess
     ''' <returns>The matched DB type</returns>
     Private Shared Function GetDbTypeOfColumn(ByVal cs As ColumnSchema) As DbType
 
-        If cs.ColumnType.ToLower() = "text" Then
-            Return DbType.[String] 'OleDb.OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "float" Then
-            Return DbType.[Single] 'OleDb.OleDbType.Single 
-        End If
-        If cs.ColumnType.ToLower() = "single" Then
-            Return DbType.[Single] ' OleDb.OleDbType.Single 
-        End If
-        If cs.ColumnType.ToLower() = "double" Then
-            Return DbType.[Double] 'OleDb.OleDbType.Double  
-        End If
-        If cs.ColumnType.ToLower() = "real" Then
-            Return DbType.[Double] 'OleDb.OleDbType.Double  
-        End If
-        If cs.ColumnType.ToLower() = "decimal" Then
-            Return DbType.[Decimal] 'OleDbType.Decimal 
-        End If
-        If cs.ColumnType.ToLower() = "timestamp" OrElse cs.ColumnType.ToLower() = "datetime" Then
-            Return DbType.DateTime 'OleDbType.DBTimeStamp 
-        End If
-        If cs.ColumnType.ToLower() = "nchar" OrElse cs.ColumnType.ToLower() = "char" Then
-            Return DbType.[String] 'OleDbType.Char 
-        End If
-        If cs.ColumnType.ToLower() = "uniqueidentifier" Then
-            Return DbType.[String] 'OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "xml" Then
-            Return DbType.[String] 'OleDbType.VarChar 
-        End If
-        If cs.ColumnType.ToLower() = "sql_variant" Then
-            Return DbType.[Object] 'OleDbType.Variant 
-        End If
-        If cs.ColumnType.ToLower() = "integer" Then
-            Return DbType.Int32 'OleDbType.Integer 
-        End If
-        If cs.ColumnType.ToLower() = "smallint" Then
-            Return DbType.Int16 'OleDbType.Int16 
-        End If
+		Select Case cs.ColumnType.ToLower()
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "GetDbTypeOfColumn: illegal db type found")
-        Throw New ApplicationException("GetDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
-    End Function
+			Case "text"
+				Return DbType.[String] 'OleDb.OleDbType.VarChar 
+
+			Case "float"
+				Return DbType.[Single] 'OleDb.OleDbType.Single 
+
+			Case "single"
+				Return DbType.[Single] ' OleDb.OleDbType.Single 
+
+			Case "double"
+				Return DbType.[Double] 'OleDb.OleDbType.Double  
+
+			Case "real"
+				Return DbType.[Double] 'OleDb.OleDbType.Double  
+
+			Case "decimal"
+				Return DbType.[Decimal]	'OleDbType.Decimal 
+
+			Case "timestamp", "datetime"
+				Return DbType.DateTime 'OleDbType.DBTimeStamp 
+
+			Case "nchar", "char"
+				Return DbType.[String] 'OleDbType.Char 
+
+			Case "uniqueidentifier"
+				Return DbType.[String] 'OleDbType.VarChar 
+
+			Case "xml"
+				Return DbType.[String] 'OleDbType.VarChar 
+
+			Case "sql_variant"
+				Return DbType.[Object] 'OleDbType.Variant 
+
+			Case "integer", "int"
+				Return DbType.Int32	'OleDbType.Integer 
+
+			Case "smallint"
+				Return DbType.Int16	'OleDbType.Int16 
+
+			Case "num"
+				Return DbType.[String]		' Generic number; treat it as text
+
+		End Select
+
+		clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "GetDbTypeOfColumn: illegal db type found")
+		Throw New ApplicationException("GetDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
+	End Function
 
     ''' <summary>
     ''' Builds a SELECT query for a specific table. Needed in the process of copying rows
@@ -2049,15 +2070,22 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="dataType">The datatype to validate.</param>
     Private Shared Sub ValidateSQLiteDataType(ByVal dataType As String, ByVal tableName As String, ByVal fieldName As String)
-        dataType = dataType.ToLower
-        If dataType = "datetime" OrElse dataType = "numeric" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "integer" OrElse dataType = "text" OrElse dataType = "char" OrElse dataType = "smallint" OrElse dataType = "double" OrElse dataType = "single" OrElse dataType = "varchar" OrElse dataType = "int" Then
-            Exit Sub
-        End If
-        If dataType = "" Then
-            Exit Sub
-        End If
-        Throw New ApplicationException("SQLite Validation failed for table/field " & tableName & "/" & fieldName & "data type [" & dataType & "]")
-    End Sub
+
+		Dim lstKnownTypes = New List(Of String) From {
+		  "datetime", "numeric", "float", "real",
+		  "integer", "smallint", "int",
+		  "double", "single", "num",
+		  "text", "char", "varchar"}
+
+		If String.IsNullOrWhiteSpace(dataType) Then
+			Exit Sub
+		End If
+
+		If lstKnownTypes.Contains(dataType.ToLower()) Then
+			Exit Sub
+		End If
+		Throw New ApplicationException("SQLite Validation failed for table/field " & tableName & "/" & fieldName & "data type [" & dataType & "]")
+	End Sub
 
     ''' <summary>
     ''' Does some necessary adjustments to a value string that appears in a column DEFAULT
@@ -2278,7 +2306,7 @@ Public Class SqliteToAccess
                             counter += 1
                             If counter Mod 1000 = 0 Then
                                 CheckCancelled()
-                                handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter & " rows to table ") + schema(i).TableName & " so far")
+								handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                             End If
                             ' while
                         End While
