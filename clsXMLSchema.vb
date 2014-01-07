@@ -1,4 +1,5 @@
-﻿
+﻿Option Strict On
+
 ''' <summary>
 ''' 
 ''' </summary>
@@ -35,7 +36,7 @@ Public Class clsXMLStepSchema
 		End Set
 	End Property
 
-	Public ReadOnly Property StepNum
+	Public ReadOnly Property StepNum As Integer
 		Get
 			Return mStepNumValue
 		End Get
