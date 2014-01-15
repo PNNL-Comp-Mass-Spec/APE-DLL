@@ -14,6 +14,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyProduct("DbAccess")> 
 <Assembly: AssemblyCopyright("Copyright © Battelle PNNL 2009")> 
 <Assembly: AssemblyTrademark("")> 
+<Assembly: CLSCompliant(True)>
 
 <Assembly: ComVisible(False)>
 

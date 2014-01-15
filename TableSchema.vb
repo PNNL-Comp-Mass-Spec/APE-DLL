@@ -1,7 +1,4 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-
+﻿Imports System.Collections.Generic
 
 Public Class TableSchema
 

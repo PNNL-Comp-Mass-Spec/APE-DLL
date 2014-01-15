@@ -889,6 +889,9 @@ Public Class SqlServerToSQLite
 							If SkipQuery Then
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Query skipped: " & wfStep.StepNo)
 							Else
+								Console.WriteLine()
+								Console.WriteLine("=== Workflow Step " & wfStep.StepNo & " ===")
+								Console.WriteLine(sql)
 								Dim cmd As New SQLiteCommand(sql, conn)
 								cmd.ExecuteNonQuery()
 								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Finished step: " & wfStep.StepNo)
