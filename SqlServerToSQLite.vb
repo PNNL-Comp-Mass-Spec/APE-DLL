@@ -3543,22 +3543,22 @@ Public Class SqlServerToSQLite
         Dim SQLreader As System.Data.SQLite.SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-		Using sqconn As New SQLiteConnection(sqliteConnString, True)
-			sqconn.Open()
-			' Go over all tables in the schema and copy their rows
-			Dim mSQLcommand As New SQLiteCommand
-			mSQLcommand.CommandText = "Select * from sqlite_master where type = 'index'"
+        Using sqconn As New SQLiteConnection(sqliteConnString, True)
+            sqconn.Open()
+            ' Go over all tables in the schema and copy their rows
+            Dim mSQLcommand As New SQLiteCommand
+            mSQLcommand.CommandText = "Select * from sqlite_master where type = 'index'"
 
-			mSQLcommand.CommandType = CommandType.Text
-			mSQLcommand.Connection = sqconn
-			mSQLcommand.ExecuteNonQuery()
-			SQLreader = mSQLcommand.ExecuteReader()
-			While SQLreader.Read()
-				indxNames.Add(CStr(SQLreader("name")))
-			End While
+            mSQLcommand.CommandType = CommandType.Text
+            mSQLcommand.Connection = sqconn
+            mSQLcommand.ExecuteNonQuery()
+            SQLreader = mSQLcommand.ExecuteReader()
+            While SQLreader.Read()
+                indxNames.Add(CStr(SQLreader("name")))
+            End While
 
-			sqconn.Close()
-		End Using
+            sqconn.Close()
+        End Using
 
         Return indxNames
     End Function
@@ -3568,21 +3568,21 @@ Public Class SqlServerToSQLite
         Dim SQLreader As System.Data.SQLite.SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-		Using sqconn As New SQLiteConnection(sqliteConnString, True)
-			sqconn.Open()
-			' Go over all tables in the schema and copy their rows
-			Dim mSQLcommand As New SQLiteCommand
-			mSQLcommand.CommandText = "select tbl_name as ""Table Name"" from sqlite_master where type = ""table"""
-			mSQLcommand.CommandType = CommandType.Text
-			mSQLcommand.Connection = sqconn
-			mSQLcommand.ExecuteNonQuery()
-			SQLreader = mSQLcommand.ExecuteReader()
-			While SQLreader.Read()
-				tblNames.Add(CStr(SQLreader("Table Name")))
-			End While
+        Using sqconn As New SQLiteConnection(sqliteConnString, True)
+            sqconn.Open()
+            ' Go over all tables in the schema and copy their rows
+            Dim mSQLcommand As New SQLiteCommand
+            mSQLcommand.CommandText = "select tbl_name as ""Table Name"" from sqlite_master where type = ""table"""
+            mSQLcommand.CommandType = CommandType.Text
+            mSQLcommand.Connection = sqconn
+            mSQLcommand.ExecuteNonQuery()
+            SQLreader = mSQLcommand.ExecuteReader()
+            While SQLreader.Read()
+                tblNames.Add(CStr(SQLreader("Table Name")))
+            End While
 
-			sqconn.Close()
-		End Using
+            sqconn.Close()
+        End Using
 
         Return tblNames
     End Function
@@ -3592,22 +3592,22 @@ Public Class SqlServerToSQLite
         Dim SQLreader As System.Data.SQLite.SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-		Using sqconn As New SQLiteConnection(sqliteConnString, True)
-			sqconn.Open()
-			' Go over all tables in the schema and copy their rows
-			Dim mSQLcommand As New SQLiteCommand
-			mSQLcommand.CommandText = "select * from T_Workflow where ID = (select max(ID) from t_workflow)"
-			mSQLcommand.CommandType = CommandType.Text
-			mSQLcommand.Connection = sqconn
-			mSQLcommand.ExecuteNonQuery()
-			SQLreader = mSQLcommand.ExecuteReader()
-			If SQLreader.HasRows Then
-				workflow = CStr(SQLreader("Workflow"))
-			Else
-				workflow = Nothing
-			End If
-			sqconn.Close()
-		End Using
+        Using sqconn As New SQLiteConnection(sqliteConnString, True)
+            sqconn.Open()
+            ' Go over all tables in the schema and copy their rows
+            Dim mSQLcommand As New SQLiteCommand
+            mSQLcommand.CommandText = "select * from T_Workflow where ID = (select max(ID) from t_workflow)"
+            mSQLcommand.CommandType = CommandType.Text
+            mSQLcommand.Connection = sqconn
+            mSQLcommand.ExecuteNonQuery()
+            SQLreader = mSQLcommand.ExecuteReader()
+            If SQLreader.HasRows Then
+                workflow = CStr(SQLreader("Workflow"))
+            Else
+                workflow = Nothing
+            End If
+            sqconn.Close()
+        End Using
 
         Return workflow
     End Function
@@ -3640,13 +3640,13 @@ Public Class SqlServerToSQLite
     ''' <param name="chunkSize"></param>
     ''' <remarks></remarks>
     Private Shared Sub CreateMTBCacheTableFromProcInChunks(ByVal paramList As List(Of String), ByVal sprocParam As String, ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler, ByVal StoredProcName As String, ByVal tblNames As List(Of String), ByVal chunkSize As Integer)
-		Dim TblSchema As List(Of TableSchema) = Nothing
+        Dim TblSchema As List(Of TableSchema) = Nothing
         Dim arrayList() As String
         Dim tmpMD_ID_List As String = ""
         Dim counter As Integer = 0
         Dim tblCreated As Boolean = False
 
-		arrayList = MD_ID_List.Split(","c)
+        arrayList = MD_ID_List.Split(","c)
         For i = 0 To arrayList.Count - 1
             If Not String.IsNullOrEmpty(arrayList(i).ToString) Then
                 tmpMD_ID_List += arrayList(i).ToString & ","
@@ -3665,7 +3665,7 @@ Public Class SqlServerToSQLite
                 End If
                 tmpMD_ID_List = ""
             End If
-		Next
+        Next
 
         If tmpMD_ID_List <> "" Then
             If tblCreated = False Then
