@@ -3742,40 +3742,40 @@ Public Class SqlServerToSQLite
             End If
             command.CommandType = CommandType.StoredProcedure
 
-            Dim adapter As SqlDataAdapter = New SqlDataAdapter(command)
-            Dim table As DataTable = New DataTable
-            mDataset = New DataSet
-            mDataset.EnforceConstraints = False
-            adapter.Fill(mDataset)
-            Dim columns As DataColumnCollection
-            Dim column As DataColumn
-            'Dim i As Integer
-            Dim j As Integer
-            For i = 0 To mDataset.Tables.Count - 1
-                If (i >= tblNames.Count) Then
-                    Exit For
-                End If
+            Using adapter As SqlDataAdapter = New SqlDataAdapter(command)
 
-                tblschema = New TableSchema
-                tblcolumnslist = New List(Of ColumnSchema)
-                tblschema.TableName = tblNames(i)
-                table = mDataset.Tables(i)
-                columns = table.Columns
-                For j = 0 To mDataset.Tables(i).Columns().Count - 1
-                    column = mDataset.Tables(i).Columns.Item(j)
-                    tblcolumn = New ColumnSchema
-                    tblcolumn.ColumnName = column.ColumnName.ToString()
-                    tblcolumn.DefaultValue = column.DefaultValue.ToString()
-                    tblcolumn.ColumnType = GetFieldType(column.DataType.ToString())
-                    If String.IsNullOrEmpty(tblcolumn.ColumnType) Then
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "column is empty for : " & column.DataType.ToString())
+                mDataset = New DataSet
+                mDataset.EnforceConstraints = False
+                adapter.Fill(mDataset)
+
+                For i = 0 To mDataset.Tables.Count - 1
+                    If (i >= tblNames.Count) Then
+                        Exit For
                     End If
-                    tblcolumnslist.Add(tblcolumn)
-                Next
-                tblschema.Columns = tblcolumnslist
 
-                res.Add(tblschema)
-            Next
+                    tblschema = New TableSchema
+                    tblcolumnslist = New List(Of ColumnSchema)
+                    tblschema.TableName = tblNames(i)
+                    ' Not used: Dim table As DataTable = mDataset.Tables(i)
+                    ' Not used: Dim columns As DataColumnCollection = table.Columns
+
+                    For j = 0 To mDataset.Tables(i).Columns().Count - 1
+                        Dim column As DataColumn = mDataset.Tables(i).Columns.Item(j)
+                        tblcolumn = New ColumnSchema
+                        tblcolumn.ColumnName = column.ColumnName.ToString()
+                        tblcolumn.DefaultValue = column.DefaultValue.ToString()
+                        tblcolumn.ColumnType = GetFieldType(column.DataType.ToString())
+                        If String.IsNullOrEmpty(tblcolumn.ColumnType) Then
+                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "column is empty for : " & column.DataType.ToString())
+                        End If
+                        tblcolumnslist.Add(tblcolumn)
+                    Next
+                    tblschema.Columns = tblcolumnslist
+
+                    res.Add(tblschema)
+                Next
+
+            End Using
 
         Catch ex As Exception
             Console.WriteLine(ex.Message)
