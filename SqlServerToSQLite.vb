@@ -1084,7 +1084,7 @@ Public Class SqlServerToSQLite
         UpdateProgress(handler, False, True, 0, "Preparing to load plotting data...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Preparing to load plotting data...")
 
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader = Nothing
+        Dim SQLreader As SQLiteDataReader = Nothing
 
         Dim i As Integer = 0
         Try
@@ -1127,38 +1127,41 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Public Shared Function GetSQLiteDataReader(ByVal strSQLQuery As String, sqliteConn As String) As System.Data.SQLite.SQLiteDataReader
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader
-        Dim mSQLconnect As New System.Data.SQLite.SQLiteConnection
-        Dim mSQLcommand As New System.Data.SQLite.SQLiteCommand
+    Public Shared Function GetSQLiteDataReader(ByVal strSQLQuery As String, sqliteConn As String) As SQLiteDataReader
+
+        Dim sqlConnection As SQLiteConnection = Nothing
+
         Try
 
-            mSQLconnect.ConnectionString = sqliteConn
-            mSQLconnect.Open()
+            sqlConnection = New SQLiteConnection(sqliteConn, True)
+            sqlConnection.Open()
 
             ' Turn off Journaling and set Synchronous mode to 0
             ' These changes are required to improve the update speed
 
-            Using SQLcommand As System.Data.SQLite.SQLiteCommand = mSQLconnect.CreateCommand
-                SQLcommand.CommandText = "PRAGMA journal_mode = OFF"
-                SQLcommand.ExecuteNonQuery()
-                SQLcommand.CommandText = "PRAGMA synchronous = 0"
-                SQLcommand.ExecuteNonQuery()
+            Using pragmaCommand As SQLiteCommand = sqlConnection.CreateCommand
+                pragmaCommand.CommandText = "PRAGMA journal_mode = OFF"
+                pragmaCommand.ExecuteNonQuery()
+                pragmaCommand.CommandText = "PRAGMA synchronous = 0"
+                pragmaCommand.ExecuteNonQuery()
             End Using
-            mSQLcommand.CommandTimeout = 300
-            mSQLcommand = mSQLconnect.CreateCommand
-            mSQLcommand.CommandText = strSQLQuery
-            mSQLcommand.Prepare()
-            SQLreader = mSQLcommand.ExecuteReader()
+
+            Dim queryCommand = New SQLiteCommand
+            queryCommand.CommandTimeout = 300
+            queryCommand = sqlConnection.CreateCommand
+            queryCommand.CommandText = strSQLQuery
+            queryCommand.Prepare()
+
+            Dim SQLreader = queryCommand.ExecuteReader()
+            Return SQLreader
 
         Catch ex As Exception
-            If Not mSQLconnect Is Nothing Then
-                mSQLconnect.Close()
+            If Not sqlConnection Is Nothing Then
+                sqlConnection.Close()
             End If
             Throw
         End Try
 
-        Return SQLreader
 
     End Function
 
@@ -3568,7 +3571,7 @@ Public Class SqlServerToSQLite
 
     Private Shared Function GetIndexesFromDb(ByVal sqlitePath As String) As List(Of String)
         Dim indxNames As New List(Of String)
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader
+        Dim SQLreader As SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
         Using sqconn As New SQLiteConnection(sqliteConnString, True)
@@ -3593,7 +3596,7 @@ Public Class SqlServerToSQLite
 
     Private Shared Function GetTablesFromDb(ByVal sqlitePath As String) As List(Of String)
         Dim tblNames As New List(Of String)
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader
+        Dim SQLreader As SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
         Using sqconn As New SQLiteConnection(sqliteConnString, True)
@@ -3617,7 +3620,7 @@ Public Class SqlServerToSQLite
 
     Private Shared Function GetWorkflowFromDb(ByVal sqlitePath As String) As String
         Dim workflow As String
-        Dim SQLreader As System.Data.SQLite.SQLiteDataReader
+        Dim SQLreader As SQLiteDataReader
 
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
         Using sqconn As New SQLiteConnection(sqliteConnString, True)
