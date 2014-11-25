@@ -3752,6 +3752,10 @@ Public Class SqlServerToSQLite
             'Dim i As Integer
             Dim j As Integer
             For i = 0 To mDataset.Tables.Count - 1
+                If (i >= tblNames.Count) Then
+                    Exit For
+                End If
+
                 tblschema = New TableSchema
                 tblcolumnslist = New List(Of ColumnSchema)
                 tblschema.TableName = tblNames(i)
