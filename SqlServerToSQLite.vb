@@ -3069,6 +3069,8 @@ Public Class SqlServerToSQLite
         tblNames.Add("T_Proteins")
         tblNames.Add("T_Mass_Tag_to_Protein_Map")
         tblNames.Add("T_Mass_Tag_Conformers_Observed")
+        tblNames.Add("T_Mass_Tag_Mod_Info")
+        tblNames.Add("T_Mass_Tag_Charge_Stats")
         TblSchema = ReturnTableSchemaFromStoredProc(paramList, Nothing, sqlConnString, tblNames, StoredProcName, MD_ID_List, handler)
 
         CheckCancelled()
@@ -3708,7 +3710,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function ReturnTableSchemaFromStoredProc(ByVal paramList As List(Of String), ByVal sprocParam As String, ByVal connectionString As String, ByVal tblNames As List(Of String), ByVal mStoredProcName As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler) As List(Of TableSchema)
+    Private Shared Function ReturnTableSchemaFromStoredProc(ByVal paramList As IEnumerable(Of String), ByVal sprocParam As String, ByVal connectionString As String, ByVal tblNames As List(Of String), ByVal mStoredProcName As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler) As List(Of TableSchema)
         Dim res As New List(Of TableSchema)
         Dim tblschema As TableSchema
         Dim tblcolumnslist As List(Of ColumnSchema)
@@ -3750,6 +3752,7 @@ Public Class SqlServerToSQLite
 
                 For i = 0 To mDataset.Tables.Count - 1
                     If (i >= tblNames.Count) Then
+                        ' The stored procedure returned more tables than we expected; ignore the remaining one(s)
                         Exit For
                     End If
 
