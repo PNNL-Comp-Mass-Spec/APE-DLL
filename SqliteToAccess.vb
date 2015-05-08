@@ -7,7 +7,6 @@ Imports System.Data.SQLite
 Imports System.Threading
 Imports System.Text.RegularExpressions
 Imports System.IO
-Imports log4net
 Imports System.Data.OleDb
 Imports ADOX
 
