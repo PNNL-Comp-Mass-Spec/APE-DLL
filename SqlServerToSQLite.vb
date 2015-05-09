@@ -4,6 +4,8 @@ Imports System.Text
 Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Data.SQLite
+Imports System.Drawing
+Imports System.Drawing.Imaging
 Imports System.Threading
 Imports System.Text.RegularExpressions
 Imports System.IO
@@ -11,9 +13,6 @@ Imports System.Xml
 Imports RangerLib
 Imports Mage
 Imports ZedGraph
-Imports System.Windows.Forms
-Imports System.Drawing
-Imports System.Drawing.Imaging
 
 ''' <summary>
 ''' This class is responsible to take a single SQL Server database

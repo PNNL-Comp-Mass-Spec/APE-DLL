@@ -56,13 +56,22 @@
     <DocumentationFile>Ape.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Mage">
+      <HintPath>Lib\Mage.dll</HintPath>
+    </Reference>
     <Reference Include="PRISM">
       <HintPath>Lib\PRISM.dll</HintPath>
+    </Reference>
+    <Reference Include="RangerLib">
+      <HintPath>Lib\RangerLib.dll</HintPath>
     </Reference>
     <Reference Include="SQLite.NET">
       <HintPath>Lib\SQLite.NET.dll</HintPath>
@@ -73,6 +82,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -85,6 +97,9 @@
     </Reference>
     <Reference Include="TableFunctions">
       <HintPath>Lib\TableFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="ZedGraph">
+      <HintPath>Lib\ZedGraph.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
