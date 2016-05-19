@@ -4,8 +4,6 @@ Imports System.Text
 Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Data.SQLite
-Imports System.Drawing
-Imports System.Drawing.Imaging
 Imports System.Threading
 Imports System.Text.RegularExpressions
 Imports System.IO
@@ -13,6 +11,8 @@ Imports System.Xml
 Imports RangerLib
 Imports Mage
 Imports ZedGraph
+Imports System.Drawing
+Imports System.Drawing.Imaging
 
 ''' <summary>
 ''' This class is responsible to take a single SQL Server database
@@ -52,7 +52,7 @@ Public Class SqlServerToSQLite
     Public Shared mNewTableName As String
     Public Shared mGroupByText As String
 
-    Public Shared Event ProgressChanged(ByVal TaskDescription As String, ByVal PctComplete As Single)
+    Public Shared Event ProgressChanged(TaskDescription As String, PctComplete As Single)
 
     Enum crosstabFields
         wTable = 0
@@ -129,7 +129,7 @@ Public Class SqlServerToSQLite
     ''' tables to convert</param>
     ''' <remarks>The method continues asynchronously in the background and the caller returned
     ''' immediatly.</remarks>
-    Public Shared Sub ConvertSqlServerToSQLiteDatabase(ByVal sqlServerConnString As String, ByVal sqlitePath As String, ByVal password As String, ByVal handler As SqlConversionHandler, ByVal selectionHandler As SqlTableSelectionHandler, ByVal createTriggers As Boolean)
+    Public Shared Sub ConvertSqlServerToSQLiteDatabase(sqlServerConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -164,7 +164,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub ConvertDatasetToSQLiteFile(ByVal paramList As List(Of String), ByVal dsIndex As Integer, ByVal sqlServerConnString As String, ByVal MDIDList As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub ConvertDatasetToSQLiteFile(paramList As List(Of String), dsIndex As Integer, sqlServerConnString As String, MDIDList As String, sqlitePath As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -195,7 +195,7 @@ Public Class SqlServerToSQLite
     ''' tables to convert</param>
     ''' <remarks>The method continues asynchronously in the background and the caller returned
     ''' immediatly.</remarks>
-    Public Shared Sub ConvertSqlServerToSQLiteDatabaseUI(ByVal sqlServerConnString As String, ByVal sqlitePath As String, ByVal password As String, ByVal handler As SqlConversionHandler, ByVal selectionHandler As SqlTableSelectionHandler, ByVal createTriggers As Boolean)
+    Public Shared Sub ConvertSqlServerToSQLiteDatabaseUI(sqlServerConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -216,7 +216,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
-    Shared Sub Functions(ByVal state As Object)
+    Shared Sub Functions(state As Object)
         Dim result As Boolean
         Try
             _isActive = True
@@ -249,7 +249,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub ConvertDatasetToSQLiteFileUI(ByVal paramList As List(Of String), ByVal dsIndex As Integer, ByVal sqlServerConnString As String, ByVal MDIDList As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub ConvertDatasetToSQLiteFileUI(paramList As List(Of String), dsIndex As Integer, sqlServerConnString As String, MDIDList As String, sqlitePath As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -269,7 +269,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
-    Shared Sub FunctionsNew(ByVal state As Object)
+    Shared Sub FunctionsNew(state As Object)
         Try
             _isActive = True
             ConvertSqlServerDatasetToSQLiteFile(mParamList, mDsIndex, mSqlServerConnString, mMDIDList, mSqlitePath, mHandler)
@@ -293,7 +293,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub StartWorkflowUI(ByVal WorflowStepList As String, ByVal WorkFlow As String, ByVal originalSqlitePath As String, ByVal sqlitePath As String, ByVal CreateResultDb As Boolean, ByVal CompactDb As Boolean, ByVal handler As SqlConversionHandler)
+    Public Shared Sub StartWorkflowUI(WorflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -314,7 +314,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
-    Shared Sub FunctionWF(ByVal state As Object)
+    Shared Sub FunctionWF(state As Object)
         Try
             _isActive = True
             ExecuteWorkflow(mWorflowStepList, mWorkflow, mOriginalSqlitePath, mSqlitePath, mCreateResultDb, mCompactDb, mHandler)
@@ -340,7 +340,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub StartWorkflow(ByVal WorflowStepList As String, ByVal WorkFlow As String, ByVal originalSqlitePath As String, ByVal sqlitePath As String, ByVal CreateResultDb As Boolean, ByVal CompactDb As Boolean, ByVal handler As SqlConversionHandler)
+    Public Shared Sub StartWorkflow(WorflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -369,7 +369,7 @@ Public Class SqlServerToSQLite
     ''' <param name="NewFilename"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub CopyFile(ByVal OriginalFilename As String, ByVal NewFilename As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub CopyFile(OriginalFilename As String, NewFilename As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -387,7 +387,7 @@ Public Class SqlServerToSQLite
 
     End Sub
 
-    Public Shared Sub CompactCacheDatabase(ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub CompactCacheDatabase(sqlitePath As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -406,7 +406,7 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Public Shared Sub CreateIterationTableUI(ByVal Sql As String, ByVal CreateSeparateTable As Boolean, ByVal iterationTableName As String, ByVal newTableName As String, ByVal groupByText As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub CreateIterationTableUI(Sql As String, CreateSeparateTable As Boolean, iterationTableName As String, newTableName As String, groupByText As String, sqlitePath As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -428,7 +428,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
-    Shared Sub FunctionsCIT(ByVal state As Object)
+    Shared Sub FunctionsCIT(state As Object)
         Try
             _isActive = True
             RunCreateIterationTable(mSQL, mCreateSeparateTable, mIterationTblName, mNewTableName, mGroupByText, mSqlitePath, mHandler)
@@ -445,7 +445,7 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Public Shared Sub CreateIterationTable(ByVal Sql As String, ByVal CreateSeparateTable As Boolean, ByVal iterationTableName As String, ByVal newTableName As String, ByVal groupByText As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Public Shared Sub CreateIterationTable(Sql As String, CreateSeparateTable As Boolean, iterationTableName As String, newTableName As String, groupByText As String, sqlitePath As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -479,7 +479,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler">A handler to handle progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler which allows the user to select which tables to 
     ''' convert.</param>
-    Private Shared Function ConvertSqlServerDatabaseToSQLiteFile(ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal password As String, ByVal handler As SqlConversionHandler, ByVal selectionHandler As SqlTableSelectionHandler, ByVal createTriggers As Boolean) As Boolean
+    Private Shared Function ConvertSqlServerDatabaseToSQLiteFile(sqlConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean) As Boolean
         ' Delete the target file if it exists already.
         If Not File.Exists(sqlitePath) Then
             CreateSQLiteDatabaseOnly(sqlitePath)
@@ -513,7 +513,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath">The path to the generated SQLite database file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
     ''' <remarks></remarks>
-    Private Shared Sub ConvertSqlServerDatasetToSQLiteFile(ByVal paramList As List(Of String), ByVal dsIndex As Integer, ByVal sqlConnString As String, ByVal IDList As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub ConvertSqlServerDatasetToSQLiteFile(paramList As List(Of String), dsIndex As Integer, sqlConnString As String, IDList As String, sqlitePath As String, handler As SqlConversionHandler)
         ' Delete the target file if it exists already.
         'If File.Exists(sqlitePath) Then
         '	File.Delete(sqlitePath)
@@ -552,7 +552,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub ExecuteWorkflow(ByVal WorkflowStepList As String, ByVal Workflow As String, ByVal originalSqlitePath As String, ByVal sqlitePath As String, ByVal mCreateResultDb As Boolean, ByVal CompactDb As Boolean, ByVal handler As SqlConversionHandler)
+    Private Shared Sub ExecuteWorkflow(WorkflowStepList As String, Workflow As String, originalSqlitePath As String, sqlitePath As String, mCreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
         If mCreateResultDb Then
             PerformCopyFile(originalSqlitePath, sqlitePath, handler)
         End If
@@ -687,7 +687,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub RunCreateIterationTable(ByVal Sql As String, ByVal CreateSeparateTable As Boolean, ByVal iterationTblName As String, ByVal newTblName As String, ByVal groupByText As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub RunCreateIterationTable(Sql As String, CreateSeparateTable As Boolean, iterationTblName As String, newTblName As String, groupByText As String, sqlitePath As String, handler As SqlConversionHandler)
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
 
         ' Create the iteration table
@@ -702,7 +702,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CompactSQLiteDatabase(ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CompactSQLiteDatabase(sqlitePath As String, handler As SqlConversionHandler)
         Dim sql As String
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
 
@@ -736,7 +736,7 @@ Public Class SqlServerToSQLite
     ''' <param name="newFile"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub PerformCopyFile(ByVal originalFile As String, ByVal newFile As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub PerformCopyFile(originalFile As String, newFile As String, handler As SqlConversionHandler)
         UpdateProgress(handler, False, True, 0, "Creating File: " & newFile)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Creating File: " & newFile)
 
@@ -749,7 +749,7 @@ Public Class SqlServerToSQLite
 
     End Sub
 
-    Private Shared Sub CBoolSafe(ByVal strStepNumber As String, ByVal strValueName As String, ByVal strValue As String, ByRef blnValue As Boolean)
+    Private Shared Sub CBoolSafe(strStepNumber As String, strValueName As String, strValue As String, ByRef blnValue As Boolean)
 
         If String.IsNullOrEmpty(strValue) Then
             blnValue = False
@@ -769,7 +769,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub RunWorkflow(ByVal stepsToRun As SortedSet(Of Integer), ByVal workflowTotalSteps As Integer, ByVal Workflow As List(Of clsXMLStepSchema), ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub RunWorkflow(stepsToRun As SortedSet(Of Integer), workflowTotalSteps As Integer, Workflow As List(Of clsXMLStepSchema), sqlitePath As String, handler As SqlConversionHandler)
         Dim sql, src As String
         Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
         Dim startStep, endStep As Integer
@@ -1078,7 +1078,7 @@ Public Class SqlServerToSQLite
 
     End Sub
 
-    Private Shared Sub GetSQLiteData(ByVal sqlText As String, ByRef labels() As String, ByRef x As Double(), ByRef List As PointPairList, ByVal plotType As String, sqliteConn As String, handler As SqlConversionHandler)
+    Private Shared Sub GetSQLiteData(sqlText As String, ByRef labels() As String, ByRef x As Double(), ByRef List As PointPairList, plotType As String, sqliteConn As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to load plotting data...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Preparing to load plotting data...")
@@ -1126,7 +1126,7 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Public Shared Function GetSQLiteDataReader(ByVal strSQLQuery As String, sqliteConn As String) As SQLiteDataReader
+    Public Shared Function GetSQLiteDataReader(strSQLQuery As String, sqliteConn As String) As SQLiteDataReader
 
         Dim sqlConnection As SQLiteConnection = Nothing
 
@@ -1201,49 +1201,48 @@ Public Class SqlServerToSQLite
 
     End Sub
 
-    Public Delegate Sub MessageHandler(ByVal message As String)
-    Public Delegate Sub CompletionStateUpdated(ByVal status As Object)
+    Public Delegate Sub MessageHandler(message As String)
+    Public Delegate Sub CompletionStateUpdated(status As Object)
 
     'Public Delegate Sub SqlConversionHandler(ByVal done As Boolean, ByVal success As Boolean, ByVal percent As Integer, ByVal msg As String)
 
-    ''' <summary>
-    ''' handle the status update messages from the currently running pipeline
-    ''' </summary>
-    ''' <param name="sender">(ignored))</param>
-    ''' <param name="args">(ignored)</param>
-    Public Sub HandleStatusMessageUpdated(ByVal sender As Object, ByVal args As MageStatusEventArgs)
-        ' the current pipleline will call this function from its own thread
-        ' we need to do the cross-thread thing to update the GUI
-        Dim ncb As MessageHandler = AddressOf SetStatusMessage
-        'Invoke(ncb, New Object() {args.Message})
+    '' <summary>
+    '' handle the status update messages from the currently running pipeline
+    '' </summary>
+    '' <param name="sender">(ignored))</param>
+    'Public Sub HandleStatusMessageUpdated(sender As Object, e As MageStatusEventArgs)
+    '    ' the current pipeline will call this function from its own thread
+    '    ' we need to do the cross-thread thing to update the GUI
+    '    Dim ncb As MessageHandler = AddressOf SetStatusMessage
+    '    'Invoke(ncb, New Object() {e.Message})
 
-    End Sub
+    'End Sub
 
-    ''' <summary>
-    ''' handle the status completion message from the currently running pipeline
-    ''' </summary>
-    ''' <param name="sender">(ignored)</param>
-    ''' <param name="args">Contains status information to be displayed</param>
-    Private Sub HandlePipelineCompletion(ByVal sender As Object, ByVal args As MageStatusEventArgs)
-        ' pipeline didn't blow up, make nice reassuring message
-        If String.IsNullOrEmpty(args.Message) Then
-            args.Message = "Process completed normally"
-        End If
+    '' <summary>
+    '' handle the status completion message from the currently running pipeline
+    '' </summary>
+    '' <param name="sender">(ignored)</param>
+    '' <param name="args">Contains status information to be displayed</param>
+    'Private Sub HandlePipelineCompletion(sender As Object, args As MageStatusEventArgs)
+    '    ' pipeline didn't blow up, make nice reassuring message
+    '    If String.IsNullOrEmpty(args.Message) Then
+    '        args.Message = "Process completed normally"
+    '    End If
 
-        ' the current pipleline will call this function from its own thread
-        ' we need to do the cross-thread thing to update the GUI
-        Dim ncb As MessageHandler = AddressOf SetStatusMessage
-        'Invoke(ncb, New Object() {args.Message})
-    End Sub
+    '    ' the current pipleline will call this function from its own thread
+    '    ' we need to do the cross-thread thing to update the GUI
+    '    Dim ncb As MessageHandler = AddressOf SetStatusMessage
+    '    'Invoke(ncb, New Object() {args.Message})
+    'End Sub
 
     ' this is targeted by the cross-thread invoke from HandleStatusMessageUpdated
     ' and update the message status display
-    Private Sub SetStatusMessage(ByVal Message As String)
+    Private Sub SetStatusMessage(Message As String)
         'StatusCtl.Text = Message
     End Sub
 
 
-    Private Shared Sub RunCreateIterationTable(ByVal sql As String, ByVal tname As String, ByVal conn As SQLiteConnection, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub RunCreateIterationTable(sql As String, tname As String, conn As SQLiteConnection, sqlitePath As String, handler As SqlConversionHandler)
         Dim IterationTables As String()
         Dim CreateSeparateTable As Boolean
         Dim SelectSQL As String = ""
@@ -1262,7 +1261,7 @@ Public Class SqlServerToSQLite
         RunIterationTable(SelectSQL, CreateSeparateTable, IterationTableName, tname, GroupByText, sqlitePath, Nothing, handler)
     End Sub
 
-    Private Shared Sub RunIterationTable(ByVal SQL As String, ByVal CreateSeparateTable As Boolean, ByVal iterationTableName As String, ByVal newTblName As String, ByVal groupByText As String, ByVal sqlitePath As String, ByVal password As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub RunIterationTable(SQL As String, CreateSeparateTable As Boolean, iterationTableName As String, newTblName As String, groupByText As String, sqlitePath As String, password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -1374,7 +1373,7 @@ Public Class SqlServerToSQLite
         End Using
     End Sub
 
-    Private Shared Sub RunCreateDataTableFromFunctionList(ByVal sql As String, ByVal tname As String, ByVal conn As SQLiteConnection, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub RunCreateDataTableFromFunctionList(sql As String, tname As String, conn As SQLiteConnection, sqlitePath As String, handler As SqlConversionHandler)
         If Not String.IsNullOrEmpty(Trim(tname)) Then
             Dim lsTs = CreateSqliteFunctionTableSchema(Split(sql, vbCrLf), tname)
 
@@ -1390,7 +1389,7 @@ Public Class SqlServerToSQLite
         End If
     End Sub
 
-    Private Shared Sub CopySQLiteDBRowsToSQliteDB(ByVal fldDefinitionList As Dictionary(Of String, String), ByVal sourceTblName As String, ByVal functionList As List(Of TableFunctions.SingleReturnFunction), ByVal slconn As SQLiteConnection, ByVal schema As List(Of TableSchema), ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CopySQLiteDBRowsToSQliteDB(fldDefinitionList As Dictionary(Of String, String), sourceTblName As String, functionList As List(Of TableFunctions.SingleReturnFunction), slconn As SQLiteConnection, schema As List(Of TableSchema), sqlitePath As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -1489,7 +1488,7 @@ Public Class SqlServerToSQLite
         End Using
     End Sub
 
-    Private Shared Function BuildSqliteCustomTableQuery(ByVal tblNameOverride As String, ByVal colList As Dictionary(Of String, String)) As String
+    Private Shared Function BuildSqliteCustomTableQuery(tblNameOverride As String, colList As Dictionary(Of String, String)) As String
         Dim sb As New StringBuilder()
         Dim fldFldType As String()
         Dim i As Integer
@@ -1508,7 +1507,7 @@ Public Class SqlServerToSQLite
         Return sb.ToString()
     End Function
 
-    Private Shared Function BuildDataRow(ByVal fldDefList As Dictionary(Of String, String)) As DataRow
+    Private Shared Function BuildDataRow(fldDefList As Dictionary(Of String, String)) As DataRow
         Dim tbl As DataTable = New DataTable("TempDb")
         Dim dr As DataRow
         Dim fldFldType As String()
@@ -1538,7 +1537,7 @@ Public Class SqlServerToSQLite
         Return dr
     End Function
 
-    Private Shared Function GetSQLiteStringColumnType(ByVal dataType As String) As String
+    Private Shared Function GetSQLiteStringColumnType(dataType As String) As String
 
         If dataType.ToLower = "integer" Then
             dataType = "System.Int64"
@@ -1576,7 +1575,7 @@ Public Class SqlServerToSQLite
 
     End Function
 
-    Private Shared Sub CreateSQLiteTables(ByVal conn As SQLiteConnection, ByVal schema As List(Of TableSchema), ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateSQLiteTables(conn As SQLiteConnection, schema As List(Of TableSchema), handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite tables...")
 
         ' Create all tables in the new database
@@ -1600,7 +1599,7 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Private Shared Function CreateSqliteFunctionTableSchema(ByVal selectCommandList() As String, ByVal NewTableName As String) As List(Of TableSchema)
+    Private Shared Function CreateSqliteFunctionTableSchema(selectCommandList() As String, NewTableName As String) As List(Of TableSchema)
         Dim tables As New List(Of TableSchema)()
         Dim res As New TableSchema()
         Dim FieldFieldType As String()
@@ -1704,7 +1703,7 @@ Public Class SqlServerToSQLite
 
     End Function
 
-    Private Shared Function GetStringColumnType(ByVal dataType As String) As String
+    Private Shared Function GetStringColumnType(dataType As String) As String
 
         If dataType.ToLower = "system.int32" Then
             dataType = "integer"
@@ -1768,7 +1767,7 @@ Public Class SqlServerToSQLite
 
     End Sub
 
-    Private Shared Function CheckForExistingIndex(ByVal sql As String, ByVal indxList As List(Of String)) As String
+    Private Shared Function CheckForExistingIndex(sql As String, indxList As List(Of String)) As String
         Dim IndexName As String = String.Empty
         Dim sqlLines As String()
         If Not String.IsNullOrEmpty(sql.Trim) Then
@@ -1802,7 +1801,7 @@ Public Class SqlServerToSQLite
     ''' <param name="pivotDefinition"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function BuildCrosstabTableQuery(ByVal connString As String, ByVal pivotDefinition As String) As String
+    Private Shared Function BuildCrosstabTableQuery(connString As String, pivotDefinition As String) As String
         Dim valueField As String = String.Empty
         Dim colHeading As String = String.Empty
         Dim Table As String = String.Empty
@@ -1899,7 +1898,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateMTSCacheIndex(ByVal tableName As String, ByVal fieldNames As String, ByVal indexName As String, ByVal sqlitePath As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateMTSCacheIndex(tableName As String, fieldNames As String, indexName As String, sqlitePath As String, handler As SqlConversionHandler)
         UpdateProgress(handler, False, True, 0, "Creating Index " & indexName & " for table: " & tableName)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating Index " & indexName & " for table: " & tableName)
 
@@ -1928,7 +1927,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL Server database.</param>
     ''' <param name="password">The password to use for encrypting the file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    Private Shared Sub CopyTableRowsToSQLiteDB(ByVal ds As DataSet, ByVal sqlitePath As String, ByVal schema As List(Of TableSchema), ByVal password As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CopyTableRowsToSQLiteDB(ds As DataSet, sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -2012,7 +2011,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL Server database.</param>
     ''' <param name="password">The password to use for encrypting the file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    Private Shared Sub CopySqlServerRowsToSQLiteDB(ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal schema As List(Of TableSchema), ByVal password As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CopySqlServerRowsToSQLiteDB(sqlConnString As String, sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -2080,7 +2079,7 @@ Public Class SqlServerToSQLite
         End Using
     End Sub
 
-    Private Shared Function ReadWorkflow(ByVal XmlDocument As String, ByVal xmlDocumentType As Integer, ByVal ViewOnly As Boolean) As List(Of clsXMLStepSchema)
+    Private Shared Function ReadWorkflow(XmlDocument As String, xmlDocumentType As Integer, ViewOnly As Boolean) As List(Of clsXMLStepSchema)
 
         Dim xmlReader As Xml.XmlTextReader = Nothing
         Dim workflow As New List(Of clsXMLStepSchema)
@@ -2154,7 +2153,7 @@ Public Class SqlServerToSQLite
     ''' <param name="val">The value object</param>
     ''' <param name="columnSchema">The corresponding column schema</param>
     ''' <returns>SQLite adjusted value.</returns>
-    Private Shared Function CastValueForColumn(ByVal val As Object, ByVal columnSchema As ColumnSchema) As Object
+    Private Shared Function CastValueForColumn(val As Object, columnSchema As ColumnSchema) As Object
         If TypeOf val Is DBNull Then
             Return Nothing
         End If
@@ -2251,7 +2250,7 @@ Public Class SqlServerToSQLite
     ''' <param name="ts">The table schema object for the table.</param>
     ''' <param name="columnDataTypes">Output list: data type of each column</param>
     ''' <returns>A command object with the required functionality.</returns>
-    Private Shared Function BuildSQLiteInsert(ByVal ts As TableSchema, ByRef columnDataTypes As List(Of DbType)) As SQLiteCommand
+    Private Shared Function BuildSQLiteInsert(ts As TableSchema, ByRef columnDataTypes As List(Of DbType)) As SQLiteCommand
         Dim res As New SQLiteCommand()
 
         Dim sb As New StringBuilder()
@@ -2298,7 +2297,7 @@ Public Class SqlServerToSQLite
     ''' <param name="str">The name to change if necessary</param>
     ''' <param name="names">Used to avoid duplicate names</param>
     ''' <returns>A normalized name</returns>
-    Private Shared Function GetNormalizedName(ByVal str As String, ByVal names As List(Of String)) As String
+    Private Shared Function GetNormalizedName(str As String, names As List(Of String)) As String
         Dim sb As New StringBuilder()
         For i As Integer = 0 To str.Length - 1
             If [Char].IsLetterOrDigit(str(i)) OrElse str(i) = "_"c Then
@@ -2321,7 +2320,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="cs">The column schema to use for the match</param>
     ''' <returns>The matched DB type</returns>
-    Private Shared Function GetDbTypeOfColumn(ByVal cs As ColumnSchema) As DbType
+    Private Shared Function GetDbTypeOfColumn(cs As ColumnSchema) As DbType
         If cs.ColumnType = "tinyint" Then
             Return DbType.[Byte]
         End If
@@ -2384,7 +2383,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="ts">The table schema of the table for which we need the query.</param>
     ''' <returns>The SELECT query for the table.</returns>
-    Private Shared Function BuildSqlServerTableQuery(ByVal ts As TableSchema) As String
+    Private Shared Function BuildSqlServerTableQuery(ts As TableSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("SELECT ")
         For i As Integer = 0 To ts.Columns.Count - 1
@@ -2405,7 +2404,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="password">The password to use for encrypting the DB or null if non is needed.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
-    Private Shared Sub CreateSQLiteDatabase(ByVal sqlitePath As String, ByVal schema As List(Of TableSchema), ByVal password As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateSQLiteDatabase(sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite database...")
 
         ' Create the SQLite database file
@@ -2443,7 +2442,7 @@ Public Class SqlServerToSQLite
     ''' Creates the SQLite database from the schema read from the SQL Server.
     ''' </summary>
     ''' <param name="sqlitePath">The path to the generated DB file.</param>
-    Private Shared Sub CreateSQLiteDatabaseOnly(ByVal sqlitePath As String)
+    Private Shared Sub CreateSQLiteDatabaseOnly(sqlitePath As String)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite database...")
 
         ' Create the SQLite database file if it doesn't exist
@@ -2462,7 +2461,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="password">The password to use for encrypting the DB or null if non is needed.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
-    Private Shared Sub AddSchemaToSQLiteDatabase(ByVal sqlitePath As String, ByVal schema As List(Of TableSchema), ByVal password As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub AddSchemaToSQLiteDatabase(sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
 
         ' Connect to the newly created database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, password)
@@ -2496,7 +2495,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="conn">The SQLite connection</param>
     ''' <param name="dt">The table schema object for the table to be generated.</param>
-    Private Shared Sub AddSQLiteTable(ByVal conn As SQLiteConnection, ByVal dt As TableSchema)
+    Private Shared Sub AddSQLiteTable(conn As SQLiteConnection, dt As TableSchema)
         ' Prepare a CREATE TABLE DDL statement
         Dim stmt As String = BuildCreateTableQuery(dt)
 
@@ -2513,7 +2512,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="ts">The table schema object from which to create the SQL statement.</param>
     ''' <returns>CREATE TABLE DDL for the specified table.</returns>
-    Private Shared Function BuildCreateTableQuery(ByVal ts As TableSchema) As String
+    Private Shared Function BuildCreateTableQuery(ts As TableSchema) As String
         Dim sb As New StringBuilder()
 
         sb.Append("CREATE TABLE [" & ts.TableName & "] (" & vbLf)
@@ -2566,7 +2565,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tableName">The name of the indexed table.</param>
     ''' <param name="indexSchema">The schema of the index object</param>
     ''' <returns>A CREATE INDEX DDL (SQLite format).</returns>
-    Private Shared Function BuildCreateIndex(ByVal tableName As String, ByVal indexSchema As IndexSchema) As String
+    Private Shared Function BuildCreateIndex(tableName As String, indexSchema As IndexSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("CREATE ")
         If indexSchema.IsUnique Then
@@ -2596,7 +2595,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="col">The column schema</param>
     ''' <returns>A single column line to be inserted into the general CREATE TABLE DDL statement</returns>
-    Private Shared Function BuildColumnStatement(ByVal col As ColumnSchema, ByVal ts As TableSchema, ByRef pkey As Boolean) As String
+    Private Shared Function BuildColumnStatement(col As ColumnSchema, ts As TableSchema, ByRef pkey As Boolean) As String
         Dim sb As New StringBuilder()
         sb.Append(vbTab & """" & col.ColumnName & """" & vbTab & vbTab)
 
@@ -2638,7 +2637,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="value">The value.</param>
     ''' <returns></returns>
-    Private Shared Function DiscardNational(ByVal value As String) As String
+    Private Shared Function DiscardNational(value As String) As String
         Dim rx As New Regex("N\'([^\']*)\'")
         Dim m As Match = rx.Match(value)
         If m.Success Then
@@ -2653,7 +2652,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="value"></param>
     ''' <returns></returns>
-    Private Shared Function IsValidDefaultValue(ByVal value As String) As Boolean
+    Private Shared Function IsValidDefaultValue(value As String) As Boolean
         If IsSingleQuoted(value) Then
             Return True
         End If
@@ -2671,7 +2670,7 @@ Public Class SqlServerToSQLite
     ''' <param name="value"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function IsSingleQuoted(ByVal value As String) As Boolean
+    Private Shared Function IsSingleQuoted(value As String) As Boolean
         value = value.Trim()
         If value.StartsWith("'") AndAlso value.EndsWith("'") Then
             Return True
@@ -2684,7 +2683,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="value">The string to strip</param>
     ''' <returns>The stripped string</returns>
-    Private Shared Function StripParens(ByVal value As String) As String
+    Private Shared Function StripParens(value As String) As String
         Dim rx As New Regex("\(([^\)]*)\)")
         Dim m As Match = rx.Match(value)
         If Not m.Success Then
@@ -2702,7 +2701,7 @@ Public Class SqlServerToSQLite
     ''' <param name="selectionHandler">The selection handler which allows the user to select 
     ''' which tables to convert.</param>
     ''' <returns>List of table schema objects for every table in the SQL Server database.</returns>
-    Private Shared Function ReadSqlServerSchema(ByVal connString As String, ByVal handler As SqlConversionHandler, ByVal selectionHandler As SqlTableSelectionHandler) As List(Of TableSchema)
+    Private Shared Function ReadSqlServerSchema(connString As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As List(Of TableSchema)
         ' First step is to read the names of all tables in the database
         Dim tables As New List(Of TableSchema)()
         Using conn As New SqlConnection(connString)
@@ -2765,7 +2764,7 @@ Public Class SqlServerToSQLite
     ''' <param name="conn">The SQL Server connection to use</param>
     ''' <param name="tableName">The name of the table for which we wants to create the table schema.</param>
     ''' <returns>A table schema object that represents our knowledge of the table schema</returns>
-    Private Shared Function CreateTableSchema(ByVal conn As SqlConnection, ByVal tableName As String) As TableSchema
+    Private Shared Function CreateTableSchema(conn As SqlConnection, tableName As String) As TableSchema
         Dim res As New TableSchema()
         res.TableName = tableName
         res.Columns = New List(Of ColumnSchema)()
@@ -2932,7 +2931,7 @@ Public Class SqlServerToSQLite
     ''' <param name="MD_ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateViperResultsCacheDatabase(ByVal paramList As List(Of String), ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateViperResultsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
 
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
@@ -3083,7 +3082,7 @@ Public Class SqlServerToSQLite
     ''' <param name="MD_ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateAMTTagDbsAllCacheDatabase(ByVal paramList As List(Of String), ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateAMTTagDbsAllCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3163,7 +3162,7 @@ Public Class SqlServerToSQLite
     ''' <param name="MD_ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateAMTTagDbsJobsCacheDatabase(ByVal paramList As List(Of String), ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateAMTTagDbsJobsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3225,7 +3224,7 @@ Public Class SqlServerToSQLite
 
 
     '************
-    Private Shared Sub CreateIMPROVDbsCacheDatabase(ByVal paramList As List(Of String), ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateIMPROVDbsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3326,7 +3325,7 @@ Public Class SqlServerToSQLite
     ''' <param name="ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreatePTDbsCacheDatabase(ByVal paramList As List(Of String), ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreatePTDbsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3568,7 +3567,7 @@ Public Class SqlServerToSQLite
 
 
 
-    Private Shared Function GetIndexesFromDb(ByVal sqlitePath As String) As List(Of String)
+    Private Shared Function GetIndexesFromDb(sqlitePath As String) As List(Of String)
         Dim indxNames As New List(Of String)
         Dim SQLreader As SQLiteDataReader
 
@@ -3593,7 +3592,7 @@ Public Class SqlServerToSQLite
         Return indxNames
     End Function
 
-    Private Shared Function GetTablesFromDb(ByVal sqlitePath As String) As List(Of String)
+    Private Shared Function GetTablesFromDb(sqlitePath As String) As List(Of String)
         Dim tblNames As New List(Of String)
         Dim SQLreader As SQLiteDataReader
 
@@ -3617,7 +3616,7 @@ Public Class SqlServerToSQLite
         Return tblNames
     End Function
 
-    Private Shared Function GetWorkflowFromDb(ByVal sqlitePath As String) As String
+    Private Shared Function GetWorkflowFromDb(sqlitePath As String) As String
         Dim workflow As String
         Dim SQLreader As SQLiteDataReader
 
@@ -3642,7 +3641,7 @@ Public Class SqlServerToSQLite
         Return workflow
     End Function
 
-    Private Shared Function GetWorkflowFromFile(ByVal workflowPath As String) As String
+    Private Shared Function GetWorkflowFromFile(workflowPath As String) As String
         Dim workflow As String = String.Empty
         Dim line As String = String.Empty
         Dim sr As StreamReader = New StreamReader(workflowPath)
@@ -3669,7 +3668,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tblNames"></param>
     ''' <param name="chunkSize"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateMTBCacheTableFromProcInChunks(ByVal paramList As List(Of String), ByVal sprocParam As String, ByVal sqlConnString As String, ByVal sqlitePath As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler, ByVal StoredProcName As String, ByVal tblNames As List(Of String), ByVal chunkSize As Integer)
+    Private Shared Sub CreateMTBCacheTableFromProcInChunks(paramList As List(Of String), sprocParam As String, sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler, StoredProcName As String, tblNames As List(Of String), chunkSize As Integer)
         Dim TblSchema As List(Of TableSchema) = Nothing
         Dim arrayList() As String
         Dim tmpMD_ID_List As String = ""
@@ -3718,7 +3717,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tmpTblSchema"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateMTBCacheTableFromProc(ByVal sqlitePath As String, ByVal tmpTblSchema As List(Of TableSchema), ByVal handler As SqlConversionHandler)
+    Private Shared Sub CreateMTBCacheTableFromProc(sqlitePath As String, tmpTblSchema As List(Of TableSchema), handler As SqlConversionHandler)
         Dim password As String = Nothing
 
         ' Create the SQLite database and apply the schema
@@ -3740,7 +3739,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function ReturnTableSchemaFromStoredProc(ByVal paramList As IEnumerable(Of String), ByVal sprocParam As String, ByVal connectionString As String, ByVal tblNames As List(Of String), ByVal mStoredProcName As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler) As List(Of TableSchema)
+    Private Shared Function ReturnTableSchemaFromStoredProc(paramList As IEnumerable(Of String), sprocParam As String, connectionString As String, tblNames As List(Of String), mStoredProcName As String, MD_ID_List As String, handler As SqlConversionHandler) As List(Of TableSchema)
         Dim res As New List(Of TableSchema)
         Dim tblschema As TableSchema
         Dim tblcolumnslist As List(Of ColumnSchema)
@@ -3821,7 +3820,7 @@ Public Class SqlServerToSQLite
 
     End Function
 
-    Private Shared Function GetDbType(ByVal dataType As String) As SqlDbType
+    Private Shared Function GetDbType(dataType As String) As SqlDbType
 
         Select Case dataType.ToLower
             Case "sqldbtype.varchar"
@@ -3860,7 +3859,7 @@ Public Class SqlServerToSQLite
     ''' <param name="MD_ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub GetAdditionalRecordsFromStoredProc(ByVal connectionString As String, ByVal mStoredProcName As String, ByVal MD_ID_List As String, ByVal handler As SqlConversionHandler)
+    Private Shared Sub GetAdditionalRecordsFromStoredProc(connectionString As String, mStoredProcName As String, MD_ID_List As String, handler As SqlConversionHandler)
         Dim res As New List(Of TableSchema)
         Dim connection As SqlConnection = New SqlConnection(connectionString)
         Dim myMessage As String = ""
@@ -3897,7 +3896,7 @@ Public Class SqlServerToSQLite
     ''' <param name="dataType"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function GetFieldType(ByVal dataType As String) As String
+    Private Shared Function GetFieldType(dataType As String) As String
         If dataType = "System.Int32" Then
             Return "int"
         End If
@@ -3935,7 +3934,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tableName"></param>
     ''' <param name="fieldName"></param>
     ''' <remarks></remarks>
-    Private Shared Sub ValidateSQLiteDataType(ByVal dataType As String, ByVal tableName As String, ByVal fieldName As String)
+    Private Shared Sub ValidateSQLiteDataType(dataType As String, tableName As String, fieldName As String)
         dataType = dataType.ToLower
         If dataType = "datetime" OrElse dataType = "numeric" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "integer" OrElse dataType = "text" OrElse dataType = "char" OrElse dataType = "smallint" OrElse dataType = "double" OrElse dataType = "varchar" Then
             Exit Sub
@@ -3951,7 +3950,7 @@ Public Class SqlServerToSQLite
     ''' an exception.
     ''' </summary>
     ''' <param name="dataType">The datatype to validate.</param>
-    Private Shared Sub ValidateDataType(ByVal dataType As String)
+    Private Shared Sub ValidateDataType(dataType As String)
         If dataType = "int" OrElse dataType = "smallint" OrElse dataType = "bit" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "nvarchar" OrElse dataType = "varchar" OrElse dataType = "timestamp" OrElse dataType = "varbinary" OrElse dataType = "image" OrElse dataType = "text" OrElse dataType = "ntext" OrElse dataType = "bigint" OrElse dataType = "char" OrElse dataType = "numeric" OrElse dataType = "binary" OrElse dataType = "smalldatetime" OrElse dataType = "smallmoney" OrElse dataType = "money" OrElse dataType = "tinyint" OrElse dataType = "uniqueidentifier" OrElse dataType = "xml" OrElse dataType = "sql_variant" OrElse dataType = "decimal" OrElse dataType = "nchar" OrElse dataType = "datetime" Then
             Exit Sub
         End If
@@ -3964,7 +3963,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="colDefault">The original default value string (as read from SQL Server).</param>
     ''' <returns>Adjusted DEFAULT value string (for SQLite)</returns>
-    Private Shared Function FixDefaultValueString(ByVal colDefault As String) As String
+    Private Shared Function FixDefaultValueString(colDefault As String) As String
         Dim replaced As Boolean = False
         Dim res As String = colDefault.Trim()
 
@@ -4005,7 +4004,7 @@ Public Class SqlServerToSQLite
     ''' <param name="desc">The description of the index</param>
     ''' <param name="keys">Key columns that are part of the index.</param>
     ''' <returns>An index schema object that represents our knowledge of the index</returns>
-    Private Shared Function BuildIndexSchema(ByVal indexName As String, ByVal desc As String, ByVal keys As String) As IndexSchema
+    Private Shared Function BuildIndexSchema(indexName As String, desc As String, keys As String) As IndexSchema
         Dim res As New IndexSchema()
         res.IndexName = indexName
 
@@ -4047,7 +4046,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="val">The value to adjust</param>
     ''' <returns>Adjusted DEFAULT value string</returns>
-    Private Shared Function AdjustDefaultValue(ByVal val As String) As String
+    Private Shared Function AdjustDefaultValue(val As String) As String
         If val Is Nothing OrElse val = String.Empty Then
             Return val
         End If
@@ -4064,7 +4063,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="sqlitePath">The path to the SQLite database file.</param>
     ''' <returns>SQLite connection string</returns>
-    Private Shared Function CreateSQLiteConnectionString(ByVal sqlitePath As String, ByVal password As String) As String
+    Private Shared Function CreateSQLiteConnectionString(sqlitePath As String, password As String) As String
         Dim builder As New SQLiteConnectionStringBuilder()
         builder.DataSource = sqlitePath
         If password IsNot Nothing Then
@@ -4077,7 +4076,7 @@ Public Class SqlServerToSQLite
         Return connstring
     End Function
 
-    Protected Shared Sub UpdateProgress(ByRef handler As SqlConversionHandler, ByVal done As Boolean, ByVal success As Boolean, ByVal percent As Integer, ByVal msg As String)
+    Protected Shared Sub UpdateProgress(ByRef handler As SqlConversionHandler, done As Boolean, success As Boolean, percent As Integer, msg As String)
 
         If Not handler Is Nothing Then
             ' Call the delegate function
@@ -4107,7 +4106,7 @@ End Class
 ''' <param name="success">TRUE indicates that the current step finished successfully.</param>
 ''' <param name="percent">Progress percent (0-100)</param>
 ''' <param name="msg">A message that accompanies the progress.</param>
-Public Delegate Sub SqlConversionHandler(ByVal done As Boolean, ByVal success As Boolean, ByVal percent As Integer, ByVal msg As String)
+Public Delegate Sub SqlConversionHandler(done As Boolean, success As Boolean, percent As Integer, msg As String)
 
 ''' <summary>
 ''' This handler allows the user to change which tables get converted from SQL Server
@@ -4115,7 +4114,7 @@ Public Delegate Sub SqlConversionHandler(ByVal done As Boolean, ByVal success As
 ''' </summary>
 ''' <param name="schema">The original SQL Server DB schema</param>
 ''' <returns>The same schema minus any table we don't want to convert.</returns>
-Public Delegate Function SqlTableSelectionHandler(ByVal schema As List(Of TableSchema)) As List(Of TableSchema)
+Public Delegate Function SqlTableSelectionHandler(schema As List(Of TableSchema)) As List(Of TableSchema)
 
 ''' <summary>
 ''' This handler is called whenever a progress is made in the conversion process.
@@ -4124,4 +4123,4 @@ Public Delegate Function SqlTableSelectionHandler(ByVal schema As List(Of TableS
 ''' <param name="success">TRUE indicates that the current step finished successfully.</param>
 ''' <param name="percent">Progress percent (0-100)</param>
 ''' <param name="msg">A message that accompanies the progress.</param>
-Public Delegate Sub SqlQueryHandler(ByVal done As Boolean, ByVal success As Boolean, ByVal percent As Integer, ByVal msg As String)
+Public Delegate Sub SqlQueryHandler(done As Boolean, success As Boolean, percent As Integer, msg As String)

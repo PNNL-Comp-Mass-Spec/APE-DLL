@@ -7,8 +7,8 @@
 ' Last modified 05/14/2009
 '						05/15/2009 (DAC) - Modified logging to use Log4Net
 '*********************************************************************************************************
-Imports System.Collections.Generic
 Imports log4net
+Imports System.Collections.Generic
 
 'This assembly attribute tells Log4Net where to find the config file
 <Assembly: log4net.Config.XmlConfigurator(ConfigFile:="Logging.config", Watch:=True)> 
@@ -70,7 +70,7 @@ Public Class clsLogTools
     ''' <param name="LogLevel">Level of log reporting</param>
     ''' <param name="InpMsg">Message to be logged</param>
     ''' <remarks></remarks>
-    Public Shared Sub WriteLog(ByVal LoggerType As LoggerTypes, ByVal LogLevel As LogLevels, ByVal InpMsg As String)
+    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String)
 
         Dim MyLogger As ILog
 
@@ -116,8 +116,8 @@ Public Class clsLogTools
     ''' <param name="InpMsg">Message to be logged</param>
     ''' <param name="Ex">Exception to be logged</param>
     ''' <remarks></remarks>
-    Public Shared Sub WriteLog(ByVal LoggerType As LoggerTypes, ByVal LogLevel As LogLevels, ByVal InpMsg As String, _
-     ByVal Ex As Exception)
+    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String, _
+     Ex As Exception)
 
         Dim MyLogger As ILog
 
@@ -155,7 +155,7 @@ Public Class clsLogTools
     ''' </summary>
     ''' <param name="FileName">Log file base name and path (relative to program folder)</param>
     ''' <remarks></remarks>
-    Public Shared Sub ChangeLogFileName(ByVal FileName As String)
+    Public Shared Sub ChangeLogFileName(FileName As String)
 
         'Get a list of appenders
         Dim AppendList As List(Of Appender.IAppender) = FindAppenders("RollingFileAppender")
@@ -183,7 +183,7 @@ Public Class clsLogTools
     ''' <param name="AppendName">Name of appender to find</param>
     ''' <returns>List(IAppender) objects if found; NOTHING otherwise</returns>
     ''' <remarks></remarks>
-    Private Shared Function FindAppenders(ByVal AppendName As String) As List(Of Appender.IAppender)
+    Private Shared Function FindAppenders(AppendName As String) As List(Of Appender.IAppender)
 
         'Get a list of the current loggers
         Dim LoggerList() As ILog = LogManager.GetCurrentLoggers()
@@ -210,7 +210,7 @@ Public Class clsLogTools
     ''' </summary>
     ''' <param name="InpLevel">Integer corresponding to level (1-5, 5 being most verbose</param>
     ''' <remarks></remarks>
-    Public Shared Sub SetFileLogLevel(ByVal InpLevel As Integer)
+    Public Shared Sub SetFileLogLevel(InpLevel As Integer)
 
         Dim LogLevelEnumType As Type = GetType(LogLevels)
 
@@ -232,7 +232,7 @@ Public Class clsLogTools
     ''' </summary>
     ''' <param name="InpLevel">LogLevels value defining level (Debug is most verbose)</param>
     ''' <remarks></remarks>
-    Public Shared Sub SetFileLogLevel(ByVal InpLevel As LogLevels)
+    Public Shared Sub SetFileLogLevel(InpLevel As LogLevels)
 
         Dim LogRepo As Repository.Hierarchy.Logger = DirectCast(m_FileLogger.Logger, Repository.Hierarchy.Logger)
 
