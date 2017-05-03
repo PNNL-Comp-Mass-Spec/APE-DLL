@@ -10,9 +10,11 @@ Imports System.IO
 Imports System.Xml
 Imports RangerLib
 Imports Mage
+#if INCLUDE_ZEDGRAPH
 Imports ZedGraph
 Imports System.Drawing
 Imports System.Drawing.Imaging
+#end if
 
 ''' <summary>
 ''' This class is responsible to take a single SQL Server database
@@ -865,8 +867,10 @@ Public Class SqlServerToSQLite
                             RunCreateDataTableFromFunctionList(sql, wfStep.TargetTable, conn, sqlitePath, handler)
                         ElseIf src = "RANGER" Then
                             RunRangerPipeline(wfStep.SQL, wfStep.TargetTable, sqlitePath)
+#if INCLUDE_ZEDGRAPH
                         ElseIf src = "PLOT" Then
                             RunPlotting(wfStep.SQL, wfStep.TargetTable, sqlitePath, sqliteConnString, handler)
+#end if
                         Else
                             If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
                                 sql = "Create table " & wfStep.TargetTable & " as " & sql
@@ -952,6 +956,7 @@ Public Class SqlServerToSQLite
         End Try
     End Sub
 
+#if INCLUDE_ZEDGRAPH
     Private Shared Sub RunPlotting(plotDefinition As String, tblName As String, dbPath As String, sqliteConn As String, handler As SqlConversionHandler)
         Dim i As Integer
         Dim rows(), tmp() As String
@@ -1124,7 +1129,7 @@ Public Class SqlServerToSQLite
         End Try
 
     End Sub
-
+#end if
 
     Public Shared Function GetSQLiteDataReader(strSQLQuery As String, sqliteConn As String) As SQLiteDataReader
 
