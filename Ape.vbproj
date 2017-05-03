@@ -11,7 +11,7 @@
     <AssemblyName>Ape</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <OptionExplicit>On</OptionExplicit>
     <OptionCompare>Binary</OptionCompare>
     <OptionStrict>On</OptionStrict>
@@ -74,18 +74,11 @@
     <Reference Include="MageDisplayLib">
       <HintPath>Lib\MageDisplayLib.dll</HintPath>
     </Reference>
-    <Reference Include="PRISM">
-      <HintPath>Lib\PRISM.dll</HintPath>
-    </Reference>
     <Reference Include="RangerLib">
       <HintPath>Lib\RangerLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\System.Data.SQLite.dll</HintPath>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -100,9 +93,6 @@
     </Reference>
     <Reference Include="TableFunctions">
       <HintPath>Lib\TableFunctions.dll</HintPath>
-    </Reference>
-    <Reference Include="ZedGraph">
-      <HintPath>Lib\ZedGraph.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -187,13 +177,21 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PRISM-Library">
+      <Version>1.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.Data.SQLite.Core">
+      <Version>1.0.97</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if exist "$(TargetDir)SQLite.Interop.dll" (del "$(TargetDir)SQLite.Interop.dll")
-if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
-if not exist "$(TargetDir)x64" mkdir "$(TargetDir)x64"
-xcopy "$(ProjectDir)Lib\x86\*" "$(TargetDir)x86\" /D /Y
-xcopy "$(ProjectDir)Lib\x64\*" "$(TargetDir)x64\" /D /Y</PostBuildEvent>
+    <PostBuildEvent>rem if exist "$(TargetDir)SQLite.Interop.dll" (del "$(TargetDir)SQLite.Interop.dll")
+rem if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
+rem if not exist "$(TargetDir)x64" mkdir "$(TargetDir)x64"
+rem xcopy "$(ProjectDir)Lib\x86\*" "$(TargetDir)x86\" /D /Y
+rem xcopy "$(ProjectDir)Lib\x64\*" "$(TargetDir)x64\" /D /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
