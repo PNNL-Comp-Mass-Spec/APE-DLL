@@ -157,7 +157,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="dsIndex"></param>
     ''' <param name="sqlServerConnString"></param>
@@ -213,7 +213,7 @@ Public Class SqlServerToSQLite
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -242,7 +242,7 @@ Public Class SqlServerToSQLite
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="dsIndex"></param>
     ''' <param name="sqlServerConnString"></param>
@@ -266,7 +266,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -286,7 +286,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="WorflowStepList"></param>
     ''' <param name="WorkFlow"></param>
@@ -311,7 +311,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -333,7 +333,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="WorflowStepList"></param>
     ''' <param name="WorkFlow"></param>
@@ -364,7 +364,7 @@ Public Class SqlServerToSQLite
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="OriginalFilename"></param>
     ''' <param name="NewFilename"></param>
@@ -425,7 +425,7 @@ Public Class SqlServerToSQLite
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -545,7 +545,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="WorkflowStepList"></param>
     ''' <param name="Workflow"></param>
@@ -592,7 +592,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="workflowStepList"></param>
     ''' <returns></returns>
@@ -654,7 +654,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="Workflow"></param>
     ''' <param name="sqlitePath"></param>
@@ -678,7 +678,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="Sql"></param>
     ''' <param name="CreateSeparateTable"></param>
@@ -698,7 +698,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
@@ -731,7 +731,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="originalFile"></param>
     ''' <param name="newFile"></param>
@@ -1804,7 +1804,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="connString"></param>
     ''' <param name="pivotDefinition"></param>
@@ -1899,7 +1899,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="tableName"></param>
     ''' <param name="fieldNames"></param>
@@ -2674,7 +2674,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="value"></param>
     ''' <returns></returns>
@@ -2933,7 +2933,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlConnString"></param>
     ''' <param name="sqlitePath"></param>
@@ -3084,7 +3084,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlConnString"></param>
     ''' <param name="sqlitePath"></param>
@@ -3164,7 +3164,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlConnString"></param>
     ''' <param name="sqlitePath"></param>
@@ -3327,7 +3327,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlConnString"></param>
     ''' <param name="sqlitePath"></param>
@@ -3666,7 +3666,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sprocParam"></param>
     ''' <param name="sqlConnString"></param>
@@ -3720,7 +3720,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="tmpTblSchema"></param>
@@ -3738,7 +3738,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sprocParam"></param>
     ''' <param name="connectionString"></param>
@@ -3861,7 +3861,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="connectionString"></param>
     ''' <param name="mStoredProcName"></param>
@@ -3900,7 +3900,7 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="dataType"></param>
     ''' <returns></returns>
@@ -3937,7 +3937,7 @@ Public Class SqlServerToSQLite
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="dataType"></param>
     ''' <param name="tableName"></param>

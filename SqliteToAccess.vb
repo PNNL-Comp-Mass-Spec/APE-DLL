@@ -81,7 +81,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -132,7 +132,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -157,7 +157,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="AccessPath"></param>
     ''' <param name="sqlitePath"></param>
@@ -180,7 +180,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -240,7 +240,7 @@ Public Class SqliteToAccess
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="textFileParams"></param>
     ''' <param name="textFilePath"></param>
@@ -267,7 +267,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -308,7 +308,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -332,7 +332,7 @@ Public Class SqliteToAccess
 #Region "Private Methods"
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="textFileDirectory"></param>
@@ -403,7 +403,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="AccessPath"></param>
     ''' <param name="sqlitePath"></param>
@@ -470,7 +470,7 @@ Public Class SqliteToAccess
 
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="connString"></param>
     ''' <param name="handler"></param>
@@ -593,7 +593,7 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="conn"></param>
     ''' <param name="tableName"></param>
@@ -690,7 +690,7 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="dataType"></param>
     ''' <param name="tableName"></param>
@@ -708,7 +708,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="schema"></param>
@@ -745,7 +745,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="AccessConnString"></param>
@@ -1020,7 +1020,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="conn"></param>
     ''' <param name="dt"></param>
@@ -1069,10 +1069,9 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="col"></param>
-    ''' <param name="ts"></param>
     ''' <param name="pkey"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
@@ -1325,7 +1324,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="ts"></param>
     ''' <returns></returns>
@@ -1370,49 +1369,49 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="cs"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function GetAccessDbTypeOfColumn(cs As ColumnSchema) As DbType 'System.Data.OleDb.OleDbType ' 
+    Private Shared Function GetAccessDbTypeOfColumn(cs As ColumnSchema) As DbType 'System.Data.OleDb.OleDbType '
 
         Select Case cs.ColumnType.ToLower()
             Case "text"
-                Return DbType.[String]      'OleDb.OleDbType.VarChar 
+                Return DbType.[String]      'OleDb.OleDbType.VarChar
 
             Case "float"
-                Return DbType.[Single]      'OleDb.OleDbType.Single 
+                Return DbType.[Single]      'OleDb.OleDbType.Single
 
             Case "single"
-                Return DbType.[Single]      ' OleDb.OleDbType.Single 
+                Return DbType.[Single]      ' OleDb.OleDbType.Single
 
             Case "double"
-                Return DbType.[Double]      'OleDb.OleDbType.Double  
+                Return DbType.[Double]      'OleDb.OleDbType.Double
 
             Case "real"
-                Return DbType.[Double]      'OleDb.OleDbType.Double  
+                Return DbType.[Double]      'OleDb.OleDbType.Double
 
             Case "decimal"
-                Return DbType.[Decimal]         'OleDbType.Decimal 
+                Return DbType.[Decimal]         'OleDbType.Decimal
 
             Case "timestamp", "datetime"
-                Return DbType.DateTime      'OleDbType.DBTimeStamp 
+                Return DbType.DateTime      'OleDbType.DBTimeStamp
 
             Case "nchar", "char"
-                Return DbType.[String]      'OleDbType.Char 
+                Return DbType.[String]      'OleDbType.Char
 
             Case "uniqueidentifier"
-                Return DbType.[String]      'OleDbType.VarChar 
+                Return DbType.[String]      'OleDbType.VarChar
 
             Case "xml"
-                Return DbType.[String]      'OleDbType.VarChar 
+                Return DbType.[String]      'OleDbType.VarChar
 
             Case "sql_variant"
-                Return DbType.[Object]      'OleDbType.Variant 
+                Return DbType.[Object]      'OleDbType.Variant
 
             Case "integer", "int"
-                Return DbType.Int32         'OleDbType.Integer 
+                Return DbType.Int32         'OleDbType.Integer
 
             Case "num"
                 Return DbType.[String]      ' Generic number; treat it as text
@@ -1606,43 +1605,43 @@ Public Class SqliteToAccess
         Select Case cs.ColumnType.ToLower()
 
             Case "text"
-                Return DbType.[String] 'OleDb.OleDbType.VarChar 
+                Return DbType.[String] 'OleDb.OleDbType.VarChar
 
             Case "float"
-                Return DbType.[Single] 'OleDb.OleDbType.Single 
+                Return DbType.[Single] 'OleDb.OleDbType.Single
 
             Case "single"
-                Return DbType.[Single] ' OleDb.OleDbType.Single 
+                Return DbType.[Single] ' OleDb.OleDbType.Single
 
             Case "double"
-                Return DbType.[Double] 'OleDb.OleDbType.Double  
+                Return DbType.[Double] 'OleDb.OleDbType.Double
 
             Case "real"
-                Return DbType.[Double] 'OleDb.OleDbType.Double  
+                Return DbType.[Double] 'OleDb.OleDbType.Double
 
             Case "decimal"
-                Return DbType.[Decimal] 'OleDbType.Decimal 
+                Return DbType.[Decimal] 'OleDbType.Decimal
 
             Case "timestamp", "datetime"
-                Return DbType.DateTime 'OleDbType.DBTimeStamp 
+                Return DbType.DateTime 'OleDbType.DBTimeStamp
 
             Case "nchar", "char"
-                Return DbType.[String] 'OleDbType.Char 
+                Return DbType.[String] 'OleDbType.Char
 
             Case "uniqueidentifier"
-                Return DbType.[String] 'OleDbType.VarChar 
+                Return DbType.[String] 'OleDbType.VarChar
 
             Case "xml"
-                Return DbType.[String] 'OleDbType.VarChar 
+                Return DbType.[String] 'OleDbType.VarChar
 
             Case "sql_variant"
-                Return DbType.[Object] 'OleDbType.Variant 
+                Return DbType.[Object] 'OleDbType.Variant
 
             Case "integer", "int"
-                Return DbType.Int32 'OleDbType.Integer 
+                Return DbType.Int32 'OleDbType.Integer
 
             Case "smallint"
-                Return DbType.Int16 'OleDbType.Int16 
+                Return DbType.Int16 'OleDbType.Int16
 
             Case "num"
                 Return DbType.[String]      ' Generic number; treat it as text
@@ -1878,7 +1877,7 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="value"></param>
     ''' <returns></returns>
@@ -2220,7 +2219,7 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="accessPath"></param>
     ''' <returns></returns>
@@ -2240,7 +2239,7 @@ Public Class SqliteToAccess
     End Function
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="textFileDirectory"></param>

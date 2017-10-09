@@ -1,12 +1,12 @@
 ﻿Option Strict On
 
 ''' <summary>
-''' 
+'''
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsXMLStepSchema
-	Protected mStepNumText As String
-	Protected mStepNumValue As Integer
+    Protected mStepNumText As String
+    Protected mStepNumValue As Integer
 
     Public Source As String
 
@@ -26,25 +26,25 @@ Public Class clsXMLStepSchema
 
     Public WorkflowGroup As String
 
-	Public Property StepNo As String
-		Get
-			Return mStepNumText
-		End Get
-		Set(value As String)
-			mStepNumText = value
-			Integer.TryParse(mStepNumText, mStepNumValue)
-		End Set
-	End Property
+    Public Property StepNo As String
+        Get
+            Return mStepNumText
+        End Get
+        Set(value As String)
+            mStepNumText = value
+            Integer.TryParse(mStepNumText, mStepNumValue)
+        End Set
+    End Property
 
-	Public ReadOnly Property StepNum As Integer
-		Get
-			Return mStepNumValue
-		End Get
-	End Property
+    Public ReadOnly Property StepNum As Integer
+        Get
+            Return mStepNumValue
+        End Get
+    End Property
 End Class
 
 ''' <summary>
-''' 
+'''
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsXMLFields
