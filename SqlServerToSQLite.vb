@@ -597,7 +597,7 @@ Public Class SqlServerToSQLite
     ''' <param name="workflowStepList"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function BuildStepList(workflowStepList As String, wf As List(Of clsXMLStepSchema)) As SortedSet(Of Integer)
+    Private Shared Function BuildStepList(workflowStepList As String, wf As IReadOnlyList(Of clsXMLStepSchema)) As SortedSet(Of Integer)
         Dim stepsToRun As New SortedSet(Of Integer)
         Dim startStep As Integer, endStep As Integer
 
@@ -770,7 +770,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub RunWorkflow(stepsToRun As SortedSet(Of Integer), workflowTotalSteps As Integer, Workflow As List(Of clsXMLStepSchema), sqlitePath As String, handler As SqlConversionHandler)
+    Private Shared Sub RunWorkflow(stepsToRun As ICollection(Of Integer), Workflow As IReadOnlyList(Of clsXMLStepSchema), sqlitePath As String, handler As SqlConversionHandler)
         Dim sql, src As String
         Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
         Dim startStep, endStep As Integer
@@ -1393,7 +1393,12 @@ Public Class SqlServerToSQLite
         End If
     End Sub
 
-    Private Shared Sub CopySQLiteDBRowsToSQliteDB(fldDefinitionList As Dictionary(Of String, String), sourceTblName As String, functionList As List(Of TableFunctions.SingleReturnFunction), slconn As SQLiteConnection, schema As List(Of TableSchema), sqlitePath As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySQLiteDBRowsToSQliteDB(
+      fldDefinitionList As Dictionary(Of String, String),
+      sourceTblName As String, functionList As List(Of SingleReturnFunction),
+      slconn As SQLiteConnection, schema As IReadOnlyList(Of TableSchema),
+      sqlitePath As String, handler As SqlConversionHandler)
+
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -1579,7 +1584,7 @@ Public Class SqlServerToSQLite
 
     End Function
 
-    Private Shared Sub CreateSQLiteTables(conn As SQLiteConnection, schema As List(Of TableSchema), handler As SqlConversionHandler)
+    Private Shared Sub CreateSQLiteTables(conn As SQLiteConnection, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite tables...")
 
         ' Create all tables in the new database
@@ -1931,7 +1936,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL Server database.</param>
     ''' <param name="password">The password to use for encrypting the file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    Private Shared Sub CopyTableRowsToSQLiteDB(ds As DataSet, sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopyTableRowsToSQLiteDB(ds As DataSet, sqlitePath As String, schema As IReadOnlyList(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -2015,7 +2020,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL Server database.</param>
     ''' <param name="password">The password to use for encrypting the file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    Private Shared Sub CopySqlServerRowsToSQLiteDB(sqlConnString As String, sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySqlServerRowsToSQLiteDB(sqlConnString As String, sqlitePath As String, schema As IReadOnlyList(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -2301,7 +2306,7 @@ Public Class SqlServerToSQLite
     ''' <param name="str">The name to change if necessary</param>
     ''' <param name="names">Used to avoid duplicate names</param>
     ''' <returns>A normalized name</returns>
-    Private Shared Function GetNormalizedName(str As String, names As List(Of String)) As String
+    Private Shared Function GetNormalizedName(str As String, names As ICollection(Of String)) As String
         Dim sb As New StringBuilder()
         For i As Integer = 0 To str.Length - 1
             If [Char].IsLetterOrDigit(str(i)) OrElse str(i) = "_"c Then
@@ -2408,7 +2413,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="password">The password to use for encrypting the DB or null if non is needed.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
-    Private Shared Sub CreateSQLiteDatabase(sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CreateSQLiteDatabase(sqlitePath As String, schema As IReadOnlyCollection(Of TableSchema), password As String, handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite database...")
 
         ' Create the SQLite database file
@@ -2465,7 +2470,7 @@ Public Class SqlServerToSQLite
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="password">The password to use for encrypting the DB or null if non is needed.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
-    Private Shared Sub AddSchemaToSQLiteDatabase(sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub AddSchemaToSQLiteDatabase(sqlitePath As String, schema As IReadOnlyCollection(Of TableSchema), password As String, handler As SqlConversionHandler)
 
         ' Connect to the newly created database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, password)
@@ -2935,7 +2940,7 @@ Public Class SqlServerToSQLite
     ''' <param name="MD_ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateViperResultsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
+    Private Shared Sub CreateViperResultsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
 
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
@@ -3228,7 +3233,7 @@ Public Class SqlServerToSQLite
 
 
     '************
-    Private Shared Sub CreateIMPROVDbsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
+    Private Shared Sub CreateIMPROVDbsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3329,7 +3334,7 @@ Public Class SqlServerToSQLite
     ''' <param name="ID_List"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreatePTDbsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
+    Private Shared Sub CreatePTDbsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
         Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
@@ -3672,7 +3677,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tblNames"></param>
     ''' <param name="chunkSize"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateMTBCacheTableFromProcInChunks(paramList As List(Of String), sprocParam As String, sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler, StoredProcName As String, tblNames As List(Of String), chunkSize As Integer)
+    Private Shared Sub CreateMTBCacheTableFromProcInChunks(paramList As IReadOnlyCollection(Of String), sprocParam As String, sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler, StoredProcName As String, tblNames As IReadOnlyList(Of String), chunkSize As Integer)
         Dim TblSchema As List(Of TableSchema) = Nothing
         Dim arrayList() As String
         Dim tmpMD_ID_List As String = ""
@@ -3721,7 +3726,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tmpTblSchema"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateMTBCacheTableFromProc(sqlitePath As String, tmpTblSchema As List(Of TableSchema), handler As SqlConversionHandler)
+    Private Shared Sub CreateMTBCacheTableFromProc(sqlitePath As String, tmpTblSchema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         Dim password As String = Nothing
 
         ' Create the SQLite database and apply the schema
@@ -3743,7 +3748,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function ReturnTableSchemaFromStoredProc(paramList As IEnumerable(Of String), sprocParam As String, connectionString As String, tblNames As List(Of String), mStoredProcName As String, MD_ID_List As String, handler As SqlConversionHandler) As List(Of TableSchema)
+    Private Shared Function ReturnTableSchemaFromStoredProc(paramList As IEnumerable(Of String), sprocParam As String, connectionString As String, tblNames As IReadOnlyList(Of String), mStoredProcName As String, MD_ID_List As String, handler As SqlConversionHandler) As List(Of TableSchema)
         Dim res As New List(Of TableSchema)
         Dim tblschema As TableSchema
         Dim tblcolumnslist As List(Of ColumnSchema)

@@ -160,7 +160,7 @@ Public Class clsLogTools
     Public Shared Sub ChangeLogFileName(FileName As String)
 
         'Get a list of appenders
-        Dim AppendList As List(Of Appender.IAppender) = FindAppenders("RollingFileAppender")
+        Dim AppendList As IEnumerable(Of IAppender) = FindAppenders("RollingFileAppender")
         If AppendList Is Nothing Then
             WriteLog(LoggerTypes.LogSystem, LogLevels.WARN, "Unable to change file name. No appender found")
             Return
@@ -185,7 +185,7 @@ Public Class clsLogTools
     ''' <param name="AppendName">Name of appender to find</param>
     ''' <returns>List(IAppender) objects if found; NOTHING otherwise</returns>
     ''' <remarks></remarks>
-    Private Shared Function FindAppenders(AppendName As String) As List(Of Appender.IAppender)
+    Private Shared Function FindAppenders(AppendName As String) As IEnumerable(Of IAppender)
 
         'Get a list of the current loggers
         Dim LoggerList() As ILog = LogManager.GetCurrentLoggers()
