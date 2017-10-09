@@ -1,13 +1,11 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-Imports System.Data
+﻿Imports System.Text
 Imports System.Data.SQLite
 Imports System.Threading
 Imports System.Text.RegularExpressions
 Imports System.IO
 Imports System.Data.OleDb
 Imports ADOX
+Imports TableFunctions
 
 ''' <summary>
 ''' This class is responsible to take a single SQL Server database
@@ -28,7 +26,7 @@ Public Class SqliteToAccess
     Public Shared mTxtFilePath As String
     Public Shared mColList As String()
     Public Shared mTextFileParams As String()
-    Public Shared mFunctionList As List(Of TableFunctions.SingleReturnFunction)
+    Public Shared mFunctionList As List(Of SingleReturnFunction)
     Public Shared mTableName As String
     Public Shared mGroupByField As String
     Public Shared mFldDefinitions As Dictionary(Of String, String)

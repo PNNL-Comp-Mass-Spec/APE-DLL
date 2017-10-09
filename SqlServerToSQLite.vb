@@ -1,7 +1,4 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-Imports System.Data
+﻿Imports System.Text
 Imports System.Data.SqlClient
 Imports System.Data.SQLite
 Imports System.Threading
@@ -10,11 +7,13 @@ Imports System.IO
 Imports System.Xml
 Imports RangerLib
 Imports Mage
-#if INCLUDE_ZEDGRAPH
+Imports TableFunctions
+
+#If INCLUDE_ZEDGRAPH Then
 Imports ZedGraph
 Imports System.Drawing
 Imports System.Drawing.Imaging
-#end if
+#End If
 
 ''' <summary>
 ''' This class is responsible to take a single SQL Server database
@@ -25,9 +24,9 @@ Public Class SqlServerToSQLite
 
     Public Shared mSqlServerConnString As String
     Public Shared mDataset As DataSet
-    Public Shared mCurrentFunction As TableFunctions.SingleReturnFunction
-    Public Shared mCurrentFunctionList As List(Of TableFunctions.SingleReturnFunction)
-    Public Shared mFunctionsList As List(Of TableFunctions.SingleReturnFunction)
+    Public Shared mCurrentFunction As SingleReturnFunction
+    Public Shared mCurrentFunctionList As List(Of SingleReturnFunction)
+    Public Shared mFunctionsList As List(Of SingleReturnFunction)
     Public Shared mFldDefinitions As Dictionary(Of String, String)
     Public Shared mPassword As String
     Public Shared mSourceTableName As String

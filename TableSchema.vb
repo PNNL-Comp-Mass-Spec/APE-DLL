@@ -1,5 +1,4 @@
-﻿Imports System.Collections.Generic
-
+﻿
 Public Class TableSchema
 
     Public TableName As String

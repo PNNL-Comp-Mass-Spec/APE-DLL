@@ -1,8 +1,4 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-
-
+﻿
 Public Class IndexSchema
     Public IndexName As String
 
