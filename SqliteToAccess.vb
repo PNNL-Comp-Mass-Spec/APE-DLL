@@ -89,7 +89,7 @@ Public Class SqliteToAccess
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertSQLiteDatabaseToTextFile(mSqlitePath, mTextFileDirectory, mPassword, mHandler, mSelectionHandler) ', mCreateTriggers)
+            result = ConvertSQLiteDatabaseToTextFile(mSqlitePath, mTextFileDirectory, mHandler, mSelectionHandler) ', mCreateTriggers)
             _isActive = False
             If result Then
                 mHandler(True, True, 100, "Finished exporting database: " & mSqlitePath)
@@ -140,7 +140,7 @@ Public Class SqliteToAccess
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertSQLiteDatabaseToAccessDatabase(mSqlitePath, mAccessPath, mPassword, mHandler, mSelectionHandler) ', mCreateTriggers)
+            result = ConvertSQLiteDatabaseToAccessDatabase(mSqlitePath, mAccessPath, mHandler, mSelectionHandler) ', mCreateTriggers)
             _isActive = False
             If result Then
                 mHandler(True, True, 100, "Finished exporting database: " & mSqlitePath)
@@ -188,7 +188,7 @@ Public Class SqliteToAccess
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertAccessDatabaseToSQLiteDatabase(mAccessPath, mSqlitePath, mPassword, mHandler, mSelectionHandler)
+            result = ConvertAccessDatabaseToSQLiteDatabase(mAccessPath, mSqlitePath, mHandler, mSelectionHandler)
             _isActive = False
             If result Then
                 mHandler(True, True, 100, "Finished importing into database: " & mSqlitePath)
@@ -222,7 +222,7 @@ Public Class SqliteToAccess
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertSqliteDatabaseToSQLiteDatabase(mSqliteSourcePath, mSqlitePath, mPassword, mHandler, mSelectionHandler)
+            result = ConvertSqliteDatabaseToSQLiteDatabase(mSqliteSourcePath, mSqlitePath, mHandler, mSelectionHandler)
             _isActive = False
             If result Then
                 mHandler(True, True, 100, "Finished importing into database: " & mSqlitePath)
@@ -275,7 +275,7 @@ Public Class SqliteToAccess
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertTextFileDatabaseToSQLiteDatabase(mTextFileParams, mTxtFilePath, mColList, mSqlitePath, mPassword, mHandler, mSelectionHandler)
+            result = ConvertTextFileDatabaseToSQLiteDatabase(mTextFileParams, mTxtFilePath, mColList, mSqlitePath, mHandler)
             _isActive = False
             If result Then
                 mHandler(True, True, 100, "Finished importing into database: " & mSqlitePath)
@@ -336,19 +336,18 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="textFileDirectory"></param>
-    ''' <param name="password"></param>
     ''' <param name="handler"></param>
     ''' <param name="selectionHandler"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function ConvertSQLiteDatabaseToTextFile(sqlitePath As String, textFileDirectory As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean ', ByVal createTriggers As Boolean)
+    Private Shared Function ConvertSQLiteDatabaseToTextFile(sqlitePath As String, textFileDirectory As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean ', ByVal createTriggers As Boolean)
         ' Read the schema of the SQL Server database into a memory structure
         Dim sqlSchema As List(Of TableSchema) = ReadSqliteSchema(sqlitePath, handler, selectionHandler)
 
         If sqlSchema IsNot Nothing Then
 
             ' Copy all rows from SQLite tables to the newly text files
-            CopySQLiteDBRowsToTextFile(sqlitePath, textFileDirectory, mDelim, sqlSchema, password, handler)
+            CopySQLiteDBRowsToTextFile(sqlitePath, textFileDirectory, mDelim, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -361,11 +360,10 @@ Public Class SqliteToAccess
     ''' SQLite schema, and copying all rows from the SQL Server database to the SQLite database.
     ''' </summary>
     ''' <param name="sqlitePath">The path to the generated SQLite database file</param>
-    ''' <param name="password">The password to use or NULL if no password should be used to encrypt the DB</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    ''' <param name="selectionHandler">The selection handler which allows the user to select which tables to 
+    ''' <param name="selectionHandler">The selection handler which allows the user to select which tables to
     ''' convert.</param>
-    Private Shared Function ConvertSQLiteDatabaseToAccessDatabase(sqlitePath As String, accessDbPath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean ', ByVal createTriggers As Boolean)
+    Private Shared Function ConvertSQLiteDatabaseToAccessDatabase(sqlitePath As String, accessDbPath As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean ', ByVal createTriggers As Boolean)
 
         Dim accessDbConn = BuildAccessDbPath(accessDbPath)
         ' Read the schema of the SQL Server database into a memory structure
@@ -376,7 +374,7 @@ Public Class SqliteToAccess
             CreateAccessDatabase(accessDbConn, sqlSchema, handler)
 
             ' Copy all rows from SQL Server tables to the newly created SQLite database
-            CopySQLiteDBRowsToAccessDB(sqlitePath, accessDbConn, sqlSchema, password, handler)
+            CopySQLiteDBRowsToAccessDB(sqlitePath, accessDbConn, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -398,7 +396,7 @@ Public Class SqliteToAccess
             CreateSQLiteTables(sqlitePath, lsTs, handler)
 
             ' Copy all rows from SQL Server tables to the newly created SQLite database
-            CopySQLiteDBRowsToSQliteDB(fldDefinitions, tname, functionList, sqlitePath, lsTs, Nothing, handler)
+            CopySQLiteDBRowsToSQliteDB(fldDefinitions, tname, functionList, sqlitePath, lsTs, handler)
         End If
     End Sub
 
@@ -407,12 +405,11 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="AccessPath"></param>
     ''' <param name="sqlitePath"></param>
-    ''' <param name="password"></param>
     ''' <param name="handler"></param>
     ''' <param name="selectionHandler"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function ConvertAccessDatabaseToSQLiteDatabase(AccessPath As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
+    Private Shared Function ConvertAccessDatabaseToSQLiteDatabase(AccessPath As String, sqlitePath As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
         Dim accessDbConn = BuildAccessDbConnString(AccessPath)
         ' Read the schema of the SQL Server database into a memory structure
         Dim sqlSchema As List(Of TableSchema) = ReadAccessSchema(accessDbConn, handler, selectionHandler)
@@ -422,7 +419,7 @@ Public Class SqliteToAccess
             CreateSQLiteTables(sqlitePath, sqlSchema, handler)
 
             ' Copy all rows from SQL Server tables to the newly created SQLite database
-            CopyAccessDBRowsToSQLiteDB(sqlitePath, accessDbConn, sqlSchema, password, handler)
+            CopyAccessDBRowsToSQLiteDB(sqlitePath, accessDbConn, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -430,7 +427,7 @@ Public Class SqliteToAccess
 
     End Function
     '
-    Private Shared Function ConvertSqliteDatabaseToSQLiteDatabase(SqliteSourcePath As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
+    Private Shared Function ConvertSqliteDatabaseToSQLiteDatabase(SqliteSourcePath As String, sqlitePath As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
         'Dim accessDbConn = BuildAccessDbConnString(AccessPath)
         ' Read the schema of the SQL Server database into a memory structure
         'Dim sqlSchema As List(Of TableSchema) = ReadAccessSchema(accessDbConn, handler, selectionHandler)
@@ -441,7 +438,7 @@ Public Class SqliteToAccess
             CreateSQLiteTables(sqlitePath, sqlSchema, handler)
 
             ' Copy all rows from SQL Server tables to the newly created SQLite database
-            CopySqliteDBToSQLiteDB(sqlitePath, SqliteSourcePath, sqlSchema, password, handler)
+            CopySqliteDBToSQLiteDB(sqlitePath, SqliteSourcePath, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -449,7 +446,7 @@ Public Class SqliteToAccess
 
     End Function
 
-    Private Shared Function ConvertTextFileDatabaseToSQLiteDatabase(mTextParams As String(), mTxtFilePath As String, mColList As String(), sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
+    Private Shared Function ConvertTextFileDatabaseToSQLiteDatabase(mTextParams As IList(Of String), txtFilePath As String, colList As IList(Of String), sqlitePath As String, handler As SqlConversionHandler) As Boolean
         ' Read the schema of the Text File into a memory structure
         Dim sqlSchema As List(Of TableSchema) = CreateTextFileTableSchema(mColList, mTextParams(2))
 
@@ -460,7 +457,7 @@ Public Class SqliteToAccess
             End If
 
             ' Copy all rows from text file to the newly created SQLite database
-            CopyTextFileRowsToSQLiteDB(mTextParams, sqlitePath, mTxtFilePath, sqlSchema, password, handler)
+            CopyTextFileRowsToSQLiteDB(mTextParams, sqlitePath, txtFilePath, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -750,10 +747,9 @@ Public Class SqliteToAccess
     ''' <param name="sqlitePath"></param>
     ''' <param name="AccessConnString"></param>
     ''' <param name="schema"></param>
-    ''' <param name="password"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CopyAccessDBRowsToSQLiteDB(sqlitePath As String, AccessConnString As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopyAccessDBRowsToSQLiteDB(sqlitePath As String, AccessConnString As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -821,7 +817,7 @@ Public Class SqliteToAccess
         End Using
     End Sub
 
-    Private Shared Sub CopySqliteDBToSQLiteDB(sqlitePath As String, SqliteSourcePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySqliteDBToSQLiteDB(sqlitePath As String, SqliteSourcePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -891,7 +887,7 @@ Public Class SqliteToAccess
     End Sub
 
 
-    Private Shared Sub CopyTextFileRowsToSQLiteDB(textParams As String(), sqlitePath As String, textFilePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopyTextFileRowsToSQLiteDB(textParams As IList(Of String), sqlitePath As String, textFilePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         Dim i As Integer
         Dim row As String
         Dim rowValues As String()
@@ -1095,9 +1091,8 @@ Public Class SqliteToAccess
     ''' <param name="sqlitePath">The SQL Server connection string</param>
     ''' <param name="AccessConnString">The path to the SQLite database file.</param>
     ''' <param name="schema">The schema of the SQL Server database.</param>
-    ''' <param name="password">The password to use for encrypting the file</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    Private Shared Sub CopySQLiteDBRowsToAccessDB(sqlitePath As String, AccessConnString As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySQLiteDBRowsToAccessDB(sqlitePath As String, AccessConnString As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -1234,8 +1229,7 @@ Public Class SqliteToAccess
     End Function
 
 
-
-    Private Shared Sub CopySQLiteDBRowsToSQliteDB(fldDefinitionList As Dictionary(Of String, String), sourceTblName As String, functionList As List(Of TableFunctions.SingleReturnFunction), sqlitePath As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySQLiteDBRowsToSQliteDB(fldDefinitionList As Dictionary(Of String, String), sourceTblName As String, functionList As List(Of SingleReturnFunction), sqlitePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -1727,7 +1721,7 @@ Public Class SqliteToAccess
         Dim pkey As Boolean = False
         For i As Integer = 0 To ts.Columns.Count - 1
             Dim col As ColumnSchema = ts.Columns(i)
-            Dim cline As String = BuildColumnStatement(col, ts, pkey)
+            Dim cline As String = BuildColumnStatement(col)
             sb.Append(cline)
             If i < ts.Columns.Count - 1 Then
                 sb.Append("," & vbLf)
@@ -1802,7 +1796,7 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="col">The column schema</param>
     ''' <returns>A single column line to be inserted into the general CREATE TABLE DDL statement</returns>
-    Private Shared Function BuildColumnStatement(col As ColumnSchema, ts As TableSchema, ByRef pkey As Boolean) As String
+    Private Shared Function BuildColumnStatement(col As ColumnSchema) As String
         Dim sb As New StringBuilder()
         sb.Append(vbTab & """" & col.ColumnName.Replace(" ", "_") & """" & vbTab & vbTab)
 
@@ -2245,10 +2239,9 @@ Public Class SqliteToAccess
     ''' <param name="textFileDirectory"></param>
     ''' <param name="delim"></param>
     ''' <param name="schema"></param>
-    ''' <param name="password"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CopySQLiteDBRowsToTextFile(sqlitePath As String, textFileDirectory As String, delim As String, schema As List(Of TableSchema), password As String, handler As SqlConversionHandler)
+    Private Shared Sub CopySQLiteDBRowsToTextFile(sqlitePath As String, textFileDirectory As String, delim As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")

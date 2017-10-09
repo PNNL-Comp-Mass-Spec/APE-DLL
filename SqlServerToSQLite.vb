@@ -692,8 +692,7 @@ Public Class SqlServerToSQLite
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
 
         ' Create the iteration table
-        RunIterationTable(Sql, CreateSeparateTable, iterationTblName, newTblName, groupByText, sqlitePath, Nothing, handler)
-        ' Private Shared Sub RunIterationTable(ByVal SQL As String, ByVal CreateSeparateTable As Boolean, ByVal iterationTableName As String, ByVal newTblName As String, ByVal groupByText As String, ByVal sqlitePath As String, ByVal password As String, ByVal handler As SqlConversionHandler)
+        RunIterationTable(Sql, CreateSeparateTable, iterationTblName, newTblName, groupByText, sqlitePath, handler)
 
     End Sub
 
@@ -1265,7 +1264,11 @@ Public Class SqlServerToSQLite
         RunIterationTable(SelectSQL, CreateSeparateTable, IterationTableName, tname, GroupByText, sqlitePath, Nothing, handler)
     End Sub
 
-    Private Shared Sub RunIterationTable(SQL As String, CreateSeparateTable As Boolean, iterationTableName As String, newTblName As String, groupByText As String, sqlitePath As String, password As String, handler As SqlConversionHandler)
+    Private Shared Sub RunIterationTable(
+      SQL As String, CreateSeparateTable As Boolean,
+      iterationTableName As String, newTblName As String,
+      groupByText As String, sqlitePath As String, handler As SqlConversionHandler)
+
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
@@ -2947,7 +2950,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
         Dim params As String()
 
         ' Create the SQLite database and apply the schema
@@ -3097,7 +3099,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
 
         ' Create the SQLite database and apply the schema
         CreateSQLiteDatabaseOnly(sqlitePath)
@@ -3177,7 +3178,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
 
         ' Create the SQLite database and apply the schema
         CreateSQLiteDatabaseOnly(sqlitePath)
@@ -3239,7 +3239,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
         Dim params As String()
         Dim paramListTmp As New List(Of String)
 
@@ -3340,7 +3339,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
         Dim params As String()
 
         ' Create the SQLite database and apply the schema
@@ -3401,7 +3399,6 @@ Public Class SqlServerToSQLite
         Dim tblNames As New List(Of String)
         Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        Dim password As String = Nothing
         'Dim params As String()
         Dim paramListTmp As New List(Of String)
 
