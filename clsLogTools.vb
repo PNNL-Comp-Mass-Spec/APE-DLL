@@ -1,5 +1,5 @@
 ﻿'*********************************************************************************************************
-' Written by Dave Clark for the US Department of Energy 
+' Written by Dave Clark for the US Department of Energy
 ' Pacific Northwest National Laboratory, Richland, WA
 ' Copyright 2009, Battelle Memorial Institute
 ' Created 01/01/2009
@@ -7,14 +7,14 @@
 ' Last modified 05/14/2009
 '						05/15/2009 (DAC) - Modified logging to use Log4Net
 '*********************************************************************************************************
+
 Option Strict On
 
 Imports log4net.Appender
 Imports log4net
 
 'This assembly attribute tells Log4Net where to find the config file
-<Assembly: log4net.Config.XmlConfigurator(ConfigFile:="Logging.config", Watch:=True)> 
-
+<Assembly: Config.XmlConfigurator(ConfigFile:="Logging.config", Watch:=True)>
 
 Public Class clsLogTools
 
@@ -118,7 +118,7 @@ Public Class clsLogTools
     ''' <param name="InpMsg">Message to be logged</param>
     ''' <param name="Ex">Exception to be logged</param>
     ''' <remarks></remarks>
-    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String, _
+    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String,
      Ex As Exception)
 
         Dim MyLogger As ILog
@@ -166,9 +166,9 @@ Public Class clsLogTools
             Return
         End If
 
-        For Each SelectedAppender As Appender.IAppender In AppendList
+        For Each SelectedAppender As IAppender In AppendList
             'Convert the IAppender object to a RollingFileAppender
-            Dim AppenderToChange As Appender.RollingFileAppender = TryCast(SelectedAppender, Appender.RollingFileAppender)
+            Dim AppenderToChange = TryCast(SelectedAppender, RollingFileAppender)
             If AppenderToChange Is Nothing Then
                 WriteLog(LoggerTypes.LogSystem, LogLevels.ERROR, "Unable to convert appender")
                 Return
@@ -192,9 +192,9 @@ Public Class clsLogTools
         If LoggerList.GetLength(0) < 1 Then Return Nothing
 
         'Create a List of appenders matching the criteria for each logger
-        Dim RetList As New List(Of Appender.IAppender)
+        Dim RetList As New List(Of IAppender)
         For Each TestLogger As ILog In LoggerList
-            For Each TestAppender As Appender.IAppender In TestLogger.Logger.Repository.GetAppenders()
+            For Each TestAppender As IAppender In TestLogger.Logger.Repository.GetAppenders()
                 If TestAppender.Name = AppendName Then RetList.Add(TestAppender)
             Next
         Next
@@ -223,7 +223,7 @@ Public Class clsLogTools
         End If
 
         'Convert input integer into the associated enum
-        Dim Lvl As LogLevels = DirectCast([Enum].Parse(LogLevelEnumType, InpLevel.ToString), LogLevels)
+        Dim Lvl = DirectCast([Enum].Parse(LogLevelEnumType, InpLevel.ToString), LogLevels)
         SetFileLogLevel(Lvl)
 
     End Sub
@@ -236,7 +236,7 @@ Public Class clsLogTools
     ''' <remarks></remarks>
     Public Shared Sub SetFileLogLevel(InpLevel As LogLevels)
 
-        Dim LogRepo As Repository.Hierarchy.Logger = DirectCast(m_FileLogger.Logger, Repository.Hierarchy.Logger)
+        Dim LogRepo = DirectCast(m_FileLogger.Logger, Repository.Hierarchy.Logger)
 
         Select Case InpLevel
             Case LogLevels.DEBUG

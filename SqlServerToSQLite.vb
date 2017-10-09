@@ -80,6 +80,8 @@ Public Class SqlServerToSQLite
     Const NUM_FIELDS_EXCEEDED_MESSAGE As String = "Fields Exceeded"
     Const NUM_FIELDS_ALLOWED As Integer = 1000
     Const TABLE_COLUMN As String = "FIELD"
+
+#If INCLUDE_ZEDGRAPH Then
     Const TABLE_COLUMN_FUNCTION As String = "FUNCTION"
     Const SERIES As String = "Series"
     Const CATEGORY As String = "Category"
@@ -87,6 +89,7 @@ Public Class SqlServerToSQLite
     Const SERIESY As String = "Series_Y"
     Const HISTOGRAMPLOT As String = "Histogram"
     Const SCATTERPLOT As String = "Scatter"
+#End If
 
     Enum datasources
         wViperResultsMdIds = 0 'Viper Results (Specific MDIDs)
@@ -137,7 +140,7 @@ Public Class SqlServerToSQLite
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertSqlServerDatabaseToSQLiteFile(sqlServerConnString, sqlitePath, password, handler, selectionHandler, createTriggers)
+            result = ConvertSqlServerDatabaseToSQLiteFile(sqlServerConnString, sqlitePath, password, handler, selectionHandler)
             _isActive = False
 
             If result Then
@@ -221,7 +224,7 @@ Public Class SqlServerToSQLite
         Dim result As Boolean
         Try
             _isActive = True
-            result = ConvertSqlServerDatabaseToSQLiteFile(mSqlServerConnString, mSqlitePath, mPassword, mHandler, mSelectionHandler, mCreateTriggers)
+            result = ConvertSqlServerDatabaseToSQLiteFile(mSqlServerConnString, mSqlitePath, mPassword, mHandler, mSelectionHandler)
             _isActive = False
 
             If result Then
@@ -322,10 +325,9 @@ Public Class SqlServerToSQLite
             _isActive = False
             mHandler(True, True, 100, "Workflow complete.")
         Catch ex As Exception
-            Dim msg As String = ""
             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to run workflow: " & ex.Message)
             _isActive = False
-            msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
+            Dim msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
             mHandler(True, False, 100, msg & ex.Message)
             ' catch
         End Try
@@ -352,10 +354,9 @@ Public Class SqlServerToSQLite
             UpdateProgress(handler, True, True, 100, "Workflow complete.")
 
         Catch ex As Exception
-            Dim msg As String = ""
             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to run workflow: " & ex.Message)
             _isActive = False
-            msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
+            Dim msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
             UpdateProgress(handler, True, False, 100, msg & ex.Message)
             ' catch
         End Try
@@ -478,9 +479,9 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath">The path to the generated SQLite database file</param>
     ''' <param name="password">The password to use or NULL if no password should be used to encrypt the DB</param>
     ''' <param name="handler">A handler to handle progress notifications.</param>
-    ''' <param name="selectionHandler">The selection handler which allows the user to select which tables to 
+    ''' <param name="selectionHandler">The selection handler which allows the user to select which tables to
     ''' convert.</param>
-    Private Shared Function ConvertSqlServerDatabaseToSQLiteFile(sqlConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean) As Boolean
+    Private Shared Function ConvertSqlServerDatabaseToSQLiteFile(sqlConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As Boolean
         ' Delete the target file if it exists already.
         If Not File.Exists(sqlitePath) Then
             CreateSQLiteDatabaseOnly(sqlitePath)
@@ -538,7 +539,7 @@ Public Class SqlServerToSQLite
                 CreateIMPROVDbsCacheDatabase(paramList, sqlConnString, sqlitePath, IDList, handler)
 
             Case datasources.wQRollup
-                CreateQRollupCacheDatabase(paramList, sqlConnString, sqlitePath, IDList, handler)
+                CreateQRollupCacheDatabase(sqlConnString, sqlitePath, IDList, handler)
 
         End Select
 
@@ -553,8 +554,8 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub ExecuteWorkflow(WorkflowStepList As String, Workflow As String, originalSqlitePath As String, sqlitePath As String, mCreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
-        If mCreateResultDb Then
+    Private Shared Sub ExecuteWorkflow(WorkflowStepList As String, Workflow As String, originalSqlitePath As String, sqlitePath As String, createResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
+        If createResultDb Then
             PerformCopyFile(originalSqlitePath, sqlitePath, handler)
         End If
 
@@ -563,7 +564,7 @@ Public Class SqlServerToSQLite
         Dim wf As List(Of clsXMLStepSchema)
         Dim wfString As String
         Dim wfStepList As SortedSet(Of Integer)
-        Dim wfDescription As String = "Unknown Workflow"
+        Dim wfDescription = "Unknown Workflow"
 
         If String.IsNullOrEmpty(Workflow) Then
             wfDescription = "Table T_Workflow in " & sqlitePath
@@ -576,14 +577,14 @@ Public Class SqlServerToSQLite
             wfString = Workflow
         End If
 
-        wf = ReadWorkflow(wfString, xmlDocType.wString, False)
+        wf = ReadWorkflow(wfString, xmlDocType.wString)
         If wf Is Nothing OrElse wf.Count = 0 Then
-            Throw New System.InvalidOperationException("Workflow is empty: " & wfDescription)
+            Throw New InvalidOperationException("Workflow is empty: " & wfDescription)
         End If
 
         wfStepList = BuildStepList(WorkflowStepList, wf)
 
-        RunWorkflow(wfStepList, 0, wf, sqlitePath, handler)
+        RunWorkflow(wfStepList, wf, sqlitePath, handler)
 
         If CompactDb Then
             CompactSQLiteDatabase(sqlitePath, handler)
@@ -689,7 +690,6 @@ Public Class SqlServerToSQLite
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
     Private Shared Sub RunCreateIterationTable(Sql As String, CreateSeparateTable As Boolean, iterationTblName As String, newTblName As String, groupByText As String, sqlitePath As String, handler As SqlConversionHandler)
-        Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
 
         ' Create the iteration table
         RunIterationTable(Sql, CreateSeparateTable, iterationTblName, newTblName, groupByText, sqlitePath, handler)
@@ -740,7 +740,7 @@ Public Class SqlServerToSQLite
         UpdateProgress(handler, False, True, 0, "Creating File: " & newFile)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Creating File: " & newFile)
 
-        System.IO.File.Copy(originalFile, newFile, True)
+        File.Copy(originalFile, newFile, True)
 
         UpdateProgress(handler, False, True, 100, "Finished creating File: " & newFile)
         CheckCancelled()
@@ -761,10 +761,9 @@ Public Class SqlServerToSQLite
 
     End Sub
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="stepsToRun"></param>
-    ''' <param name="workflowTotalSteps"></param>
     ''' <param name="Workflow"></param>
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
@@ -772,14 +771,11 @@ Public Class SqlServerToSQLite
     Private Shared Sub RunWorkflow(stepsToRun As ICollection(Of Integer), Workflow As IReadOnlyList(Of clsXMLStepSchema), sqlitePath As String, handler As SqlConversionHandler)
         Dim sql, src As String
         Dim kTrgtTble, PivotTble, IterationTbl, FunctionTble As Boolean
-        Dim startStep, endStep As Integer
-        Dim iCurrentStepNum As Integer = 0
+        Dim endStep As Integer
+        Dim iCurrentStepNum As Integer
         Dim tblList As List(Of String)
         Dim indxList As List(Of String)
-        Dim ExistingIndexName As String
         Dim SkipQuery As Boolean
-        ' make new pipeline to generate parameter table
-        Dim ptg As New ParamTableGenerator()
 
         If Not File.Exists(sqlitePath) Then
             Exit Sub
@@ -795,7 +791,6 @@ Public Class SqlServerToSQLite
             conn = New SQLiteConnection(sqliteConnString, True)
             conn.Open()
 
-            startStep = Workflow.Item(0).StepNum
             endStep = Workflow.Item(Workflow.Count - 1).StepNum
 
             'Drop all the tables not needed
@@ -831,7 +826,6 @@ Public Class SqlServerToSQLite
 
                     If stepsToRun.Contains(wfStep.StepNum) Then
                         SkipQuery = False
-                        ExistingIndexName = ""
                         mStep = wfStep.StepNo
                         sql = wfStep.SQL.Trim()
                         sql = sql.Replace("''", "'") 'Don't need this anymore
@@ -860,23 +854,23 @@ Public Class SqlServerToSQLite
                         src = wfStep.Source.ToUpper()
 
                         If IterationTbl Then
-                            RunCreateIterationTable(sql, wfStep.TargetTable, conn, sqlitePath, handler)
+                            RunCreateIterationTable(sql, wfStep.TargetTable, sqlitePath, handler)
                         ElseIf FunctionTble AndAlso Not String.IsNullOrEmpty(wfStep.TargetTable) Then
                             RunCreateDataTableFromFunctionList(sql, wfStep.TargetTable, conn, sqlitePath, handler)
                         ElseIf src = "RANGER" Then
                             RunRangerPipeline(wfStep.SQL, wfStep.TargetTable, sqlitePath)
-#if INCLUDE_ZEDGRAPH
+#If INCLUDE_ZEDGRAPH Then
                         ElseIf src = "PLOT" Then
                             RunPlotting(wfStep.SQL, wfStep.TargetTable, sqlitePath, sqliteConnString, handler)
-#end if
+#End If
                         Else
                             If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
                                 sql = "Create table " & wfStep.TargetTable & " as " & sql
                                 mSQL = sql
                             Else
                                 'if an index name is returned, then we should skip the query
-                                ExistingIndexName = CheckForExistingIndex(sql, indxList)
-                                If Not String.IsNullOrEmpty(ExistingIndexName) Then
+                                Dim existingIndexName = CheckForExistingIndex(sql, indxList)
+                                If Not String.IsNullOrEmpty(existingIndexName) Then
                                     SkipQuery = True
                                 End If
                             End If
@@ -954,7 +948,7 @@ Public Class SqlServerToSQLite
         End Try
     End Sub
 
-#if INCLUDE_ZEDGRAPH
+#If INCLUDE_ZEDGRAPH Then
     Private Shared Sub RunPlotting(plotDefinition As String, tblName As String, dbPath As String, sqliteConn As String, handler As SqlConversionHandler)
         Dim i As Integer
         Dim rows(), tmp() As String
@@ -1127,7 +1121,7 @@ Public Class SqlServerToSQLite
         End Try
 
     End Sub
-#end if
+#End If
 
     Public Shared Function GetSQLiteDataReader(strSQLQuery As String, sqliteConn As String) As SQLiteDataReader
 
@@ -1238,19 +1232,12 @@ Public Class SqlServerToSQLite
     '    'Invoke(ncb, New Object() {args.Message})
     'End Sub
 
-    ' this is targeted by the cross-thread invoke from HandleStatusMessageUpdated
-    ' and update the message status display
-    Private Sub SetStatusMessage(Message As String)
-        'StatusCtl.Text = Message
-    End Sub
-
-
-    Private Shared Sub RunCreateIterationTable(sql As String, tname As String, conn As SQLiteConnection, sqlitePath As String, handler As SqlConversionHandler)
+    Private Shared Sub RunCreateIterationTable(sql As String, tname As String, sqlitePath As String, handler As SqlConversionHandler)
         Dim IterationTables As String()
         Dim CreateSeparateTable As Boolean
-        Dim SelectSQL As String = ""
-        Dim IterationTableName As String = ""
-        Dim GroupByText As String = ""
+        Dim SelectSQL = ""
+        Dim IterationTableName = ""
+        Dim GroupByText = ""
         If Not String.IsNullOrEmpty(sql) Then
             IterationTables = sql.Split("|"c)
             If IterationTables.Length = 4 Then
@@ -1261,7 +1248,7 @@ Public Class SqlServerToSQLite
                 Boolean.TryParse(IterationTables(3), CreateSeparateTable)
             End If
         End If
-        RunIterationTable(SelectSQL, CreateSeparateTable, IterationTableName, tname, GroupByText, sqlitePath, Nothing, handler)
+        RunIterationTable(SelectSQL, CreateSeparateTable, IterationTableName, tname, GroupByText, sqlitePath, handler)
     End Sub
 
     Private Shared Sub RunIterationTable(
@@ -1275,7 +1262,6 @@ Public Class SqlServerToSQLite
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-        Dim tf As New TableFunctions.TblFunctions
 
         Using slconn As New SQLiteConnection(sqliteConnString, True)
             slconn.Open()
@@ -1290,18 +1276,17 @@ Public Class SqlServerToSQLite
                 Try
                     Dim tableQuery As String = "Select * from " + iterationTableName
                     Dim query As New SQLiteCommand(tableQuery, slconn)
-                    Dim counter As Integer = 0
+                    Dim counter = 0
 
                     Dim colName As String
                     Dim colValue As String
                     Dim fldName As String
                     Dim fldValue As String
-                    Dim fullSql As String = ""
-                    Dim whereClause As String = ""
+                    Dim fullSql As String
+                    Dim whereClause As String
                     Dim fldOperator As String()
-                    Dim firstPass As Boolean = True
-                    Dim createTableSQL As String = ""
-                    Dim selectTxt As String = ""
+                    Dim createTableSQL As String
+                    Dim selectTxt As String
 
                     Using reader As SQLiteDataReader = query.ExecuteReader()
                         Dim insert As New SQLiteCommand
@@ -1309,7 +1294,9 @@ Public Class SqlServerToSQLite
                         insert.Transaction = tx
 
                         'Remove the select portion so the param list name can be added
-                        SQL = SQL.Substring(SQL.ToLower.IndexOf("select") + 6, SQL.Length - (SQL.ToLower.IndexOf("select") + 6))
+                        Dim charIndex = SQL.ToLower.IndexOf("select", StringComparison.Ordinal) + 6
+
+                        SQL = SQL.Substring(charIndex, SQL.Length - charIndex)
 
                         selectTxt = "select """" as ParamField, "
                         If Not CreateSeparateTable Then
@@ -1320,14 +1307,14 @@ Public Class SqlServerToSQLite
                         End If
 
                         While reader.Read()
-                            colName = CStr(reader.GetName(0))
+                            colName = reader.GetName(0)
                             colValue = CStr(reader.GetValue(0))
-                            fullSql = ""
+
                             whereClause = ""
                             selectTxt = "select """ & colValue & """ as " & colName & ", "
                             'SQL = "SELECT """ & fldValue & """ as " & fldName & ", " & groupByField & ", count(*) as Cnt " & vbCrLf & " From " & sourceTblName & vbCrLf
 
-                            For i As Integer = 1 To (reader.FieldCount - 1) Step 2
+                            For i = 1 To (reader.FieldCount - 1) Step 2
                                 fldName = CStr(reader.GetName(i))
                                 fldValue = CStr(reader.GetValue(i))
                                 fldOperator = CStr(reader.GetValue(i + 1)).Split(";"c)
@@ -1342,6 +1329,7 @@ Public Class SqlServerToSQLite
                                 whereClause = whereClause.Substring(0, whereClause.Length - 4)
                             End If
                             whereClause = whereClause & vbCrLf & groupByText
+
                             If CreateSeparateTable Then
                                 fullSql = "Create Table " & colValue & " as " & vbCrLf & selectTxt & SQL & " Where " & whereClause
                             Else
@@ -1356,8 +1344,6 @@ Public Class SqlServerToSQLite
                                 CheckCancelled()
                                 UpdateProgress(handler, False, True, CInt((100.0R * counter / 10)), counter & " Iterations run so far")
                             End If
-                            whereClause = ""
-                            firstPass = False
 
                         End While
                     End Using
@@ -1408,14 +1394,14 @@ Public Class SqlServerToSQLite
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-        Dim tf As New TableFunctions.TblFunctions
+        Dim tf As New TblFunctions
 
         ' Connect to the SQLite database next
         Using sl2conn As New SQLiteConnection(sqliteConnString, True)
             sl2conn.Open()
 
             ' Go over all tables in the schema and copy their rows
-            For i As Integer = 0 To schema.Count - 1
+            For i = 0 To schema.Count - 1
                 Dim tx As SQLiteTransaction = sl2conn.BeginTransaction()
                 Try
                     Dim tableQuery As String = BuildSqliteCustomTableQuery(sourceTblName, fldDefinitionList)
@@ -1429,7 +1415,7 @@ Public Class SqlServerToSQLite
                         Dim columnDataTypes As List(Of DbType) = Nothing
                         Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i), columnDataTypes)
 
-                        Dim counter As Integer = 0
+                        Dim counter = 0
                         While reader.Read()
                             insert.Connection = sl2conn
                             insert.Transaction = tx
@@ -1448,13 +1434,13 @@ Public Class SqlServerToSQLite
 
                             Dim pnames As New List(Of String)
 
-                            For j As Integer = 0 To schema(i).Columns.Count - 1
+                            For j = 0 To schema(i).Columns.Count - 1
                                 Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
 
                                 ' May need to format the date as a SQLite canonical date
                                 ' However, it appears that this is not necessary (July 2014)
                                 'If columnDataTypes(j) = DbType.DateTime Then
-                                '	
+                                '
                                 '	Dim objValue As Object = dr.Item(schema(i).Columns(j).ColumnName)
 
                                 '	Dim dtDate As DateTime = Nothing
@@ -1520,25 +1506,25 @@ Public Class SqlServerToSQLite
     End Function
 
     Private Shared Function BuildDataRow(fldDefList As Dictionary(Of String, String)) As DataRow
-        Dim tbl As DataTable = New DataTable("TempDb")
+        Dim tbl = New DataTable("TempDb")
         Dim dr As DataRow
         Dim fldFldType As String()
 
         For Each item In fldDefList
             fldFldType = item.Key.Split("|"c)
-            Dim idColumn As DataColumn = New DataColumn()
-            idColumn.DataType = System.Type.GetType(GetSQLiteStringColumnType(fldFldType(1)))
+            Dim idColumn = New DataColumn()
+            idColumn.DataType = Type.GetType(GetSQLiteStringColumnType(fldFldType(1)))
             idColumn.ColumnName = fldFldType(0)
             tbl.Columns.Add(idColumn)
         Next
 
         If Not mCurrentFunctionList Is Nothing AndAlso mCurrentFunctionList.Count > 0 Then
-            For i As Integer = 0 To mCurrentFunctionList.Count - 1
+            For i = 0 To mCurrentFunctionList.Count - 1
                 Dim fldName As String = mCurrentFunctionList(i).NewFieldName
-                Dim datatype As System.Type = mCurrentFunctionList(i).ReturnDataType
+                Dim datatype As Type = mCurrentFunctionList(i).ReturnDataType
 
-                Dim idColumn As DataColumn = New DataColumn()
-                idColumn.DataType = System.Type.GetType(GetSQLiteStringColumnType(datatype.ToString))
+                Dim idColumn = New DataColumn()
+                idColumn.DataType = Type.GetType(GetSQLiteStringColumnType(datatype.ToString))
                 idColumn.ColumnName = fldName
                 tbl.Columns.Add(idColumn)
             Next
@@ -1591,7 +1577,7 @@ Public Class SqlServerToSQLite
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite tables...")
 
         ' Create all tables in the new database
-        Dim count As Integer = 0
+        Dim count = 0
         For Each dt As TableSchema In schema
             Try
                 AddSQLiteTable(conn, dt)
@@ -1611,7 +1597,7 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Private Shared Function CreateSqliteFunctionTableSchema(selectCommandList() As String, NewTableName As String) As List(Of TableSchema)
+    Private Shared Function CreateSqliteFunctionTableSchema(selectCommandList As IList(Of String), NewTableName As String) As List(Of TableSchema)
         Dim tables As New List(Of TableSchema)()
         Dim res As New TableSchema()
         Dim FieldFieldType As String()
@@ -1621,7 +1607,6 @@ Public Class SqlServerToSQLite
         Dim fnctn As String
         Dim flds As String
         Dim colName As String
-        Dim parmList As String
         Dim FieldListNames As String()
         Dim TmpFldFldTypeList As String()
 
@@ -1630,30 +1615,37 @@ Public Class SqlServerToSQLite
         End If
         mFldDefinitions.Clear()
         If mCurrentFunctionList Is Nothing Then
-            mCurrentFunctionList = New List(Of TableFunctions.SingleReturnFunction)
+            mCurrentFunctionList = New List(Of SingleReturnFunction)
         End If
         mCurrentFunctionList.Clear()
         res.Columns = New List(Of ColumnSchema)()
 
         res.TableName = NewTableName
+
+        If selectCommandList.Count = 0 Then
+            mSourceTableName = ""
+            Return tables
+        End If
         mSourceTableName = selectCommandList(0)
+
         'Gather list of table fields first
         For i = 1 To selectCommandList.Count - 1
             If Not String.IsNullOrEmpty(selectCommandList(i).ToString) Then
                 rows = selectCommandList(i).ToString.Split(";"c)
                 fnctn = Trim(rows(FunctionTableFields.wFunction))
                 flds = Trim(rows(FunctionTableFields.wFieldList))
-                colName = Trim(rows(FunctionTableFields.wNewColumnName))
-                parmList = Trim(rows(FunctionTableFields.wParameterList))
+                ' colName = Trim(rows(FunctionTableFields.wNewColumnName))
+                ' parmList = Trim(rows(FunctionTableFields.wParameterList))
                 TmpFldFldTypeList = flds.Split(","c)
                 If fnctn = TABLE_COLUMN Then
                     FieldFieldType = TmpFldFldTypeList(j).Split("|"c)
-                    Dim col As New ColumnSchema()
-                    col.ColumnName = FieldFieldType(0)
-                    col.ColumnType = FieldFieldType(1)
-                    col.IsNullable = True
-                    col.IsIdentity = False
-                    col.DefaultValue = String.Empty
+                    Dim col As New ColumnSchema With {
+                        .ColumnName = FieldFieldType(0),
+                        .ColumnType = FieldFieldType(1),
+                        .IsNullable = True,
+                        .IsIdentity = False,
+                        .DefaultValue = String.Empty
+                    }
                     res.Columns.Add(col)
                     mFldDefinitions.Add(TmpFldFldTypeList(j), TABLE_COLUMN)
                 End If
@@ -1667,7 +1659,7 @@ Public Class SqlServerToSQLite
                 fnctn = Trim(rows(FunctionTableFields.wFunction))
                 flds = Trim(rows(FunctionTableFields.wFieldList))
                 colName = Trim(rows(FunctionTableFields.wNewColumnName))
-                parmList = Trim(rows(FunctionTableFields.wParameterList))
+                ' parmList = Trim(rows(FunctionTableFields.wParameterList))
                 TmpFldFldTypeList = flds.Split(","c)
                 If fnctn <> TABLE_COLUMN Then
                     ReDim FieldListNames(TmpFldFldTypeList.Count - 1)
@@ -1678,13 +1670,12 @@ Public Class SqlServerToSQLite
                         End If
                         FieldListNames(j) = FieldFieldType(0)
                     Next
-                    Dim tf As New TableFunctions.TblFunctions
-                    Dim newFunction As New TableFunctions.SingleReturnFunction
-                    For k As Integer = 0 To tf.AvailableFunctions.Count - 1
+                    Dim tf As New TblFunctions
+                    Dim newFunction As New SingleReturnFunction
+                    For k = 0 To tf.AvailableFunctions.Count - 1
                         If tf.AvailableFunctions(k).Name = fnctn Then
                             'newFunction.NewFieldName = colName
                             tf.AvailableFunctions(k).NewFieldName = colName
-                            newFunction = New TableFunctions.SingleReturnFunction
                             newFunction = tf.AvailableFunctions(k)
                             Exit For
                         Else
@@ -1698,7 +1689,7 @@ Public Class SqlServerToSQLite
                         mCurrentFunction = newFunction
                         mCurrentFunctionList.Add(newFunction)
                     End If
-                    Dim datatype As System.Type = mCurrentFunction.ReturnDataType
+                    Dim datatype As Type = mCurrentFunction.ReturnDataType
                     Dim col1 As New ColumnSchema()
                     col1.ColumnName = colName
                     col1.ColumnType = GetStringColumnType(datatype.ToString)
@@ -1758,23 +1749,21 @@ Public Class SqlServerToSQLite
     End Function
 
     Private Shared Sub InitializeTableFunctions()
-        Dim tf As TableFunctions.TblFunctions
-        Dim iCatIndex As Integer
-        tf = New TableFunctions.TblFunctions
+        Dim tf As TblFunctions
+        tf = New TblFunctions
         mFunctionsList = tf.AvailableFunctions
 
-        Dim s_FunctionNames As String() = New String(mFunctionsList.Count - 1) {}
+        Dim s_FunctionNames = New String(mFunctionsList.Count - 1) {}
         Dim s_FunctionCategories As New List(Of String)
 
-        For i As Integer = 0 To s_FunctionNames.Length - 1
+        For i = 0 To s_FunctionNames.Length - 1
             If Not s_FunctionCategories.Contains(mFunctionsList(i).Category.ToString) Then
                 s_FunctionCategories.Add(mFunctionsList(i).Category.ToString)
             End If
         Next
 
-        For i As Integer = 0 To s_FunctionNames.Length - 1
+        For i = 0 To s_FunctionNames.Length - 1
             s_FunctionNames(i) = mFunctionsList(i).Name
-            iCatIndex = s_FunctionCategories.IndexOf(mFunctionsList(i).Category.ToString)
         Next
 
     End Sub
@@ -1785,7 +1774,7 @@ Public Class SqlServerToSQLite
         If Not String.IsNullOrEmpty(sql.Trim) Then
             sqlLines = sql.Split(New Char() {ControlChars.Cr, ControlChars.Lf})
             For Each s As String In sqlLines
-                s = s.ToLower.TrimStart() 's.TrimStart(" "c).ToLower 
+                s = s.ToLower.TrimStart() 's.TrimStart(" "c).ToLower
                 'look for first non comment line
                 If s.Length > 0 Then
                     If s.Substring(0, 2) = "--" Then
@@ -1819,10 +1808,10 @@ Public Class SqlServerToSQLite
         Dim Table As String = String.Empty
         Dim qry As String = Nothing
         Dim fldList As String = String.Empty
-        Dim grpBy As String = String.Empty
+        Dim grpBy As String
         Dim fldQry As String = String.Empty
         Dim caseQry As String = String.Empty
-        Dim numColumns As Integer = 0
+        Dim numColumns = 0
         Dim i As Integer
         Dim pivotDefItems() As String
 
@@ -1863,8 +1852,7 @@ Public Class SqlServerToSQLite
                 Using conn As New SQLiteConnection(connString, True)
                     conn.Open()
 
-                    Dim cmd As New SQLiteCommand
-                    cmd = conn.CreateCommand
+                    Dim cmd = conn.CreateCommand
                     cmd.CommandText = qry
                     Using reader As SQLiteDataReader = cmd.ExecuteReader()
                         While reader.Read()
@@ -1954,15 +1942,14 @@ Public Class SqlServerToSQLite
             sqconn.Open()
 
             ' Go over all tables in the schema and copy their rows
-            For i As Integer = 0 To schema.Count - 1
+            For i = 0 To schema.Count - 1
                 Dim tx As SQLiteTransaction = sqconn.BeginTransaction()
                 Try
-                    Dim tableQuery As String = BuildSqlServerTableQuery(schema(i))
 
                     Dim columnDataTypes As List(Of DbType) = Nothing
                     Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i), columnDataTypes)
 
-                    Dim counter As Integer = 0
+                    Dim counter = 0
                     Dim tbl As DataTable
                     tbl = ds.Tables(i)
                     Dim row As DataRow
@@ -1971,7 +1958,7 @@ Public Class SqlServerToSQLite
                         insert.Transaction = tx
 
                         Dim pnames As New List(Of String)()
-                        For j As Integer = 0 To schema(i).Columns.Count - 1
+                        For j = 0 To schema(i).Columns.Count - 1
                             Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                             insert.Parameters(pname).Value = CastValueForColumn(row(j), schema(i).Columns(j))
                             pnames.Add(pname)
@@ -2038,7 +2025,7 @@ Public Class SqlServerToSQLite
                 sqconn.Open()
 
                 ' Go over all tables in the schema and copy their rows
-                For i As Integer = 0 To schema.Count - 1
+                For i = 0 To schema.Count - 1
                     Dim tx As SQLiteTransaction = sqconn.BeginTransaction()
                     Try
                         Dim tableQuery As String = BuildSqlServerTableQuery(schema(i))
@@ -2049,12 +2036,12 @@ Public Class SqlServerToSQLite
                             Dim columnDataTypes As List(Of DbType) = Nothing
                             Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i), columnDataTypes)
 
-                            Dim counter As Integer = 0
+                            Dim counter = 0
                             While reader.Read()
                                 insert.Connection = sqconn
                                 insert.Transaction = tx
                                 Dim pnames As New List(Of String)()
-                                For j As Integer = 0 To schema(i).Columns.Count - 1
+                                For j = 0 To schema(i).Columns.Count - 1
                                     Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                                     insert.Parameters(pname).Value = CastValueForColumn(reader(j), schema(i).Columns(j))
                                     pnames.Add(pname)
@@ -2091,26 +2078,23 @@ Public Class SqlServerToSQLite
         End Using
     End Sub
 
-    Private Shared Function ReadWorkflow(XmlDocument As String, xmlDocumentType As Integer, ViewOnly As Boolean) As List(Of clsXMLStepSchema)
+    Private Shared Function ReadWorkflow(XmlDocument As String, xmlDocumentType As Integer) As List(Of clsXMLStepSchema)
 
-        Dim xmlReader As Xml.XmlTextReader = Nothing
+        Dim xmlReader As XmlTextReader = Nothing
         Dim workflow As New List(Of clsXMLStepSchema)
         Dim stepSchema As New clsXMLStepSchema
-        Dim streamFile As System.IO.StreamReader = Nothing
-        Dim streamString As System.IO.StringReader = Nothing
         Try
 
             Select Case xmlDocumentType
                 Case xmlDocType.wFile
-                    If Not System.IO.File.Exists(XmlDocument) Then
+                    If Not File.Exists(XmlDocument) Then
                         Return Nothing
                     End If
-                    streamFile = New StreamReader(XmlDocument)
-                    xmlReader = New Xml.XmlTextReader(streamFile)
+                    xmlReader = New XmlTextReader(New StreamReader(XmlDocument))
 
                 Case xmlDocType.wString
-                    streamString = New StringReader(XmlDocument)
-                    xmlReader = New Xml.XmlTextReader(streamString)
+                    xmlReader = New XmlTextReader(New StringReader(XmlDocument))
+
             End Select
 
             xmlReader.WhitespaceHandling = WhitespaceHandling.None
@@ -2267,7 +2251,7 @@ Public Class SqlServerToSQLite
 
         Dim sb As New StringBuilder()
         sb.Append("INSERT INTO [" & ts.TableName & "] (")
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             sb.Append("[" & ts.Columns(i).ColumnName & "]")
             If i < ts.Columns.Count - 1 Then
                 sb.Append(", ")
@@ -2278,7 +2262,7 @@ Public Class SqlServerToSQLite
         columnDataTypes = New List(Of DbType)
 
         Dim pnames As New List(Of String)()
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             Dim pname As String = "@" & GetNormalizedName(ts.Columns(i).ColumnName, pnames)
             sb.Append(pname)
             If i < ts.Columns.Count - 1 Then
@@ -2311,7 +2295,7 @@ Public Class SqlServerToSQLite
     ''' <returns>A normalized name</returns>
     Private Shared Function GetNormalizedName(str As String, names As ICollection(Of String)) As String
         Dim sb As New StringBuilder()
-        For i As Integer = 0 To str.Length - 1
+        For i = 0 To str.Length - 1
             If [Char].IsLetterOrDigit(str(i)) OrElse str(i) = "_"c Then
                 sb.Append(str(i))
             Else
@@ -2398,13 +2382,13 @@ Public Class SqlServerToSQLite
     Private Shared Function BuildSqlServerTableQuery(ts As TableSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("SELECT ")
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             sb.Append("[" & ts.Columns(i).ColumnName & "]")
             If i < ts.Columns.Count - 1 Then
                 sb.Append(", ")
             End If
         Next
-        ' for
+
         sb.Append(" FROM [" & ts.TableName & "]")
         Return sb.ToString()
     End Function
@@ -2429,7 +2413,7 @@ Public Class SqlServerToSQLite
             conn.Open()
 
             ' Create all tables in the new database
-            Dim count As Integer = 0
+            Dim count = 0
             For Each dt As TableSchema In schema
                 Try
                     AddSQLiteTable(conn, dt)
@@ -2481,7 +2465,7 @@ Public Class SqlServerToSQLite
             conn.Open()
 
             ' Create all tables in the new database
-            Dim count As Integer = 0
+            Dim count = 0
             For Each dt As TableSchema In schema
                 Try
                     AddSQLiteTable(conn, dt)
@@ -2529,8 +2513,8 @@ Public Class SqlServerToSQLite
 
         sb.Append("CREATE TABLE [" & ts.TableName & "] (" & vbLf)
 
-        Dim pkey As Boolean = False
-        For i As Integer = 0 To ts.Columns.Count - 1
+        Dim pkey = False
+        For i = 0 To ts.Columns.Count - 1
             Dim col As ColumnSchema = ts.Columns(i)
             Dim cline As String = BuildColumnStatement(col, ts, pkey)
             sb.Append(cline)
@@ -2586,7 +2570,7 @@ Public Class SqlServerToSQLite
         sb.Append(("INDEX [" & tableName & "_") + indexSchema.IndexName & "]" & vbLf)
         sb.Append("ON [" & tableName & "]" & vbLf)
         sb.Append("(")
-        For i As Integer = 0 To indexSchema.Columns.Count - 1
+        For i = 0 To indexSchema.Columns.Count - 1
             sb.Append("[" & indexSchema.Columns(i).ColumnName & "]")
             If Not indexSchema.Columns(i).IsAscending Then
                 sb.Append(" DESC")
@@ -2710,7 +2694,7 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="connString">The connection string used for reading SQL Server schema.</param>
     ''' <param name="handler">A handler for progress notifications.</param>
-    ''' <param name="selectionHandler">The selection handler which allows the user to select 
+    ''' <param name="selectionHandler">The selection handler which allows the user to select
     ''' which tables to convert.</param>
     ''' <returns>List of table schema objects for every table in the SQL Server database.</returns>
     Private Shared Function ReadSqlServerSchema(connString As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As List(Of TableSchema)
@@ -2730,7 +2714,7 @@ Public Class SqlServerToSQLite
             End Using
             ' using
             ' Next step is to use ADO APIs to query the schema of each table.
-            Dim count As Integer = 0
+            Dim count = 0
             For Each tname As String In tableNames
                 Dim ts As TableSchema = CreateTableSchema(conn, tname)
                 'CreateForeignKeySchema(conn, ts)
@@ -2787,7 +2771,7 @@ Public Class SqlServerToSQLite
                 If TypeOf tmp Is DBNull Then
                     Continue While
                 End If
-                Dim colName As String = DirectCast(reader("COLUMN_NAME"), String)
+                Dim colName = DirectCast(reader("COLUMN_NAME"), String)
 
                 tmp = reader("COLUMN_DEFAULT")
                 Dim colDefault As String
@@ -2799,14 +2783,14 @@ Public Class SqlServerToSQLite
 
                 tmp = reader("IS_NULLABLE")
                 Dim isNullable As Boolean = (DirectCast(tmp, String) = "YES")
-                Dim dataType As String = DirectCast(reader("DATA_TYPE"), String)
+                Dim dataType = DirectCast(reader("DATA_TYPE"), String)
 
                 tmp = reader("IDENT")
                 Dim isIdentity As Boolean
                 If TypeOf tmp Is DBNull Then
                     isIdentity = False
                 Else
-                    isIdentity = If(CInt(reader("IDENT")) = 1, True, False)
+                    isIdentity = (CInt(reader("IDENT")) = 1)
                 End If
 
                 ValidateDataType(dataType)
@@ -2878,8 +2862,8 @@ Public Class SqlServerToSQLite
         Dim cmd4 As New SqlCommand("EXEC sp_tablecollations '" & tableName & "'", conn)
         Using reader As SqlDataReader = cmd4.ExecuteReader()
             While reader.Read()
-                Dim isCaseSensitive As System.Nullable(Of Boolean) = Nothing
-                Dim colName As String = DirectCast(reader("name"), String)
+                Dim isCaseSensitive As Boolean?
+                Dim colName = DirectCast(reader("name"), String)
 
                 isCaseSensitive = False
                 'JDS Research
@@ -2946,9 +2930,7 @@ Public Class SqlServerToSQLite
     Private Shared Sub CreateViperResultsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
 
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
         Dim params As String()
 
@@ -2979,7 +2961,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
 
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         If tblsCreated.Contains("T_Proteins") Then
             CreateMTSCacheIndex("T_Proteins", "Ref_ID", "P_Ref_ID_indx", sqlitePath, handler)
@@ -3095,9 +3077,7 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Sub CreateAMTTagDbsAllCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
 
         ' Create the SQLite database and apply the schema
@@ -3118,7 +3098,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
 
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         If tblsCreated.Contains("T_Proteins") Then
 
@@ -3174,9 +3154,7 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Sub CreateAMTTagDbsJobsCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
 
         ' Create the SQLite database and apply the schema
@@ -3197,7 +3175,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
 
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         If tblsCreated.Contains("T_Peptides") Then
 
@@ -3235,9 +3213,7 @@ Public Class SqlServerToSQLite
     '************
     Private Shared Sub CreateIMPROVDbsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
         Dim params As String()
         Dim paramListTmp As New List(Of String)
@@ -3268,8 +3244,6 @@ Public Class SqlServerToSQLite
         CreateMTBCacheTableFromProc(sqlitePath, TblSchema, handler)
 
         CheckCancelled()
-
-        tblsCreated = GetTablesFromDb(sqlitePath)
 
         StoredProcName = "GetMassTags"
 
@@ -3306,7 +3280,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
 
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         For Each tblName In tblsCreated
             If tblName.Contains("_Experiments") Then
@@ -3335,9 +3309,7 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Sub CreatePTDbsCacheDatabase(paramList As IReadOnlyCollection(Of String), sqlConnString As String, sqlitePath As String, ID_List As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
         Dim params As String()
 
@@ -3368,7 +3340,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
 
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         If tblsCreated.Contains("T_Peptides") Then
             CreateMTSCacheIndex("T_Peptides", "Mass_Tag_ID", "Idx_T_Peptides_Mass_Tag_ID", sqlitePath, handler)
@@ -3393,13 +3365,10 @@ Public Class SqlServerToSQLite
     End Sub
 
 
-    Private Shared Sub CreateQRollupCacheDatabase(paramList As List(Of String), sqlConnString As String, sqlitePath As String, IDList As String, handler As SqlConversionHandler)
+    Private Shared Sub CreateQRollupCacheDatabase(sqlConnString As String, sqlitePath As String, IDList As String, handler As SqlConversionHandler)
         Dim TblSchema As List(Of TableSchema)
-        Dim resultDataset As New DataSet
         Dim tblNames As New List(Of String)
-        Dim tblsCreated As New List(Of String)
         Dim StoredProcName As String
-        'Dim params As String()
         Dim paramListTmp As New List(Of String)
 
         If Not File.Exists(sqlitePath) Then
@@ -3431,7 +3400,7 @@ Public Class SqlServerToSQLite
 
         '-- Protein List
         'exec QRRetrieveProteinsMultiQID
-        '    @QuantitationIDList=@QIDList, 
+        '    @QuantitationIDList=@QIDList,
         '    @VerboseColumnOutput=1,             -- Set to 1 to include all of the output columns; 0 to hide the less commonly used columns
         '    @IncludeProteinDescription=0,       -- Set to 1 to include protein descriptions; 0 to exclude them
         '    @SortMode=2,                        -- 0=Unsorted, 1=QID, 2=SampleName, 3=Comment, 4=Job (first job if more than one job), 5=Dataset Acq_Time_Start
@@ -3464,7 +3433,7 @@ Public Class SqlServerToSQLite
 
         '-- Peptide List (Note: change @IncludeRefColumn to 1 to get proteins and peptides)
         '        exec QRRetrievePeptidesMultiQID
-        '    @QuantitationIDList=@QIDList, 
+        '    @QuantitationIDList=@QIDList,
         '    @IncludeRefColumn=0,                -- Set to 1 to include the proteins for each peptide (returning multiple lines for each peptide if it's in multiple proteins)
         '    @VerboseColumnOutput=1,             -- Set to 1 to include all of the output columns; 0 to hide the less commonly used columns
         '    @IncludePrefixAndSuffixResidues=0,  -- The query is slower if this is enabled
@@ -3528,7 +3497,7 @@ Public Class SqlServerToSQLite
 
         '*****************************************************************
         ' Create Indexes
-        tblsCreated = GetTablesFromDb(sqlitePath)
+        Dim tblsCreated = GetTablesFromDb(sqlitePath)
 
         If tblsCreated.Contains("T_QRSummary") Then
             CreateMTSCacheIndex("T_QRSummary", "Jobs", "idx_T_QRSummary_Jobs", sqlitePath, handler)
@@ -3649,11 +3618,10 @@ Public Class SqlServerToSQLite
 
     Private Shared Function GetWorkflowFromFile(workflowPath As String) As String
         Dim workflow As String = String.Empty
-        Dim line As String = String.Empty
-        Dim sr As StreamReader = New StreamReader(workflowPath)
+        Dim sr = New StreamReader(workflowPath)
 
-        Do While sr.Peek() >= 0
-            line = sr.ReadLine()
+        Do While Not sr.EndOfStream
+            Dim line = sr.ReadLine()
             workflow += " " + line
         Loop
         sr.Close()
@@ -3677,9 +3645,9 @@ Public Class SqlServerToSQLite
     Private Shared Sub CreateMTBCacheTableFromProcInChunks(paramList As IReadOnlyCollection(Of String), sprocParam As String, sqlConnString As String, sqlitePath As String, MD_ID_List As String, handler As SqlConversionHandler, StoredProcName As String, tblNames As IReadOnlyList(Of String), chunkSize As Integer)
         Dim TblSchema As List(Of TableSchema) = Nothing
         Dim arrayList() As String
-        Dim tmpMD_ID_List As String = ""
-        Dim counter As Integer = 0
-        Dim tblCreated As Boolean = False
+        Dim tmpMD_ID_List = ""
+        Dim counter = 0
+        Dim tblCreated = False
 
         arrayList = MD_ID_List.Split(","c)
         For i = 0 To arrayList.Count - 1
@@ -3707,7 +3675,6 @@ Public Class SqlServerToSQLite
                 TblSchema = ReturnTableSchemaFromStoredProc(paramList, sprocParam, sqlConnString, tblNames, StoredProcName, tmpMD_ID_List, handler)
                 CheckCancelled()
                 CreateMTBCacheTableFromProc(sqlitePath, TblSchema, handler)
-                tblCreated = True
             Else
                 GetAdditionalRecordsFromStoredProc(sqlConnString, StoredProcName, tmpMD_ID_List, handler)
                 ' Copy all rows from SQL Server tables to the newly created SQLite database
@@ -3750,15 +3717,14 @@ Public Class SqlServerToSQLite
         Dim tblschema As TableSchema
         Dim tblcolumnslist As List(Of ColumnSchema)
         Dim tblcolumn As ColumnSchema
-        Dim connection As SqlConnection = New SqlConnection(connectionString)
-        Dim myMessage As String = ""
+        Dim connection = New SqlConnection(connectionString)
         Dim params As String()
 
         UpdateProgress(handler, False, True, 0, "Executing " & mStoredProcName)
         connection.Open()
         '"@MDIDs"
         Try
-            Dim command As SqlCommand = New SqlCommand(mStoredProcName, connection)
+            Dim command = New SqlCommand(mStoredProcName, connection)
             command.CommandTimeout = 1800
             If Not sprocParam Is Nothing Then
                 command.Parameters.Add(sprocParam, SqlDbType.VarChar)
@@ -3779,7 +3745,7 @@ Public Class SqlServerToSQLite
             End If
             command.CommandType = CommandType.StoredProcedure
 
-            Using adapter As SqlDataAdapter = New SqlDataAdapter(command)
+            Using adapter = New SqlDataAdapter(command)
 
                 mDataset = New DataSet
                 mDataset.EnforceConstraints = False
@@ -3866,15 +3832,13 @@ Public Class SqlServerToSQLite
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
     Private Shared Sub GetAdditionalRecordsFromStoredProc(connectionString As String, mStoredProcName As String, MD_ID_List As String, handler As SqlConversionHandler)
-        Dim res As New List(Of TableSchema)
-        Dim connection As SqlConnection = New SqlConnection(connectionString)
-        Dim myMessage As String = ""
+        Dim connection = New SqlConnection(connectionString)
 
         UpdateProgress(handler, False, True, 0, "Executing " & mStoredProcName)
         connection.Open()
 
         Try
-            Dim command As SqlCommand = New SqlCommand(mStoredProcName, connection)
+            Dim command = New SqlCommand(mStoredProcName, connection)
             command.CommandTimeout = 300
 
             command.Parameters.Add("@MDIDs", SqlDbType.VarChar)
@@ -3882,7 +3846,7 @@ Public Class SqlServerToSQLite
             command.Parameters.Item("@MDIDs").Value = MD_ID_List
             command.CommandType = CommandType.StoredProcedure
 
-            Dim adapter As SqlDataAdapter = New SqlDataAdapter(command)
+            Dim adapter = New SqlDataAdapter(command)
             mDataset = New DataSet
             mDataset.EnforceConstraints = False
             adapter.Fill(mDataset)
@@ -3970,13 +3934,13 @@ Public Class SqlServerToSQLite
     ''' <param name="colDefault">The original default value string (as read from SQL Server).</param>
     ''' <returns>Adjusted DEFAULT value string (for SQLite)</returns>
     Private Shared Function FixDefaultValueString(colDefault As String) As String
-        Dim replaced As Boolean = False
+        Dim replaced = False
         Dim res As String = colDefault.Trim()
 
         ' Find first/last indexes in which to search
         Dim first As Integer = -1
         Dim last As Integer = -1
-        For i As Integer = 0 To res.Length - 1
+        For i = 0 To res.Length - 1
             If res(i) = "'"c AndAlso first = -1 Then
                 first = i
             End If
@@ -3990,7 +3954,7 @@ Public Class SqlServerToSQLite
         End If
 
         Dim sb As New StringBuilder()
-        For i As Integer = 0 To res.Length - 1
+        For i = 0 To res.Length - 1
             If res(i) <> "("c AndAlso res(i) <> ")"c Then
                 sb.Append(res(i))
                 replaced = True
@@ -4072,7 +4036,7 @@ Public Class SqlServerToSQLite
     Private Shared Function CreateSQLiteConnectionString(sqlitePath As String, password As String) As String
         Dim builder As New SQLiteConnectionStringBuilder()
         builder.DataSource = sqlitePath
-        If password IsNot Nothing Then
+        If Not String.IsNullOrWhiteSpace(password) Then
             builder.Password = password
         End If
         'builder.PageSize = 4096
@@ -4099,8 +4063,8 @@ Public Class SqlServerToSQLite
 #Region "Private Variables"
     Private Shared _isActive As Boolean = False
     Private Shared _cancelled As Boolean = False
-    Private Shared _keyRx As New Regex("([a-zA-Z_0-9]+)(\(\-\))?")
-    Private Shared _defaultValueRx As New Regex("\(N(\'.*\')\)")
+    Private Shared ReadOnly _keyRx As New Regex("([a-zA-Z_0-9]+)(\(\-\))?")
+    Private Shared ReadOnly _defaultValueRx As New Regex("\(N(\'.*\')\)")
 #End Region
 
 End Class

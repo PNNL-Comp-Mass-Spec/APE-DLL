@@ -292,7 +292,7 @@ Public Class SqliteToAccess
     End Sub
 
 
-    Public Shared Sub CreateDataTableFromFunctionList(fldDefinitions As Dictionary(Of String, String), functionList As List(Of TableFunctions.SingleReturnFunction), sqlitePath As String, tableName As String, newTableName As String, handler As SqlConversionHandler)
+    Public Shared Sub CreateDataTableFromFunctionList(fldDefinitions As Dictionary(Of String, String), functionList As List(Of SingleReturnFunction), sqlitePath As String, tableName As String, newTableName As String, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
@@ -382,9 +382,10 @@ Public Class SqliteToAccess
 
     End Function
 
-    Private Shared Sub RunCreateDataTableFromFunctionList(fldDefinitions As Dictionary(Of String, String), sqlitePath As String, tname As String, newTableName As String, functionList As List(Of TableFunctions.SingleReturnFunction), handler As SqlConversionHandler)
+    Private Shared Sub RunCreateDataTableFromFunctionList(fldDefinitions As Dictionary(Of String, String), sqlitePath As String, tname As String, newTableName As String, functionList As List(Of SingleReturnFunction), handler As SqlConversionHandler)
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-        Dim lsTs As New List(Of TableSchema)
+        Dim lsTs As List(Of TableSchema)
+
         Using conn As New SQLiteConnection(sqliteConnString, True)
             conn.Open()
             lsTs = CreateSqliteFunctionTableSchema(fldDefinitions, newTableName)
@@ -448,7 +449,7 @@ Public Class SqliteToAccess
 
     Private Shared Function ConvertTextFileDatabaseToSQLiteDatabase(mTextParams As IList(Of String), txtFilePath As String, colList As IList(Of String), sqlitePath As String, handler As SqlConversionHandler) As Boolean
         ' Read the schema of the Text File into a memory structure
-        Dim sqlSchema As List(Of TableSchema) = CreateTextFileTableSchema(mColList, mTextParams(2))
+        Dim sqlSchema As List(Of TableSchema) = CreateTextFileTableSchema(colList, mTextParams(2))
 
         If sqlSchema IsNot Nothing Then
             ' Create the SQLite database and apply the schema
@@ -484,7 +485,7 @@ Public Class SqliteToAccess
             Dim SchemaTable As DataTable
             Dim tableNames As New List(Of String)()
             ' This command will read the names of all tables in the database
-            SchemaTable = conn.GetOleDbSchemaTable(System.Data.OleDb.OleDbSchemaGuid.Tables, New Object() {Nothing, Nothing, Nothing, Nothing})
+            SchemaTable = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, New Object() {Nothing, Nothing, Nothing, Nothing})
             For int = 0 To SchemaTable.Rows.Count - 1
                 If SchemaTable.Rows(int)!TABLE_TYPE.ToString = "TABLE" Or SchemaTable.Rows(int)!TABLE_TYPE.ToString = "PASS-THROUGH" Or SchemaTable.Rows(int)!TABLE_TYPE.ToString = "VIEW" Then
                     tableNames.Add(SchemaTable.Rows(int)!TABLE_NAME.ToString())
@@ -493,7 +494,7 @@ Public Class SqliteToAccess
 
             ' using
             ' Next step is to use OleDB APIs to query the schema of each table.
-            Dim count As Integer = 0
+            Dim count = 0
             For Each tname As String In tableNames
                 Dim ts As TableSchema = CreateAccessTableSchema(conn, tname)
                 tables.Add(ts)
@@ -548,9 +549,9 @@ Public Class SqliteToAccess
         tables.Add(res)
 
         If Not mFunctionList Is Nothing AndAlso mFunctionList.Count > 0 Then
-            For i As Integer = 0 To mFunctionList.Count - 1
+            For i = 0 To mFunctionList.Count - 1
                 Dim fldName As String = mFunctionList(i).NewFieldName
-                Dim datatype As System.Type = mFunctionList(i).ReturnDataType
+                Dim datatype As Type = mFunctionList(i).ReturnDataType
 
                 Dim col As New ColumnSchema()
                 col.ColumnName = fldName
@@ -566,7 +567,7 @@ Public Class SqliteToAccess
 
     End Function
 
-    Private Shared Function CreateTextFileTableSchema(colList As String(), tableName As String) As List(Of TableSchema)
+    Private Shared Function CreateTextFileTableSchema(colList As IList(Of String), tableName As String) As List(Of TableSchema)
         Dim tables As New List(Of TableSchema)()
 
         Dim res As New TableSchema()
@@ -601,7 +602,7 @@ Public Class SqliteToAccess
         res.TableName = tableName
         res.Columns = New List(Of ColumnSchema)()
 
-        Dim cmd As OleDbCommand = New OleDbCommand(tableName, conn)
+        Dim cmd = New OleDbCommand(tableName, conn)
         cmd.CommandType = CommandType.TableDirect
 
         ' Retrieve schema only
@@ -614,11 +615,10 @@ Public Class SqliteToAccess
         reader.Close()
 
         Dim row As DataRow
-        Dim ColCount As Integer = SchemaTable.Columns.Count
         For Each row In SchemaTable.Rows
             Dim colName As String = Convert.ToString(row("ColumnName"))
             Dim dataType As String = Convert.ToString(row("DataType"))
-            Dim isNullable As Boolean = True
+            Dim isNullable = True
             ValidateAccessDataType(dataType, tableName, colName)
             If dataType.ToLower = "" Then
                 dataType = "text"
@@ -711,7 +711,7 @@ Public Class SqliteToAccess
     ''' <param name="schema"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Private Shared Sub CreateSQLiteTables(sqlitePath As String, schema As List(Of TableSchema), handler As SqlConversionHandler)
+    Private Shared Sub CreateSQLiteTables(sqlitePath As String, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite tables...")
 
         ' Connect to the newly created database
@@ -720,7 +720,7 @@ Public Class SqliteToAccess
             conn.Open()
 
             ' Create all tables in the new database
-            Dim count As Integer = 0
+            Dim count = 0
             For Each dt As TableSchema In schema
                 Try
                     AddSQLiteTable(conn, dt)
@@ -764,19 +764,19 @@ Public Class SqliteToAccess
                 slconn.Open()
 
                 ' Go over all tables in the schema and copy their rows
-                For i As Integer = 0 To schema.Count - 1
+                For i = 0 To schema.Count - 1
                     Dim tx As SQLiteTransaction = slconn.BeginTransaction()
                     Try
                         Dim tableQuery As String = BuildSqlServerTableQuery(Nothing, schema(i))
                         Dim query As New OleDbCommand(tableQuery, accessconn)
                         Using reader As OleDbDataReader = query.ExecuteReader()
                             Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i))
-                            Dim counter As Integer = 0
+                            Dim counter = 0
                             While reader.Read()
                                 insert.Connection = slconn
                                 insert.Transaction = tx
                                 Dim pnames As New List(Of String)()
-                                For j As Integer = 0 To schema(i).Columns.Count - 1
+                                For j = 0 To schema(i).Columns.Count - 1
                                     Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                                     If TypeOf reader(j) Is DBNull Then
                                         insert.Parameters(pname).Value = DBNull.Value
@@ -833,19 +833,19 @@ Public Class SqliteToAccess
                 slconn.Open()
 
                 ' Go over all tables in the schema and copy their rows
-                For i As Integer = 0 To schema.Count - 1
+                For i = 0 To schema.Count - 1
                     Dim tx As SQLiteTransaction = slconn.BeginTransaction()
                     Try
                         Dim tableQuery As String = BuildSqlServerTableQuery(Nothing, schema(i))
                         Dim query As New SQLiteCommand(tableQuery, slsconn)
                         Using reader As SQLiteDataReader = query.ExecuteReader()
                             Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i))
-                            Dim counter As Integer = 0
+                            Dim counter = 0
                             While reader.Read()
                                 insert.Connection = slconn
                                 insert.Transaction = tx
                                 Dim pnames As New List(Of String)()
-                                For j As Integer = 0 To schema(i).Columns.Count - 1
+                                For j = 0 To schema(i).Columns.Count - 1
                                     Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                                     If TypeOf reader(j) Is DBNull Then
                                         insert.Parameters(pname).Value = DBNull.Value
@@ -889,9 +889,6 @@ Public Class SqliteToAccess
 
     Private Shared Sub CopyTextFileRowsToSQLiteDB(textParams As IList(Of String), sqlitePath As String, textFilePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         Dim i As Integer
-        Dim row As String
-        Dim rowValues As String()
-        Dim cnt As Integer = 0
         Dim delim As Char
         Dim header As Boolean
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -903,11 +900,13 @@ Public Class SqliteToAccess
         delim = textParams(0).Chars(0)
         Boolean.TryParse(textParams(1), header)
 
-        Dim sr As StreamReader = New StreamReader(textFilePath)
-        row = sr.ReadLine()
+        Dim sr = New StreamReader(textFilePath)
 
-        If Not CBool(header) Then
-            row = sr.ReadLine()
+        ' The following ReadLine feels like a bug; commenting out in October 2017
+        ' sr.ReadLine()
+
+        If Not header Then
+            sr.ReadLine()
         End If
 
         ' Connect to the SQLite database next
@@ -917,18 +916,17 @@ Public Class SqliteToAccess
             ' Go over all tables in the schema and copy their rows
             Dim tx As SQLiteTransaction = slconn.BeginTransaction()
             Try
-                Dim tableQuery As String = BuildSqlServerTableQuery(Nothing, schema(0))
                 Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(0))
-                Dim counter As Integer = 0
+                Dim counter = 0
                 Do While sr.Peek() >= 0
-                    row = sr.ReadLine()
-                    rowValues = row.Split(delim)
+                    Dim row = sr.ReadLine()
+                    Dim rowValues = row.Split(delim)
 
                     insert.Connection = slconn
                     insert.Transaction = tx
                     Dim pnames As New List(Of String)()
                     '                    For i = 0 To rowValues.Count - 1
-                    For j As Integer = 0 To schema(i).Columns.Count - 1
+                    For j = 0 To schema(i).Columns.Count - 1
                         Dim pname As String = "@" & GetNormalizedName(schema(0).Columns(j).ColumnName, pnames)
                         'If String.IsNullOrEmpty(rowValues(i)) Then
                         If String.IsNullOrEmpty(rowValues(j)) Then
@@ -949,7 +947,6 @@ Public Class SqliteToAccess
                         handler(False, True, CInt((100.0R * i / schema.Count)), ("Added " & counter.ToString("##,##0") & " rows to table ") + schema(i).TableName & " so far")
                         tx = slconn.BeginTransaction()
                     End If
-                    cnt += 1
                 Loop
 
                 CheckCancelled()
@@ -978,11 +975,10 @@ Public Class SqliteToAccess
     ''' <param name="AccessPath">The path to the generated DB file.</param>
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
-    Private Shared Sub CreateAccessDatabase(AccessPath As String, schema As List(Of TableSchema), handler As SqlConversionHandler)
+    Private Shared Sub CreateAccessDatabase(AccessPath As String, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating Access database...")
 
-        Dim objCmd As New OleDbCommand
-        Dim cat As Catalog = New Catalog()
+        Dim cat = New Catalog()
 
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Access file was created successfully at [" & AccessPath & "]")
 
@@ -993,7 +989,7 @@ Public Class SqliteToAccess
         Using conn As New OleDbConnection(AccessPath)
             conn.Open()
 
-            Dim count As Integer = 0
+            Dim count = 0
             For Each dt As TableSchema In schema
                 Try
                     AddAccessTable(conn, dt)
@@ -1036,7 +1032,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    ''' 
+    '''
     ''' </summary>
     ''' <param name="ts"></param>
     ''' <returns></returns>
@@ -1046,10 +1042,9 @@ Public Class SqliteToAccess
 
         sb.Append("CREATE TABLE [" & ts.TableName & "] (" & vbLf)
 
-        Dim pkey As Boolean = False
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             Dim col As ColumnSchema = ts.Columns(i)
-            Dim cline As String = BuildAccessColumnStatement(col, ts, pkey)
+            Dim cline As String = BuildAccessColumnStatement(col)
             sb.Append(cline)
             If i < ts.Columns.Count - 1 Then
                 sb.Append("," & vbLf)
@@ -1068,10 +1063,9 @@ Public Class SqliteToAccess
     '''
     ''' </summary>
     ''' <param name="col"></param>
-    ''' <param name="pkey"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function BuildAccessColumnStatement(col As ColumnSchema, ts As TableSchema, ByRef pkey As Boolean) As String
+    Private Shared Function BuildAccessColumnStatement(col As ColumnSchema) As String
         Dim sb As New StringBuilder()
         sb.Append(vbTab & "[" & col.ColumnName & "]" & vbTab & vbTab)
 
@@ -1107,19 +1101,19 @@ Public Class SqliteToAccess
                 accessconn.Open()
 
                 ' Go over all tables in the schema and copy their rows
-                For i As Integer = 0 To schema.Count - 1
+                For i = 0 To schema.Count - 1
                     Dim tx As OleDbTransaction = accessconn.BeginTransaction()
                     Try
                         Dim tableQuery As String = BuildSqlServerTableQuery(Nothing, schema(i))
                         Dim query As New SQLiteCommand(tableQuery, slconn)
                         Using reader As SQLiteDataReader = query.ExecuteReader()
                             Dim insert As OleDbCommand = BuildAccessInsert(schema(i))
-                            Dim counter As Integer = 0
+                            Dim counter = 0
                             While reader.Read()
                                 insert.Connection = accessconn
                                 insert.Transaction = tx
                                 Dim pnames As New List(Of String)()
-                                For j As Integer = 0 To schema(i).Columns.Count - 1
+                                For j = 0 To schema(i).Columns.Count - 1
                                     Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                                     If TypeOf reader(j) Is DBNull Then
                                         insert.Parameters(pname).Value = DBNull.Value
@@ -1161,25 +1155,25 @@ Public Class SqliteToAccess
     End Sub
 
     Private Shared Function BuildDataRow(fldDefList As Dictionary(Of String, String)) As DataRow
-        Dim tbl As DataTable = New DataTable("TempDb")
+        Dim tbl = New DataTable("TempDb")
         Dim dr As DataRow
         Dim fldFldType As String()
 
         For Each item In fldDefList
             fldFldType = item.Key.Split("|"c)
-            Dim idColumn As DataColumn = New DataColumn()
-            idColumn.DataType = System.Type.GetType(GetSQLiteStringColumnType(fldFldType(1)))
+            Dim idColumn = New DataColumn()
+            idColumn.DataType = Type.GetType(GetSQLiteStringColumnType(fldFldType(1)))
             idColumn.ColumnName = fldFldType(0)
             tbl.Columns.Add(idColumn)
         Next
 
         If Not mFunctionList Is Nothing AndAlso mFunctionList.Count > 0 Then
-            For i As Integer = 0 To mFunctionList.Count - 1
+            For i = 0 To mFunctionList.Count - 1
                 Dim fldName As String = mFunctionList(i).NewFieldName
-                Dim datatype As System.Type = mFunctionList(i).ReturnDataType
+                Dim datatype As Type = mFunctionList(i).ReturnDataType
 
-                Dim idColumn As DataColumn = New DataColumn()
-                idColumn.DataType = System.Type.GetType(GetSQLiteStringColumnType(datatype.ToString))
+                Dim idColumn = New DataColumn()
+                idColumn.DataType = Type.GetType(GetSQLiteStringColumnType(datatype.ToString))
                 idColumn.ColumnName = fldName
                 tbl.Columns.Add(idColumn)
             Next
@@ -1236,7 +1230,7 @@ Public Class SqliteToAccess
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
-        Dim tf As New TableFunctions.TblFunctions
+        Dim tf As New TblFunctions
 
         Using slconn As New SQLiteConnection(sqliteConnString, True)
             slconn.Open()
@@ -1246,7 +1240,7 @@ Public Class SqliteToAccess
                 sl2conn.Open()
 
                 ' Go over all tables in the schema and copy their rows
-                For i As Integer = 0 To schema.Count - 1
+                For i = 0 To schema.Count - 1
                     Dim tx As SQLiteTransaction = sl2conn.BeginTransaction()
                     Try
                         Dim tableQuery As String = BuildSqliteCustomTableQuery(sourceTblName, fldDefinitionList)
@@ -1257,7 +1251,7 @@ Public Class SqliteToAccess
 
                         Using reader As SQLiteDataReader = query.ExecuteReader()
                             Dim insert As SQLiteCommand = BuildSQLiteInsert(schema(i))
-                            Dim counter As Integer = 0
+                            Dim counter = 0
                             While reader.Read()
                                 insert.Connection = sl2conn
                                 insert.Transaction = tx
@@ -1275,7 +1269,7 @@ Public Class SqliteToAccess
                                 dr = tf.PerformFunction(dr)
 
                                 Dim pnames As New List(Of String)()
-                                For j As Integer = 0 To schema(i).Columns.Count - 1
+                                For j = 0 To schema(i).Columns.Count - 1
                                     Dim pname As String = "@" & GetNormalizedName(schema(i).Columns(j).ColumnName, pnames)
                                     insert.Parameters(pname).Value = dr.Item(schema(i).Columns(j).ColumnName)
                                     'If TypeOf reader(j) Is DBNull Then
@@ -1328,7 +1322,7 @@ Public Class SqliteToAccess
 
         Dim sb As New StringBuilder()
         sb.Append("INSERT INTO [" & ts.TableName & "] (")
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             sb.Append("[" & ts.Columns(i).ColumnName & "]")
             If i < ts.Columns.Count - 1 Then
                 sb.Append(", ")
@@ -1338,7 +1332,7 @@ Public Class SqliteToAccess
         sb.Append(") VALUES (")
 
         Dim pnames As New List(Of String)()
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             Dim pname As String = "@" & GetNormalizedName(ts.Columns(i).ColumnName, pnames)
             sb.Append(pname)
             If i < ts.Columns.Count - 1 Then
@@ -1507,7 +1501,7 @@ Public Class SqliteToAccess
 
             Case DbType.DateTime
                 If TypeOf val Is Date Then
-                    Dim dtDate As DateTime = CDate(val)
+                    Dim dtDate = CDate(val)
                     Return dtDate.ToString("yyyy-MM-dd HH:mm:ss")
                 End If
 
@@ -1532,7 +1526,7 @@ Public Class SqliteToAccess
 
         Dim sb As New StringBuilder()
         sb.Append("INSERT INTO [" & ts.TableName.Replace(" ", "_") & "] (")
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             sb.Append("[" & ts.Columns(i).ColumnName.Replace(" ", "_") & "]")
             If i < ts.Columns.Count - 1 Then
                 sb.Append(", ")
@@ -1542,7 +1536,7 @@ Public Class SqliteToAccess
         sb.Append(") VALUES (")
 
         Dim pnames As New List(Of String)()
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             Dim pname As String = "@" & GetNormalizedName(ts.Columns(i).ColumnName, pnames)
             sb.Append(pname)
             If i < ts.Columns.Count - 1 Then
@@ -1571,9 +1565,9 @@ Public Class SqliteToAccess
     ''' <param name="str">The name to change if necessary</param>
     ''' <param name="names">Used to avoid duplicate names</param>
     ''' <returns>A normalized name</returns>
-    Private Shared Function GetNormalizedName(str As String, names As List(Of String)) As String
+    Private Shared Function GetNormalizedName(str As String, names As ICollection(Of String)) As String
         Dim sb As New StringBuilder()
-        For i As Integer = 0 To str.Length - 1
+        For i = 0 To str.Length - 1
             If [Char].IsLetterOrDigit(str(i)) OrElse str(i) = "_"c Then
                 sb.Append(str(i))
             Else
@@ -1655,7 +1649,7 @@ Public Class SqliteToAccess
     Private Shared Function BuildSqlServerTableQuery(tblNameOverride As String, ts As TableSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("SELECT ")
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             sb.Append("[" & ts.Columns(i).ColumnName & "]")
             If i < ts.Columns.Count - 1 Then
                 sb.Append(", ")
@@ -1718,8 +1712,7 @@ Public Class SqliteToAccess
 
         sb.Append("CREATE TABLE [" & ts.TableName.Replace(" ", "_") & "] (" & vbLf)
 
-        Dim pkey As Boolean = False
-        For i As Integer = 0 To ts.Columns.Count - 1
+        For i = 0 To ts.Columns.Count - 1
             Dim col As ColumnSchema = ts.Columns(i)
             Dim cline As String = BuildColumnStatement(col)
             sb.Append(cline)
@@ -1766,6 +1759,7 @@ Public Class SqliteToAccess
     ''' <param name="tableName">The name of the indexed table.</param>
     ''' <param name="indexSchema">The schema of the index object</param>
     ''' <returns>A CREATE INDEX DDL (SQLite format).</returns>
+    <Obsolete("Unused")>
     Private Shared Function BuildCreateIndex(tableName As String, indexSchema As IndexSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("CREATE ")
@@ -1775,7 +1769,7 @@ Public Class SqliteToAccess
         sb.Append(("INDEX [" & tableName & "_") + indexSchema.IndexName & "]" & vbLf)
         sb.Append("ON [" & tableName & "]" & vbLf)
         sb.Append("(")
-        For i As Integer = 0 To indexSchema.Columns.Count - 1
+        For i = 0 To indexSchema.Columns.Count - 1
             sb.Append("[" & indexSchema.Columns(i).ColumnName & "]")
             If Not indexSchema.Columns(i).IsAscending Then
                 sb.Append(" DESC")
@@ -1904,7 +1898,7 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="connString">The connection string used for reading SQL Server schema.</param>
     ''' <param name="handler">A handler for progress notifications.</param>
-    ''' <param name="selectionHandler">The selection handler which allows the user to select 
+    ''' <param name="selectionHandler">The selection handler which allows the user to select
     ''' which tables to convert.</param>
     ''' <returns>List of table schema objects for every table in the SQL Server database.</returns>
     Private Shared Function ReadSqliteSchema(connString As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler) As List(Of TableSchema)
@@ -1916,8 +1910,7 @@ Public Class SqliteToAccess
 
             Dim tableNames As New List(Of String)()
             ' This command will read the names of all tables in the database
-            Dim cmd As New SQLiteCommand '("select tbl_name as ""TABLE_NAME"", sql as ""SQL Create"" from sqlite_master where type = ""table""", conn)
-            cmd = conn.CreateCommand
+            Dim cmd = conn.CreateCommand
             cmd.CommandText = "select tbl_name as ""TABLE_NAME"", sql as ""SQL Create"" from sqlite_master where type = ""table""" '"PRAGMA table_info ('t_proteins')"
             Using reader As SQLiteDataReader = cmd.ExecuteReader()
                 While reader.Read()
@@ -1926,7 +1919,7 @@ Public Class SqliteToAccess
             End Using
             ' using
             ' Next step is to use ADO APIs to query the schema of each table.
-            Dim count As Integer = 0
+            Dim count = 0
             For Each tname As String In tableNames
                 Dim ts As TableSchema = CreateSQLiteTableSchema(conn, tname)
                 tables.Add(ts)
@@ -1983,19 +1976,18 @@ Public Class SqliteToAccess
                 If TypeOf tmp Is DBNull Then
                     Continue While
                 End If
-                Dim colName As String = DirectCast(reader("name"), String)
+                Dim colName = DirectCast(reader("name"), String)
 
-                tmp = reader("dflt_value")
-                Dim colDefault As String
-                If TypeOf tmp Is DBNull Then
-                    colDefault = String.Empty
-                Else
-                    colDefault = DirectCast(tmp, String)
-                End If
+                ' tmp = reader("dflt_value")
+                'Dim colDefault As String
+                'If TypeOf tmp Is DBNull Then
+                '    colDefault = String.Empty
+                'Else
+                '    colDefault = DirectCast(tmp, String)
+                'End If
 
-                tmp = reader("notnull")
-                Dim isNullable As Boolean = True
-                Dim dataType As String = DirectCast(reader("type"), String)
+                Dim isNullable = True
+                Dim dataType = DirectCast(reader("type"), String)
 
                 ValidateSQLiteDataType(dataType, tableName, colName)
                 If dataType = "" Then
@@ -2035,7 +2027,7 @@ Public Class SqliteToAccess
                     dataType = "single"
                 End If
 
-                colDefault = FixDefaultValueString(colDefault)
+                ' colDefault = FixDefaultValueString(colDefault)
 
                 Dim col As New ColumnSchema()
                 col.ColumnName = colName
@@ -2081,14 +2073,15 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="colDefault">The original default value string (as read from SQL Server).</param>
     ''' <returns>Adjusted DEFAULT value string (for SQLite)</returns>
+    <Obsolete("Unused")>
     Private Shared Function FixDefaultValueString(colDefault As String) As String
-        Dim replaced As Boolean = False
+        Dim replaced = False
         Dim res As String = colDefault.Trim()
 
         ' Find first/last indexes in which to search
         Dim first As Integer = -1
         Dim last As Integer = -1
-        For i As Integer = 0 To res.Length - 1
+        For i = 0 To res.Length - 1
             If res(i) = "'"c AndAlso first = -1 Then
                 first = i
             End If
@@ -2102,7 +2095,7 @@ Public Class SqliteToAccess
         End If
 
         Dim sb As New StringBuilder()
-        For i As Integer = 0 To res.Length - 1
+        For i = 0 To res.Length - 1
             If res(i) <> "("c AndAlso res(i) <> ")"c Then
                 sb.Append(res(i))
                 replaced = True
@@ -2252,23 +2245,20 @@ Public Class SqliteToAccess
             slconn.Open()
 
             ' Go over all tables in the schema and copy their rows
-            For i As Integer = 0 To schema.Count - 1
+            For i = 0 To schema.Count - 1
 
                 Try
-                    Dim numCols As Integer = 0
                     Dim cols As String = String.Empty
                     Dim dataValues As String = String.Empty
-                    Dim exportFilename As String = String.Empty
-
-                    exportFilename = Path.Combine(textFileDirectory, schema(i).TableName & ".txt")
+                    Dim exportFilename As String = Path.Combine(textFileDirectory, schema(i).TableName & ".txt")
 
                     Dim tableQuery As String = BuildSqlServerTableQuery(Nothing, schema(i))
                     Dim query As New SQLiteCommand(tableQuery, slconn)
-                    Dim sw As StreamWriter = New StreamWriter(exportFilename)
+                    Dim sw = New StreamWriter(exportFilename)
                     Using reader As SQLiteDataReader = query.ExecuteReader()
-                        Dim counter As Integer = 0
+                        Dim counter = 0
 
-                        For j As Integer = 0 To schema(i).Columns.Count - 1
+                        For j = 0 To schema(i).Columns.Count - 1
                             If j = 0 Then
                                 cols += schema(i).Columns(j).ColumnName.ToString
                             Else
@@ -2279,8 +2269,7 @@ Public Class SqliteToAccess
                         sw.WriteLine(cols)
 
                         While reader.Read()
-                            Dim pnames As New List(Of String)()
-                            For j As Integer = 0 To schema(i).Columns.Count - 1
+                            For j = 0 To schema(i).Columns.Count - 1
                                 If j = 0 Then
                                     dataValues += reader.GetValue(j).ToString
                                 Else
@@ -2319,8 +2308,8 @@ Public Class SqliteToAccess
 #Region "Private Variables"
     Private Shared _isActive As Boolean = False
     Private Shared _cancelled As Boolean = False
-    Private Shared _keyRx As New Regex("([a-zA-Z_0-9]+)(\(\-\))?")
-    Private Shared _defaultValueRx As New Regex("\(N(\'.*\')\)")
+    Private Shared ReadOnly _keyRx As New Regex("([a-zA-Z_0-9]+)(\(\-\))?")
+    Private Shared ReadOnly _defaultValueRx As New Regex("\(N(\'.*\')\)")
     'Private Shared _log As ILog = LogManager.GetLogger(GetType(SqliteToAccess))
 #End Region
 End Class
