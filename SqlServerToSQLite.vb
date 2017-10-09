@@ -77,7 +77,7 @@ Public Class SqlServerToSQLite
 
     Const COLUMN_HEADING As String = "Column Heading"
     Const ROW_HEADING As String = "Row Heading"
-    Const VALUE As String = "Value"
+    Const VALUE_KEYWORD As String = "Value"
     Const NUM_FIELDS_EXCEEDED_MESSAGE As String = "Fields Exceeded"
     Const NUM_FIELDS_ALLOWED As Integer = 1000
     Const TABLE_COLUMN As String = "FIELD"
@@ -1831,7 +1831,7 @@ Public Class SqlServerToSQLite
                         If pivotDefItems.Count < 3 Then
                             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Pivot definition does not contain 3 entries: " & sqlTerms(i))
                         Else
-                            If Trim(pivotDefItems(crosstabFields.wCrosstab)) = VALUE Then
+                            If Trim(pivotDefItems(crosstabFields.wCrosstab)) = VALUE_KEYWORD Then
                                 valueField = Trim(pivotDefItems(crosstabFields.wField))
                                 Table = Trim(pivotDefItems(crosstabFields.wTable))
                             End If
