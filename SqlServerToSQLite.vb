@@ -661,6 +661,7 @@ Public Class SqlServerToSQLite
     ''' <param name="sqlitePath"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    <Obsolete("Unused")>
     Private Shared Function SaveWorkflowToDatabase(Workflow As String, sqlitePath As String) As Boolean
         Dim qryText As String
         qryText = "Insert Into T_Workflow (Date_Stamp, User, Workflow, Title, Description)"
@@ -2561,6 +2562,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tableName">The name of the indexed table.</param>
     ''' <param name="indexSchema">The schema of the index object</param>
     ''' <returns>A CREATE INDEX DDL (SQLite format).</returns>
+    <Obsolete("Unused")>
     Private Shared Function BuildCreateIndex(tableName As String, indexSchema As IndexSchema) As String
         Dim sb As New StringBuilder()
         sb.Append("CREATE ")
@@ -3904,6 +3906,7 @@ Public Class SqlServerToSQLite
     ''' <param name="tableName"></param>
     ''' <param name="fieldName"></param>
     ''' <remarks></remarks>
+    <Obsolete("Unused")>
     Private Shared Sub ValidateSQLiteDataType(dataType As String, tableName As String, fieldName As String)
         dataType = dataType.ToLower
         If dataType = "datetime" OrElse dataType = "numeric" OrElse dataType = "float" OrElse dataType = "real" OrElse dataType = "integer" OrElse dataType = "text" OrElse dataType = "char" OrElse dataType = "smallint" OrElse dataType = "double" OrElse dataType = "varchar" Then
@@ -3974,6 +3977,7 @@ Public Class SqlServerToSQLite
     ''' <param name="desc">The description of the index</param>
     ''' <param name="keys">Key columns that are part of the index.</param>
     ''' <returns>An index schema object that represents our knowledge of the index</returns>
+    <Obsolete("Unused")>
     Private Shared Function BuildIndexSchema(indexName As String, desc As String, keys As String) As IndexSchema
         Dim res As New IndexSchema()
         res.IndexName = indexName

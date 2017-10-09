@@ -2115,6 +2115,7 @@ Public Class SqliteToAccess
     ''' <param name="desc">The description of the index</param>
     ''' <param name="keys">Key columns that are part of the index.</param>
     ''' <returns>An index schema object that represents our knowledge of the index</returns>
+    <Obsolete("Unused")>
     Private Shared Function BuildIndexSchema(indexName As String, desc As String, keys As String) As IndexSchema
         Dim res As New IndexSchema()
         res.IndexName = indexName
@@ -2157,6 +2158,7 @@ Public Class SqliteToAccess
     ''' </summary>
     ''' <param name="val">The value to adjust</param>
     ''' <returns>Adjusted DEFAULT value string</returns>
+    <Obsolete("Unused")>
     Private Shared Function AdjustDefaultValue(val As String) As String
         If val Is Nothing OrElse val = String.Empty Then
             Return val
