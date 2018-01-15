@@ -1,0 +1,2629 @@
+<MdartWorkflow>
+    <Title />
+    <WorkflowDescription />
+    <Steps>
+        <Step id="1">
+            <Source>APE</Source>
+            <query>/*Workflow for MasterWorkflowSyn.xml*/</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This file can best be viewed and edited with the APE program found in \\floyd\Software\APE\Exe\ It provides a workflow for the APE step of the MAC ITRAQ pipeline in DMS that includes iTRAQ 4-plex and 8-plex, TMT 6-plex and 10-plex results from SEQUEST or MSGFDB, with or without AScore, at varying levels of peptide FDR, with or without filtering for precursor interference and with an option to keep peptides for which no reporter ion signals are observed. These options are passed from the DMS MAC pipeline parameters and apply to the Workflow Group entries. It takes as input the Results_IDM.db3 from the IDM step</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="2">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="3">
+            <Source>MDART</Source>
+            <query>/*Ensure correct types */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section ensures that the input data to the workflow from Results_IDM.db3 are of the correct form</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="4">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Results_AScore_Typed (
+  Job                 int,
+  Scan                int,
+  OriginalSequence    text,
+  BestSequence        text,
+  PeptideScore        real,
+  AScore              real,
+  numSiteIonsPoss     int,
+  numSiteIonsMatched  int,
+  SecondSequence      text,
+  ModInfo             text,
+  ProteinName         text,
+  ProteinCount        int,
+  Residue             text,
+  Position            int
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Results_AScore-Typed for ASCORE results when present</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="5">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Results_AScore_Typed
+SELECT Job,
+       Scan,
+       OriginalSequence,
+       BestSequence,
+       PeptideScore,
+       AScore,
+       numSiteIonsPoss,
+       numSiteIonsMatched,
+       SecondSequence,
+       ModInfo,
+       ProteinName,
+       ProteinCount,
+       Residue,
+       Position
+FROM t_results_ascore;
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>PopulatesT_Results_AScore-Typed for ASCORE results when present</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="6">
+            <Source>APE</Source>
+            <query>Drop Table t_results_ascore;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>removes t_results_ascore from working db3 if present</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="7">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="8">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Results_IDM(
+    Job                   int,
+    Passed_Filter         text,
+    MSGF_SpecProb         real,
+    HitNum                int,
+    ScanNum               int,
+    ScanCount             int,
+    ChargeState           int,
+    MH                    real,
+    XCorr                 real,
+    DelCn                 real,
+    Sp                    real,
+    Reference             text,
+    MultiProtein          int,
+    Peptide               text,
+    DelCn2                real,
+    RankSp                int,
+    RankXc                int,
+    DelM                  real,
+    XcRatio               real,
+    Ions_Observed         int,
+    Ions_Expected         int,
+    NumTrypticEnds        int,
+    DelM_PPM              real
+);
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Results_IDM for SEQUEST results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="9">
+            <Source>MDART</Source>
+            <query> Insert into T_Results_IDM
+  Select 
+    Job,
+    Passed_Filter,
+    MSGF_SpecProb,
+    HitNum,
+    ScanNum,
+    ScanCount,
+    ChargeState,
+    MH,
+    XCorr,
+    DelCn,
+    Sp,
+    Reference,
+    MultiProtein,
+    Peptide,
+    DelCn2,
+    RankSp,
+    RankXc,
+    DelM,
+    XcRatio,
+    Ions_Observed,
+    Ions_Expected,
+    NumTrypticEnds,
+    DelM_PPM
+  FROM
+	t_results
+</query>
+            <TargetTable />
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Results_IDM with SEQUEST results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="10">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="11">
+            <Source>MDART</Source>
+            <query>Create Table T_Results_IDM(
+	Job	int,
+	Passed_Filter	text, 
+	MSGF_SpecProb 	real,
+ 	ResultID		int, 
+	Scan		int, 
+	FragMethod	text, 
+	SpecIndex		int,
+	Charge		int, 
+	PrecursorMZ	real, 
+	DelM		real, 
+	DelM_PPM	real,
+  	MH		real, 
+	Peptide		text, 
+	Protein		text, 
+	NTT		int,
+  	DeNovoScore	int, 
+	MSGFScore	int,
+	MSGFDB_SpecEValue 	real,
+ 	Rank_MSGFDB_SpecEValue	real,
+	EValue		real, 
+	QValue	real,
+	PepQValue	real,
+	IsotopeError	real
+);
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Results_IDM for MSGFDB results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="12">
+            <Source>MDART</Source>
+            <query>Insert into T_Results_IDM
+Select Job, Passed_Filter, MSGF_SpecProb,
+  ResultID, Scan, FragMethod, SpecIndex,
+  Charge, PrecursorMZ, DelM, DelM_PPM,
+  MH, Peptide, Protein, NTT,
+  DeNovoScore, MSGFScore, MSGFDB_SpecEValue,
+  Rank_MSGFDB_SpecEValue, EValue, QValue,
+  PepQValue,IsotopeError
+From t_results</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Results_IDM with MSGF results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="13">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="14">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Results_Metadata_Typed(
+  Job,
+  State,
+  Dataset,
+  Dataset_ID,
+  Tool,
+  Parameter_File,
+  Settings_File,
+  Instrument,
+  Experiment,
+  Campaign,
+  Organism,
+  "Organism DB",
+  "Protein Collection List",
+  "Protein Options",
+  Comment,
+  "Results Folder",
+  Folder,
+  Data_Package_ID,
+  "Package Comment"
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Results_Metadata_Typed for DMS job tracking information
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="15">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Results_Metadata_Typed
+SELECT
+  Job,
+  State,
+  Dataset,
+  Dataset_ID,
+  Tool,
+  Parameter_File,
+  Settings_File,
+  Instrument,
+  Experiment,
+  Campaign,
+  Organism,
+  "Organism DB",
+  "Protein Collection List",
+  "Protein Options",
+  Comment,
+  "Results Folder",
+  Folder,
+  Data_Package_ID,
+  "Package Comment"
+FROM t_results_metadata;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Results_Metadata_Typed from t_results_metadata</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="16">
+            <Source>APE</Source>
+            <query>Drop Table t_results_metadata;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>removes t_results_metadata from working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="17">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="18">
+            <Source>MDART</Source>
+            <query>/* reporter ion table prep */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section enures the reporter ion tables are in the correct form</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="19">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Reporter_Ions_Typed (
+  Dataset		int,
+  ScanNumber	int,
+  "Collision Mode"	text,
+  ParentIonMZ		real,	
+  BasePeakIntensity		real,
+  BasePeakMZ		real,
+  ReporterIonIntensityMax		real,
+  Ion_114		real,
+  Ion_115		real,
+  Ion_116		real,
+  Ion_117		real,
+  "Weighted Avg Pct Intensity Correction"  	real
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Reporter_Ions_Typed for 4-plex iTRAQ data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="20">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Reporter_Ions_Typed
+SELECT
+  Dataset,
+  ScanNumber,
+  "Collision Mode",
+  ParentIonMZ,
+  BasePeakIntensity,
+  BasePeakMZ,
+  ReporterIonIntensityMax,
+  Ion_114,
+  Ion_115,
+  Ion_116,
+  Ion_117,
+  "Weighted Avg Pct Intensity Correction"
+FROM t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Reporter_Ions_Typed for 4-plex iTRAQ data
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="21">
+            <Source>APE</Source>
+            <query>Drop Table t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Removes t_reporter_ions from the working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="22">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="23">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Reporter_Ions_Typed (
+  Dataset                               int ,
+  ScanNumber                        int,
+  "Collision Mode"                      text   ,
+  ParentIonMZ                              real,
+  BasePeakIntensity                       real ,
+  BasePeakMZ                               real,
+  ReporterIonIntensityMax                  real,
+Ion_126		real,
+Ion_127		real,
+Ion_128		real,
+Ion_129		real,
+Ion_130		real,
+Ion_131		real,
+  "Weighted Avg Pct Intensity Correction"	real);
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Reporter_Ions_Typed for 6-plex TMT data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="24">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Reporter_Ions_Typed
+SELECT
+  Dataset,
+  ScanNumber,
+  "Collision Mode",
+  ParentIonMZ,
+  BasePeakIntensity,
+  BasePeakMZ,
+  ReporterIonIntensityMax,
+Ion_126,
+Ion_127,
+Ion_128,
+Ion_129,
+Ion_130,
+Ion_131,
+  "Weighted Avg Pct Intensity Correction"
+FROM t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Reporter_Ions_Typed for 6-plex TMT data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="25">
+            <Source>APE</Source>
+            <query>Drop Table t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Removes t_reporter_ions from the working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="26">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="27">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Reporter_Ions_Typed (
+  Dataset                                  int,
+  ScanNumber                               int,
+  "Collision Mode"                         text,
+  ParentIonMZ                              real,
+  BasePeakIntensity                        real,
+  BasePeakMZ                               real,
+  ReporterIonIntensityMax                  real,
+  Ion_113                                  real,
+  Ion_114                                  real,
+  Ion_115                                  real,
+  Ion_116                                  real,
+  Ion_117                                  real,
+  Ion_118                                  real,
+  Ion_119                                  real,
+  Ion_121                                  real,
+  "Weighted Avg Pct Intensity Correction"  real  
+);
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Reporter_Ions_Typed for 8-plex iTRAQ data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="28">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Reporter_Ions_Typed
+SELECT
+  Dataset,
+  ScanNumber,
+  "Collision Mode",
+  ParentIonMZ,
+  BasePeakIntensity,
+  BasePeakMZ,
+  ReporterIonIntensityMax,
+  Ion_113,
+  Ion_114,
+  Ion_115,
+  Ion_116,
+  Ion_117,
+  Ion_118,
+  Ion_119,
+  Ion_121,
+  "Weighted Avg Pct Intensity Correction"
+FROM t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Reporter_Ions_Typed for 4-plex iTRAQ data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="29">
+            <Source>APE</Source>
+            <query>Drop Table t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Removes t_reporter_ions from the working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="30">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="31">
+            <Source>MDART</Source>
+            <query>CREATE TABLE T_Reporter_Ions_Typed (
+  Dataset                               int ,
+  ScanNumber                        int,
+  "Collision Mode"                      text   ,
+  ParentIonMZ                              real,
+  BasePeakIntensity                       real ,
+  BasePeakMZ                               real,
+  ReporterIonIntensityMax                  real,
+'Ion_126.128'		real,
+'Ion_127.125'		real,
+'Ion_127.131'		real,
+'Ion_128.128'		real,
+'Ion_128.134'		real,
+'Ion_129.131'		real,
+'Ion_129.138'		real,
+'Ion_130.135'		real,
+'Ion_130.141'		real,
+'Ion_131.138'		real,
+  "Weighted Avg Pct Intensity Correction"	real);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Reporter_Ions_Typed for 10-plex TMT data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="32">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_Reporter_Ions_Typed
+SELECT
+  Dataset,
+  ScanNumber,
+  "Collision Mode",
+  ParentIonMZ,
+  BasePeakIntensity,
+  BasePeakMZ,
+  ReporterIonIntensityMax,
+[Ion_126.128],
+[Ion_127.125],
+[Ion_127.131],
+[Ion_128.128],
+[Ion_128.134],
+[Ion_129.131],
+[Ion_129.138],
+[Ion_130.135],
+[Ion_130.141],
+[Ion_131.138],
+  "Weighted Avg Pct Intensity Correction"
+FROM t_reporter_ions;
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates T_Reporter_Ions_Typed for 10-plex TMT data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="33">
+            <Source>APE</Source>
+            <query>Drop Table t_reporter_ions;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Removes t_reporter_ions from the working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="34">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="35">
+            <Source>APE</Source>
+            <query>CREATE TABLE T_Precursor_Interference_Typed
+(
+	Dataset_ID	int,
+ScanNumber	int,
+PrecursorScan	int,
+ParentMZ	real,
+ChargeState	int,
+IsoWidth	real,
+Interference	real,
+PreIntensity	real,
+IonCollectionTime real
+);
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates T_Precursor_Interference_Typed for precursor interference information to check for proper form</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="36">
+            <Source>APE</Source>
+            <query>INSERT INTO T_Precursor_Interference_Typed
+SELECT
+Dataset_ID,
+ScanNumber,
+PrecursorScan,
+ParentMZ	,
+ChargeState,
+IsoWidth,
+Interference,
+PreIntensity,
+IonCollectionTime
+FROM t_precursor_interference</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>PopulatesT_Precursor_Interference_Typed with precursor interference information from t_precursor_interference</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="37">
+            <Source>APE</Source>
+            <query>Drop Table t_precursor_interference;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Removes t_precursor_interference from working db3</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="38">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="39">
+            <Source>MDART</Source>
+            <query>Create Table t_results_filtered
+(
+	Job	int, 
+	Scan	int,
+	HCDScanNum	int,    
+	FragType text,
+	Charge 	int,
+	Peptide	text,
+	Protein	text,
+ 	NTT	int,
+	MSGF_SpecProb	real);	</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Creates t_results_filtered to be populated with filtered search results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="40">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="41">
+            <Source>MDART</Source>
+            <query>/* msgfdb filtering */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="42">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Results_IDM
+WHERE QValue &lt; 0.01;</query>
+            <TargetTable>T_Results_Filter</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filters MSGFDB results ONLY using Q-Value &lt;0.01, or &lt;1% peptide level FDR for each dataset and places results into T_Results_Filter</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>1pctFDR</WorkflowGroup>
+        </Step>
+        <Step id="43">
+            <Source>APE</Source>
+            <query>SELECT * FROM T_Results_IDM
+WHERE QValue &lt; 0.05;</query>
+            <TargetTable>T_Results_Filter</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filters MSGFDB results ONLY using Q-Value &lt;0.05, or &lt;5% peptide level FDR for each dataset and places results into T_Results_Filter</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>5pctFDR</WorkflowGroup>
+        </Step>
+        <Step id="44">
+            <Source>APE</Source>
+            <query>SELECT * FROM T_Results_IDM
+WHERE QValue &lt; 0.10;</query>
+            <TargetTable>T_Results_Filter</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filters MSGFDB results ONLY using Q-Value &lt;0.1, or &lt;10% peptide level FDR for each dataset and places results into T_Results_Filter</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>10pctFDR</WorkflowGroup>
+        </Step>
+        <Step id="45">
+            <Source>MDART</Source>
+            <query>INSERT INTO t_results_filtered
+  (  Job,
+  Scan,
+HCDScanNum,
+FragType,
+Charge,
+Peptide,
+Protein,
+NTT,
+MSGF_SpecProb)
+SELECT
+Job,
+Scan,
+(CASE WHEN FragMethod LIKE '%hcd%' THEN Scan 
+ELSE Scan - 1 END) AS HCDScanNum,
+FragMethod AS FragType,
+Charge,
+Peptide,
+Protein,
+NTT,
+MSGFDB_SpecEValue as MSGF_SpecProb
+FROM
+T_Results_Filter;
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Populates t_results_filtered with filtered MSGFDB results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="46">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="47">
+            <Source>MDART</Source>
+            <query>/*sequest iteration tables */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section performs SEQUEST ONLY search result filtering using iterations of decoy result filtering with final results populateing t_results_filtered</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="48">
+            <Source>MDART</Source>
+            <query>Select *, 0 as Direction, abs(DelM_PPM) as abs_PPM
+from T_Results_IDM</query>
+            <TargetTable>t_results01</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="49">
+            <Source>MDART</Source>
+            <query>Update t_results01
+Set Direction = 1 where Reference Like 'Reverse%'</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="50">
+            <Source>MDART</Source>
+            <query>Select *
+From t_results01
+Where Direction = 0</query>
+            <TargetTable>t_results02</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="51">
+            <Source>MDART</Source>
+            <query>Select Peptide, NumTrypticEnds, ChargeState, abs_PPM, MSGF_SpecProb, Direction
+From t_results01</query>
+            <TargetTable>t_iterate</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="52">
+            <Source>MDART</Source>
+            <query>Select Direction, Count(Distinct Peptide) as Cnt
+From t_iterate|Group by Direction|t_iteration1|False</query>
+            <TargetTable>t_it1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="53">
+            <Source>MDART</Source>
+            <query>Select ParamField, 
+sum(case when Direction = 0 then Cnt end) as forward, 
+sum(case when Direction = 1 then Cnt end) as reverse, 
+sum(Cnt) as sumTot 
+from t_it1
+group By ParamField</query>
+            <TargetTable>t_it2</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="54">
+            <Source>MDART</Source>
+            <query>Update t_it2
+Set reverse = 0 where reverse is null</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="55">
+            <Source>MDART</Source>
+            <query>Update t_it2
+Set forward = 0 where forward is null</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="56">
+            <Source>MDART</Source>
+            <query>Select *, reverse*1.0 / forward*100 as PercentFDR from t_it2</query>
+            <TargetTable>t_it3</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="57">
+            <Source>MDART</Source>
+            <query>create index i3 on t_it3(ParamField)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="58">
+            <Source>MDART</Source>
+            <query>Select t_iteration1.*, t_it3.*
+From t_iteration1 Left Join
+  t_it3 On t_it3.ParamField = t_iteration1.ref</query>
+            <TargetTable>t_it4</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="59">
+            <Source>MDART</Source>
+            <query>Select *
+From t_it4|Order by forward desc, PercentFDR asc, MSGF_Specprob desc
+Limit 1;|t_iteration2_1|False</query>
+            <TargetTable>t_it2_1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="60">
+            <Source>MDART</Source>
+            <query>Select ParamField as ref, ChargeState, ChargeState_Operator, NumTrypticEnds,
+NumTrypticEnds_Operator, abs_PPM, abs_PPM_Operator, MSGF_SpecProb,
+MSGF_SpecProb_Operator
+From t_it2_1</query>
+            <TargetTable>t_pt_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="61">
+            <Source>MDART</Source>
+            <query>Select * From t_results02||t_pt_1|False</query>
+            <TargetTable>T_Results_QValue_Filter</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="62">
+            <Source>MDART</Source>
+            <query>INSERT INTO t_results_filtered
+  (  Job,
+  Scan,
+HCDScanNum,
+FragType,
+Charge,
+Peptide,
+Protein,
+NTT,
+MSGF_SpecProb
+)
+SELECT
+Q.Job,
+Q.ScanNum as Scan,
+(CASE WHEN M.Parameter_File LIKE '%HCD%' THEN Q.ScanNum
+  ELSE Q.ScanNum + 1 END) AS HCDScanNum,
+(CASE WHEN M.Parameter_File LIKE '%HCD%' THEN 'hcd'
+  ELSE 'other' END) AS FragType,
+Q.ChargeState AS Charge,
+Q.Peptide,
+Q.Reference as Protein,
+Q.NumTrypticEnds as NTT,
+Q.MSGF_SpecProb
+FROM
+  T_Results_QValue_Filter Q
+  INNER JOIN T_Results_Metadata_Typed M ON (Q.Job = M.Job)
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="63">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="64">
+            <Source>MDART</Source>
+            <query>/* ASCORE-related Section */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section applies ASCORE filtering to t_results_filtered IFF ascore is part of the workflow</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="65">
+            <Source>MDART</Source>
+            <query>Select Distinct Job, Scan
+FROM T_Results_AScore_Typed 
+WHERE (AScore &gt; 13) OR ( AScore = -1);</query>
+            <TargetTable>t_ascore_passed</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="66">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_results_filtered_Job_ScanNum ON t_results_filtered(Job, Scan);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="67">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_ascore_passed_Job_scan ON t_ascore_passed(Job, Scan);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="68">
+            <Source>MDART</Source>
+            <query>Select t_results_filtered.Job,
+  t_results_filtered.Scan,
+  t_results_filtered.HCDScanNum,
+  t_results_filtered.FragType,
+  t_results_filtered.Charge,
+  t_results_filtered.Peptide,
+  t_results_filtered.Protein,
+  t_results_filtered.NTT,
+  t_results_filtered.MSGF_SpecProb
+FROM t_results_filtered, t_ascore_passed
+WHERE t_results_filtered.Job = t_ascore_passed.Job AND
+    t_results_filtered.Scan = t_ascore_passed.Scan;</query>
+            <TargetTable>t_results_filtered_ascore</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>ascore</WorkflowGroup>
+        </Step>
+        <Step id="69">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="70">
+            <Source>MDART</Source>
+            <query>Select *
+FROM t_results_filtered
+</query>
+            <TargetTable>t_results_filtered_ascore</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>passes results from t_results_filtered into t_results_filtered_ascore if ASCORE was NOT performed as part of the workflow</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>no_ascore</WorkflowGroup>
+        </Step>
+        <Step id="71">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="72">
+            <Source>MDART</Source>
+            <query>/*Getting best identification from multiple fragmentation types */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section filters the search results to pull out the best identification for each job/scan pair as well as removing prefix and suffic characters from the peptide sequence and removing any filter passing decoy identifications</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="73">
+            <Source>APE</Source>
+            <query>SELECT Job,
+Scan,
+Min(MSGF_SpecProb) as Min_MSGF
+FROM t_results_filtered_ascore
+GROUP BY Job, Scan;</query>
+            <TargetTable>t_min_msgf_match</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_min_msgf_match with lowest scoring MSGF_SpecProb value for each job/scan pair from MSGFDB search results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="74">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_min_msgf_match_Job ON t_min_msgf_match(Job, Scan, Min_MSGF)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_min_msgf_match wth all three elements used as indicies from MSGFDB dearch results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="75">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_results_filtered_ascore_Job ON t_results_filtered_ascore(Job, Scan, MSGF_SpecProb)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_results_filtered_ascore using job, scan and MSGF_SpecProb from MSGFDB dearch results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="76">
+            <Source>MDART</Source>
+            <query>Select t_results_filtered_ascore.Job,
+  t_results_filtered_ascore.Scan,
+  HCDScanNum,
+  FragType,
+  Charge,
+ substr(Peptide, 3, length(Peptide)-4) AS Peptide,
+ Protein,
+  NTT,
+  MSGF_SpecProb
+FROM t_results_filtered_ascore
+JOIN t_min_msgf_match ON
+t_results_filtered_ascore.Job = t_min_msgf_match.Job AND
+t_results_filtered_ascore.Scan = t_min_msgf_match.Scan AND
+t_results_filtered_ascore.MSGF_SpecProb = t_min_msgf_match.Min_MSGF
+WHERE (t_results_filtered_ascore.Protein NOT LIKE 'rev%') AND (t_results_filtered_ascore.Protein NOT LIKE 'xxx%')
+</query>
+            <TargetTable>t_results_best_hit</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_best_hit using t_results_filtered_ascore and t_min_msgf_match, removing prefix and suffix characters from the peptide sequence AND any filter passing reversed results from MSGFDB results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>msgfplus</WorkflowGroup>
+        </Step>
+        <Step id="77">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="78">
+            <Source>MDART</Source>
+            <query> SELECT
+  T_Results_Metadata_Typed.Dataset_ID AS Dataset_ID,
+  t_results_filtered_ascore.HCDScanNum AS HCDScanNum,
+  MIN(t_results_filtered_ascore.MSGF_SpecProb) AS MSGF_Min
+FROM
+  t_results_filtered_ascore
+  INNER JOIN T_Results_Metadata_Typed ON (t_results_filtered_ascore.Job = T_Results_Metadata_Typed.Job)
+GROUP BY
+  T_Results_Metadata_Typed.Dataset_ID,
+  t_results_filtered_ascore.HCDScanNum;
+</query>
+            <TargetTable>t_min_msgf_match</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_min_msgf_match with lowest scoring MSGF_SpecProb value for each job/scan pair from SEQUEST search results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="79">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_results_filtered_ascore ON t_min_msgf_match(MSGF_Min, HCDScanNum)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_min_msgf_match wth all three elements used as indicies from SEQUEST search results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="80">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_results_filtered_match ON t_results_filtered_ascore(MSGF_SpecProb, HCDScanNum)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_results_filtered_ascore using job, scan and MSGF_SpecProb from SEQUEST search results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="81">
+            <Source>MDART</Source>
+            <query>Select t_results_filtered_ascore.Job,
+  t_results_filtered_ascore.Scan,
+  t_results_filtered_ascore.HCDScanNum,
+  t_results_filtered_ascore.FragType,
+  t_results_filtered_ascore.Charge,
+  t_results_filtered_ascore.Peptide,
+  t_results_filtered_ascore.Protein,
+  t_results_filtered_ascore.NTT,
+  t_results_filtered_ascore.MSGF_SpecProb
+FROM
+  t_results_filtered_ascore
+  INNER JOIN t_min_msgf_match ON (t_results_filtered_ascore.MSGF_SpecProb = t_min_msgf_match.MSGF_Min)
+  AND (t_results_filtered_ascore.HCDScanNum = t_min_msgf_match.HCDScanNum)
+  INNER JOIN T_Results_Metadata_Typed ON (t_results_filtered_ascore.Job = T_Results_Metadata_Typed.Job)
+  AND (T_Results_Metadata_Typed.Dataset_ID = t_min_msgf_match.Dataset_ID);
+WHERE (t_results_filtered_ascore.Protein NOT LIKE 'rev%') AND (t_results_filtered_ascore.Protein NOT LIKE 'xxx%')</query>
+            <TargetTable>t_results_best_hit</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_best_hit using t_results_filtered_ascore and t_min_msgf_match, removing prefix and suffix characters from the peptide sequence AND any filter passing reversed results from SEQUEST results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>sequest</WorkflowGroup>
+        </Step>
+        <Step id="82">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="83">
+            <Source>APE</Source>
+            <query>/*Get best hit from the synopsis file and get all the proteins associated with it to form the T_Row_Metadata */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="84">
+            <Source>APE</Source>
+            <query>SELECT Peptide, Protein FROM t_results_best_hit Group by Peptide, Protein;</query>
+            <TargetTable>tt1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates table tt1 with Peptide and protein pairs from t_results_best_hit</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="85">
+            <Source>APE</Source>
+            <query>Select Peptide, Count(Protein)-1 AS MultiProtein FROM tt1 GROUP By Peptide;</query>
+            <TargetTable>tt2</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates table tt2 with MultiProtein count from tt1 indicating how many proteins a given peptide might be found</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="86">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_tt1_Peptide ON tt1(Peptide)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes tt1 using peptide</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="87">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_tt2_Peptide ON tt2(Peptide)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes tt2 using peptide</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="88">
+            <Source>APE</Source>
+            <query>Select tt1.Peptide, tt1.Protein, MultiProtein FROM tt1
+Join tt2 ON tt1.Peptide = tt2.Peptide;</query>
+            <TargetTable>T_Row_Metadata</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Row_Metadata with Peptide, Protein and MultiProtein values from tt1 and tt2</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="89">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="90">
+            <Source>APE</Source>
+            <query>/*Remove Protein column and reduce to a single entry for each scan-job-peptide */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>this section collapses t_results_best_hit entries by removing the protein references and adding Dataset_IDs to the results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="91">
+            <Source>APE</Source>
+            <query>Select Job,
+Scan,
+  HCDScanNum,
+ FragType,
+Charge,
+Peptide,
+NTT,
+MSGF_SpecProb
+FROM
+  t_results_best_hit
+GROUP BY Job, Scan, HCDScanNum, FragType, Charge, Peptide, NTT, MSGF_SpecProb;
+</query>
+            <TargetTable>t_results_remove_extraProt</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_remove_extraProt with results from t_results_best_hit collapsing any duplicates results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="92">
+            <Source>MDART</Source>
+            <query>Select t_results_remove_extraProt.Job,
+ Scan,
+ HCDScanNum,
+  FragType,
+  Charge,
+  Peptide,
+  NTT,
+  MSGF_SpecProb,
+  Dataset_ID
+From t_results_remove_extraProt
+ Inner Join
+  T_Results_Metadata_Typed On (t_results_remove_extraProt.Job = T_Results_Metadata_Typed.Job)
+</query>
+            <TargetTable>t_results_dataset</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_dataset with results from t_results_remove_extraProt combined with T_Results_Metadata_Typed adding Dataset_ID information</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="93">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="94">
+            <Source>MDART</Source>
+            <query>/*Precursor Interference filtering */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section applies interference filtering is precursor_filter is passed from the parameters</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="95">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idxt_precursor_interference_int ON T_Precursor_Interference_Typed(Interference);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes T_Precursor_Interference_Typed using the interference value</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="96">
+            <Source>MDART</Source>
+            <query>Select *
+From T_Precursor_Interference_Typed
+where Interference &gt; 0.8;</query>
+            <TargetTable>precursor_intermediate</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates precursor_intermedate with T_Precursor_Interference_Typed data filtered to an interference value of &gt; 0.8</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="97">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_precursor_intermediate_scans ON precursor_intermediate(ScanNumber, Dataset_ID, ChargeState)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes precursor_intermediate using ScanNumber, Dataset_ID and ChargeState</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="98">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_filtered_bestIntermediate_scans ON t_results_dataset(Scan, Dataset_ID, Charge)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_results_dataset on Scan, Dataset and Charge</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="99">
+            <Source>MDART</Source>
+            <query>Select t_results_dataset.Job,
+  t_results_dataset.Scan,
+  t_results_dataset.HCDScanNum,
+  t_results_dataset.FragType,
+  t_results_dataset.Charge,
+  t_results_dataset.Peptide,
+  t_results_dataset.NTT,
+  t_results_dataset.MSGF_SpecProb,
+  t_results_dataset.Dataset_ID
+FROM    t_results_dataset
+Inner JOIN precursor_intermediate ON ( t_results_dataset.Scan = precursor_intermediate.ScanNumber)
+  AND (  t_results_dataset.Dataset_ID = precursor_intermediate.Dataset_ID)
+  AND (  t_results_dataset.Charge = precursor_intermediate.ChargeState);</query>
+            <TargetTable>t_results_filtered_int</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_filtered_int using results from t_results_dataset and precursor_intermediate</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="100">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="101">
+            <Source>MDART</Source>
+            <query>Select t_results_dataset.Job,
+  t_results_dataset.Scan,
+  t_results_dataset.HCDScanNum,
+  t_results_dataset.FragType,
+  t_results_dataset.Charge,
+  t_results_dataset.Peptide,
+  t_results_dataset.NTT,
+  t_results_dataset.MSGF_SpecProb,
+  t_results_dataset.Dataset_ID
+FROM    t_results_dataset;
+</query>
+            <TargetTable>t_results_filtered_int</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_filtered_int with results from t_reults_dataset with NO precursor interference filtering</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>no_precursor_filter</WorkflowGroup>
+        </Step>
+        <Step id="102">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="103">
+            <Source>MDART</Source>
+            <query>/*Filter Non-quantifiable */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This section removes reporter ion results where there are values of 0 for all reporter ion channels</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="104">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Reporter_Ions_Typed
+WHERE 
+Ion_114 != 0 AND
+Ion_115 != 0 AND
+Ion_116 != 0 AND
+Ion_117 != 0;</query>
+            <TargetTable>t_reporter_ions_quantifiable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_reporter_ions_quantifiable with results from T_Reporter_Ions_Typed where at least one reporter ion channel is non-zero across all 4 iTRAQ 4-plex ion channels</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="105">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Reporter_Ions_Typed
+WHERE 
+Ion_126 != 0 AND
+Ion_127 != 0 AND
+Ion_128 != 0 AND
+Ion_129 != 0 AND
+Ion_130 != 0 AND
+Ion_131 != 0;</query>
+            <TargetTable>t_reporter_ions_quantifiable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_reporter_ions_quantifiable with results from T_Reporter_Ions_Typed where at least one reporter ion channel is non-zero across all 6 TMT 6-plex ion channels</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="106">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Reporter_Ions_Typed
+WHERE 
+Ion_113 != 0 AND
+Ion_114 != 0 AND
+Ion_115 != 0 AND
+Ion_116 != 0 AND
+Ion_117 != 0 AND
+Ion_118 != 0 AND
+Ion_119 != 0 AND
+Ion_121 != 0;</query>
+            <TargetTable>t_reporter_ions_quantifiable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_reporter_ions_quantifiable with results from T_Reporter_Ions_Typed where at least one reporter ion channel is non-zero across all 8 iTRAQ 8-plex ion channels</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="107">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Reporter_Ions_Typed
+WHERE 
+'Ion_126.128' != 0 AND
+'Ion_127.125' != 0 AND
+'Ion_127.131' != 0 AND
+'Ion_128.128' != 0 AND
+'Ion_128.124' != 0 AND
+'Ion_129.131' != 0 AND
+'Ion_129.138' != 0 AND
+'Ion_130.135' != 0 AND
+'Ion_130.141' != 0 AND
+'Ion_131.138' != 0;
+</query>
+            <TargetTable>t_reporter_ions_quantifiable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_reporter_ions_quantifiable with results from T_Reporter_Ions_Typed where at least one reporter ion channel is non-zero across all 10 TMT 10-plex ion channels</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="108">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="109">
+            <Source>APE</Source>
+            <query>Drop Table t_reporter_ions_quantifiable;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>drops the t_reporter_ions_quantifiable table IF the keep_nonquant parameter is passed to APE</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>keep_nonquant</WorkflowGroup>
+        </Step>
+        <Step id="110">
+            <Source>MDART</Source>
+            <query>SELECT * FROM T_Reporter_Ions_Typed</query>
+            <TargetTable>t_reporter_ions_quantifiable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_reporter_ions_quantifiable directly with results from T_Reporter_Ions_Typed IF the keep_nonquant parameter is passed to APE</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>keep_nonquant</WorkflowGroup>
+        </Step>
+        <Step id="111">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="112">
+            <Source>MDART</Source>
+            <query>/* Join reporter ions and identifications */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>this section combines the reporter ions with their respective peptide idenfications</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="113">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_reporter_ions_quantifiable_scans ON t_reporter_ions_quantifiable(Dataset, ScanNumber)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_reporter_ions_quantifiable on dataset and scan number</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="114">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_t_results_filtered_int_scan ON t_results_filtered_int(Dataset_ID, Scan)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>indexes t_results_filtered_int on dataset and scan number</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="115">
+            <Source>MDART</Source>
+            <query>Select t_results_filtered_int.*, t_reporter_ions_quantifiable.*
+From t_results_filtered_int
+  Inner Join
+  t_reporter_ions_quantifiable On t_results_filtered_int.Dataset_ID = t_reporter_ions_quantifiable.Dataset And
+    t_results_filtered_int.Scan = t_reporter_ions_quantifiable.ScanNumber</query>
+            <TargetTable>t_results_quantifiable</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_results_quantifiable with results from t_results_filtered_int and t_reporter_ions_quantifiable</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="116">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="117">
+            <Source>MDART</Source>
+            <query>/*pivot some tables*/</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="118">
+            <Source>MDART</Source>
+            <query>Create Table T_Data_1
+(
+	Peptide	text,
+	Sample	text,
+	Ion	text,
+	Intensity	double
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>creates table T_Data_1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="119">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="120">
+            <Source>MDART</Source>
+            <query>Select t_results_quantifiable.Peptide As Peptide, t_factors.Sample As Sample,
+  SUM(t_results_quantifiable.Ion_114) AS Ion_114,
+  SUM(t_results_quantifiable.Ion_115) AS Ion_115,
+  SUM(t_results_quantifiable.Ion_116) AS Ion_116,
+  SUM(t_results_quantifiable.Ion_117) AS Ion_117
+From t_results_quantifiable Inner Join 
+ t_factors On t_results_quantifiable.Dataset_ID = t_factors.Dataset_ID
+ Group By t_results_quantifiable.Peptide, t_factors.Sample, t_results_quantifiable.NTT</query>
+            <TargetTable>T_Data_temp</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_temp by summing reporter ion intensities for each peptide in each sample using NTT to separate similar peptide sequences with different prefix/suffix values for iTRAQ 4-plex results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="121">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '114', Ion_114 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 4-plex reporter ion 114 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="122">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '115', Ion_115 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 4-plex reporter ion 115 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="123">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '116', Ion_116 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 4-plex reporter ion 116 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="124">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '117', Ion_117 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 4-plex reporter ion 117 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>4plex</WorkflowGroup>
+        </Step>
+        <Step id="125">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="126">
+            <Source>MDART</Source>
+            <query>Select t_results_quantifiable.Peptide As Peptide, t_factors.Sample As Sample,
+  SUM(t_results_quantifiable.Ion_126) AS Ion_126,
+  SUM(t_results_quantifiable.Ion_127) AS Ion_127,
+  SUM(t_results_quantifiable.Ion_128) AS Ion_128,
+  SUM(t_results_quantifiable.Ion_129) AS Ion_129,
+  SUM(t_results_quantifiable.Ion_130) AS Ion_130,
+  SUM(t_results_quantifiable.Ion_131) AS Ion_131
+From t_results_quantifiable Inner Join 
+ t_factors On t_results_quantifiable.Dataset_ID = t_factors.Dataset_ID
+ Group By t_results_quantifiable.Peptide, t_factors.Sample, t_results_quantifiable.NTT
+
+</query>
+            <TargetTable>T_Data_temp</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_temp by summing reporter ion intensities for each peptide in each sample using NTT to separate similar peptide sequences with different prefix/suffix values for TMT 6-plex results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="127">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '126', Ion_126 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 126 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="128">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '127', Ion_127 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 127 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="129">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '128', Ion_128 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 128 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="130">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '129', Ion_129 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 129 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="131">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '130', Ion_130 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 130 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="132">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '131', Ion_131 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 6-plex reporter ion 131 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>6plex</WorkflowGroup>
+        </Step>
+        <Step id="133">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="134">
+            <Source>MDART</Source>
+            <query>Select t_results_quantifiable.Peptide As Peptide, t_factors.Sample As Sample,
+  SUM(t_results_quantifiable.Ion_113) AS Ion_113,
+  SUM(t_results_quantifiable.Ion_114) AS Ion_114,
+  SUM(t_results_quantifiable.Ion_115) AS Ion_115,
+  SUM(t_results_quantifiable.Ion_116) AS Ion_116,
+  SUM(t_results_quantifiable.Ion_117) AS Ion_117,
+  SUM(t_results_quantifiable.Ion_118) AS Ion_118,
+  SUM(t_results_quantifiable.Ion_119) AS Ion_119,
+  SUM(t_results_quantifiable.Ion_121) AS Ion_121
+From t_results_quantifiable Inner Join 
+ t_factors On t_results_quantifiable.Dataset_ID = t_factors.Dataset_ID
+ Group By t_results_quantifiable.Peptide, t_factors.Sample, t_results_quantifiable.NTT
+
+</query>
+            <TargetTable>T_Data_temp</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_temp by summing reporter ion intensities for each peptide in each sample using NTT to separate similar peptide sequences with different prefix/suffix values for iTRAQ 8-plex results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="135">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '113', Ion_113 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 113 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="136">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '114', Ion_114 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 114 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="137">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '115', Ion_115 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 115 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="138">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '116', Ion_116 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 116 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="139">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '117', Ion_117 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 117 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="140">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '118', Ion_118 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 118 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="141">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '119', Ion_119 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 119 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="142">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, '121', Ion_121 as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with iTRAQ 8-plex reporter ion 121 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>8plex</WorkflowGroup>
+        </Step>
+        <Step id="143">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="144">
+            <Source>MDART</Source>
+            <query>Select t_results_quantifiable.Peptide As Peptide, t_factors.Sample As Sample,
+  SUM(t_results_quantifiable.'Ion_126.128') AS 'Ion_126.128',
+  SUM(t_results_quantifiable.'Ion_127.125') AS 'Ion_127.125',
+  SUM(t_results_quantifiable.'Ion_127.131') AS 'Ion_127.131',
+  SUM(t_results_quantifiable.'Ion_128.128') AS 'Ion_128.128',
+  SUM(t_results_quantifiable.'Ion_128.134') AS 'Ion_128.134',
+  SUM(t_results_quantifiable.'Ion_129.131') AS 'Ion_129.131',
+  SUM(t_results_quantifiable.'Ion_129.138') AS 'Ion_129.138',
+  SUM(t_results_quantifiable.'Ion_130.135') AS 'Ion_130.135',
+  SUM(t_results_quantifiable.'Ion_130.141') AS 'Ion_130.141',
+  SUM(t_results_quantifiable.'Ion_131.138') AS 'Ion_131.138'
+From t_results_quantifiable Inner Join 
+ t_factors On t_results_quantifiable.Dataset_ID = t_factors.Dataset_ID
+ Group By t_results_quantifiable.Peptide, t_factors.Sample, t_results_quantifiable.NTT
+
+
+</query>
+            <TargetTable>T_Data_temp</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_temp by summing reporter ion intensities for each peptide in each sample using NTT to separate similar peptide sequences with different prefix/suffix values for TMT 10-plex results</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="145">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 126.128, [Ion_126.128] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 126.128 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="146">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 127.125, [Ion_127.125] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 127.125 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="147">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 127.131, [Ion_127.131] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 127.131 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="148">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 128.128, [Ion_128.128] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 128.128 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="149">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 128.134, [Ion_128.134] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 128.134 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="150">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 129.131, [Ion_129.131] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 129.131 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="151">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 129.138, [Ion_129.138] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 129.138 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="152">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 130.135, [Ion_130.135] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 130.135 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="153">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 130.141, [Ion_130.141] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 130.141 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="154">
+            <Source>MDART</Source>
+            <query>Insert into T_Data_1(
+	Peptide,
+	Sample,
+	Ion,
+	Intensity)
+Select Peptide, Sample, 131.138, [Ion_131.138] as Intensity
+FROM T_Data_temp;</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_Data_1 with TMT 10-plex reporter ion 131.138 intensities</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>TMT10Plex</WorkflowGroup>
+        </Step>
+        <Step id="155">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="156">
+            <Source>APE</Source>
+            <query>Select Distinct 
+Alias,
+Ion,
+Sample
+From
+t_alias;</query>
+            <TargetTable>t_alias_shrunk</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_alias_shrunk with only Alias, Ion and Sample entries from t_alias</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="157">
+            <Source>APE</Source>
+            <query>Select 
+T_Data_1.Peptide, 
+t_alias_shrunk.Alias as Alias,
+T_Data_1.Intensity
+From T_Data_1
+ Inner Join
+  t_alias_shrunk On T_Data_1.Sample = t_alias_shrunk.Sample COLLATE NOCASE And T_Data_1.Ion = t_alias_shrunk.Ion</query>
+            <TargetTable>t_final</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates t_final with results from T_Data_1 and t_alias_shrunk to provide reporter ion channel aliases as column headers</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="158">
+            <Source>MDART</Source>
+            <query>t_final, Alias, Column Heading, ;t_final, Peptide, Row Heading, ;t_final, Intensity, Value, max;</query>
+            <TargetTable>T_Data</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>populates T_Data with pivoted t_final to provide peptides, aliased column headers and maximum ion channel intensity for each aliased column</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="159">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="160">
+            <Source>MDART</Source>
+            <query>/*QC stats */</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="161">
+            <Source>MDART</Source>
+            <query>SELECT "1" AS "ID", "Original" AS Step, COUNT(*) As Peptide
+FROM
+(
+	SELECT Peptide
+	FROM T_Results_IDM
+	GROUP BY Peptide
+);</query>
+            <TargetTable>T_MAC_Peptide_Summary</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_MAC_Peptide_Summary with a peptide count from the original T_Results_IDM </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="162">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_MAC_Peptide_Summary(ID, Step, Peptide)
+SELECT "2", "MSGF", COUNT(*)
+FROM 
+(
+	SELECT Peptide
+	FROM t_results_filtered
+	GROUP BY Peptide
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_MAC_Peptide_Summary with a peptide count from t_results_filtered</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="163">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_MAC_Peptide_Summary(ID, Step, Peptide)
+SELECT "3", "HCD", COUNT(*)
+FROM 
+(
+	SELECT Peptide
+	FROM t_results_best_hit
+	GROUP BY Peptide
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_MAC_Peptide_Summary with a peptide count from t_results_best_hit</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="164">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_MAC_Peptide_Summary(ID, Step, Peptide)
+SELECT "4", "Interference", COUNT(*)
+FROM 
+(
+	SELECT Peptide
+	FROM t_results_filtered_int
+	GROUP BY Peptide
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_MAC_Peptide_Summary with a peptide count from t_results_filtered_int</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+        <Step id="165">
+            <Source>MDART</Source>
+            <query>INSERT INTO T_MAC_Peptide_Summary(ID, Step, Peptide)
+SELECT "5", "Quantifiable", COUNT(*)
+FROM 
+(
+	SELECT Peptide
+	FROM T_Data
+	GROUP BY Peptide
+);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>populates T_MAC_Peptide_Summary with a peptide count from T_Data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>default</WorkflowGroup>
+        </Step>
+    </Steps>
+</MdartWorkflow>
