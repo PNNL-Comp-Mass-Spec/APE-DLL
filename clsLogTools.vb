@@ -3,254 +3,255 @@
 ' Pacific Northwest National Laboratory, Richland, WA
 ' Copyright 2009, Battelle Memorial Institute
 ' Created 01/01/2009
-'
-' Last modified 05/14/2009
-'						05/15/2009 (DAC) - Modified logging to use Log4Net
 '*********************************************************************************************************
 
 Option Strict On
 
-Imports log4net.Appender
-Imports log4net
+Imports PRISM.Logging
+Imports System.IO
 
-'This assembly attribute tells Log4Net where to find the config file
-<Assembly: Config.XmlConfigurator(ConfigFile:="Logging.config", Watch:=True)>
-
+''' <summary>
+''' Class for handling logging via the FileLogger and DatabaseLogger
+''' </summary>
+''' <remarks>
+''' Call method CreateFileLogger to define the log file name
+''' </remarks>
 Public Class clsLogTools
 
-    '*********************************************************************************************************
-    ' Class for handling logging via Log4Net
-    '*********************************************************************************************************
-
 #Region "Enums"
-    Public Enum LogLevels
-        DEBUG = 5
-        INFO = 4
-        WARN = 3
-        [ERROR] = 2
-        FATAL = 1
+
+    ''' <summary>
+    ''' Log types
+    ''' </summary>
+    Public Enum LoggerTypes
+        ''' <summary>
+        ''' Log to a log file
+        ''' </summary>
+        LogFile
+        ''' <summary>
+        ''' Log to the database and to the log file
+        ''' </summary>
+        LogDb
     End Enum
 
-    Public Enum LoggerTypes
-        LogFile
-        LogDb
-        LogSystem
-    End Enum
 #End Region
 
-#Region "Module variables"
-    Private Shared ReadOnly m_FileLogger As ILog = LogManager.GetLogger("FileLogger")
-    Private Shared ReadOnly m_DbLogger As ILog = LogManager.GetLogger("DbLogger")
-    Private Shared ReadOnly m_SysLogger As ILog = LogManager.GetLogger("SysLogger")
-    Private Shared m_MostRecentErrorMessage As String = String.Empty
+#Region "Class variables"
+
+    ''' <summary>
+    ''' File Logger
+    ''' </summary>
+    Private Shared ReadOnly m_FileLogger As FileLogger = New FileLogger()
+
+    ''' <summary>
+    ''' Database logger
+    ''' </summary>
+    Private Shared ReadOnly m_DbLogger As DatabaseLogger = New SQLServerDatabaseLogger()
+
 #End Region
 
 #Region "Properties"
+
+    ''' <summary>
+    ''' File path for the current log file used by the FileAppender
+    ''' </summary>
+    Public ReadOnly Property CurrentFileAppenderPath As String
+        Get
+            If (String.IsNullOrEmpty(FileLogger.LogFilePath)) Then
+                Return String.Empty
+            End If
+
+            Return FileLogger.LogFilePath
+        End Get
+    End Property
+
     ''' <summary>
     ''' Tells calling program file debug status
     ''' </summary>
-    ''' <returns>TRUE if debug level enabled for file logger; FALSE otherwise</returns>
-    ''' <remarks></remarks>
-    Public Shared ReadOnly Property FileLogDebugEnabled() As Boolean
+    Public Shared ReadOnly Property FileLogDebugEnabled As Boolean
         Get
             Return m_FileLogger.IsDebugEnabled
         End Get
     End Property
 
-    Public Shared ReadOnly Property MostRecentErrorMessage() As String
+    ''' <summary>
+    ''' Most recent error message
+    ''' </summary>
+    Public Shared ReadOnly Property MostRecentErrorMessage As String
         Get
-            Return m_MostRecentErrorMessage
+            Return BaseLogger.MostRecentErrorMessage
         End Get
     End Property
+
+    ''' <summary>
+    ''' Working directory path
+    ''' </summary>
+    Public Shared Property WorkDirPath As String
+
 #End Region
 
 #Region "Methods"
+
     ''' <summary>
     ''' Writes a message to the logging system
     ''' </summary>
-    ''' <param name="LoggerType">Type of logger to use</param>
-    ''' <param name="LogLevel">Level of log reporting</param>
-    ''' <param name="InpMsg">Message to be logged</param>
-    ''' <remarks></remarks>
-    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String)
-
-        Dim MyLogger As ILog
-
-        'Establish which logger will be used
-        Select Case LoggerType
-            Case LoggerTypes.LogDb
-                ' Note that the Logging.config should have the DbLogger logging to both the database and the rolling file
-                MyLogger = m_DbLogger
-            Case LoggerTypes.LogFile
-                MyLogger = m_FileLogger
-            Case LoggerTypes.LogSystem
-                MyLogger = m_SysLogger
-            Case Else
-                Throw New Exception("Invalid logger type specified")
-        End Select
-
-        'Send the log message
-        Select Case LogLevel
-            Case LogLevels.DEBUG
-                If MyLogger.IsDebugEnabled Then MyLogger.Debug(InpMsg)
-            Case LogLevels.ERROR
-                If MyLogger.IsErrorEnabled Then MyLogger.Error(InpMsg)
-            Case LogLevels.FATAL
-                If MyLogger.IsFatalEnabled Then MyLogger.Fatal(InpMsg)
-            Case LogLevels.INFO
-                If MyLogger.IsInfoEnabled Then MyLogger.Info(InpMsg)
-            Case LogLevels.WARN
-                If MyLogger.IsWarnEnabled Then MyLogger.Warn(InpMsg)
-            Case Else
-                Throw New Exception("Invalid log level specified")
-        End Select
-
-        If LogLevel <= LogLevels.ERROR Then
-            m_MostRecentErrorMessage = InpMsg
-        End If
+    ''' <param name="loggerType">Type of logger to use</param>
+    ''' <param name="logLevel">Level of log reporting</param>
+    ''' <param name="message">Message to be logged</param>
+    Public Shared Sub WriteLog(loggerType As LoggerTypes, logLevel As BaseLogger.LogLevels, message As String)
+        WriteLogWork(loggerType, logLevel, message, Nothing)
     End Sub
 
     ''' <summary>
     ''' Overload to write a message and exception to the logging system
     ''' </summary>
-    ''' <param name="LoggerType">Type of logger to use</param>
-    ''' <param name="LogLevel">Level of log reporting</param>
-    ''' <param name="InpMsg">Message to be logged</param>
-    ''' <param name="Ex">Exception to be logged</param>
-    ''' <remarks></remarks>
-    Public Shared Sub WriteLog(LoggerType As LoggerTypes, LogLevel As LogLevels, InpMsg As String,
-     Ex As Exception)
+    ''' <param name="loggerType">Type of logger to use</param>
+    ''' <param name="logLevel">Level of log reporting</param>
+    ''' <param name="message">Message to be logged</param>
+    ''' <param name="ex">Exception to be logged</param>
+    Public Shared Sub WriteLog(loggerType As LoggerTypes, logLevel As BaseLogger.LogLevels, message As String, ex As Exception)
+        WriteLogWork(loggerType, logLevel, message, ex)
+    End Sub
 
-        Dim MyLogger As ILog
+    ''' <summary>
+    ''' Write a message and possibly an exception to the logging system
+    ''' </summary>
+    ''' <param name="loggerType">Type of logger to use</param>
+    ''' <param name="logLevel">Level of log reporting</param>
+    ''' <param name="message">Message to be logged</param>
+    ''' <param name="ex">Exception to be logged</param>
+    Private Shared Sub WriteLogWork(loggerType As LoggerTypes, logLevel As BaseLogger.LogLevels, message As String, ex As Exception)
+        Dim myLogger As BaseLogger
 
-        'Establish which logger will be used
-        Select Case LoggerType
+        ' Establish which logger will be used
+        Select Case loggerType
             Case LoggerTypes.LogDb
-                MyLogger = m_DbLogger
+                ' Note that the Database logger will (by default) also echo messages to the file logger
+                myLogger = m_DbLogger
+                message = Net.Dns.GetHostName() + ": " + message
+
             Case LoggerTypes.LogFile
-                MyLogger = m_FileLogger
-            Case LoggerTypes.LogSystem
-                MyLogger = m_SysLogger
+                myLogger = m_FileLogger
+
+                If Not String.IsNullOrWhiteSpace(FileLogger.LogFilePath) AndAlso
+                   Not FileLogger.LogFilePath.Contains(Path.DirectorySeparatorChar.ToString()) Then
+
+                    Dim logFileName = Path.GetFileName(FileLogger.LogFilePath)
+                    Dim workDirLogPath As String
+
+                    If (String.IsNullOrEmpty(WorkDirPath)) Then
+                        workDirLogPath = Path.Combine(".", logFileName)
+                    Else
+                        workDirLogPath = Path.Combine(WorkDirPath, logFileName)
+                    End If
+                    ChangeLogFileBaseName(workDirLogPath, FileLogger.AppendDateToBaseFileName)
+
+                End If
+
             Case Else
                 Throw New Exception("Invalid logger type specified")
         End Select
 
-        'Send the log message
-        Select Case LogLevel
-            Case LogLevels.DEBUG
-                If MyLogger.IsDebugEnabled Then MyLogger.Debug(InpMsg, Ex)
-            Case LogLevels.ERROR
-                If MyLogger.IsErrorEnabled Then MyLogger.Error(InpMsg, Ex)
-            Case LogLevels.FATAL
-                If MyLogger.IsFatalEnabled Then MyLogger.Fatal(InpMsg, Ex)
-            Case LogLevels.INFO
-                If MyLogger.IsInfoEnabled Then MyLogger.Info(InpMsg, Ex)
-            Case LogLevels.WARN
-                If MyLogger.IsWarnEnabled Then MyLogger.Warn(InpMsg, Ex)
-            Case Else
-                Throw New Exception("Invalid log level specified")
-        End Select
+        RaiseEvent MessageLogged(message, logLevel)
+
+        ' Send the log message
+        myLogger?.LogMessage(logLevel, message, ex)
     End Sub
 
+
     ''' <summary>
-    ''' Changes the base log file name
+    ''' Update the log file's base name (or relative path)
+    ''' However, if appendDateToBaseName is false, baseName is the full path to the log file
     ''' </summary>
-    ''' <param name="FileName">Log file base name and path (relative to program folder)</param>
-    ''' <remarks></remarks>
-    Public Shared Sub ChangeLogFileName(FileName As String)
-
-        'Get a list of appenders
-        Dim AppendList As IEnumerable(Of IAppender) = FindAppenders("RollingFileAppender")
-        If AppendList Is Nothing Then
-            WriteLog(LoggerTypes.LogSystem, LogLevels.WARN, "Unable to change file name. No appender found")
-            Return
-        End If
-
-        For Each SelectedAppender As IAppender In AppendList
-            'Convert the IAppender object to a RollingFileAppender
-            Dim AppenderToChange = TryCast(SelectedAppender, RollingFileAppender)
-            If AppenderToChange Is Nothing Then
-                WriteLog(LoggerTypes.LogSystem, LogLevels.ERROR, "Unable to convert appender")
-                Return
-            End If
-            'Change the file name and activate change
-            AppenderToChange.File = FileName
-            AppenderToChange.ActivateOptions()
-        Next
+    ''' <param name="baseName">Base log file name (or relative path)</param>
+    ''' <param name="appendDateToBaseName">
+    ''' When true, the actual log file name will have today's date appended to it, in the form mm-dd-yyyy.txt
+    ''' When false, the actual log file name will be the base name plus .txt (unless the base name already has an extension)
+    ''' </param>
+    ''' <remarks>If baseName is null or empty, the log file name will be named DefaultLogFileName</remarks>
+    Public Shared Sub ChangeLogFileBaseName(baseName As String, appendDateToBaseName As Boolean)
+        FileLogger.ChangeLogFileBaseName(baseName, appendDateToBaseName)
     End Sub
-
-    ''' <summary>
-    ''' Gets the specified appender
-    ''' </summary>
-    ''' <param name="AppendName">Name of appender to find</param>
-    ''' <returns>List(IAppender) objects if found; NOTHING otherwise</returns>
-    ''' <remarks></remarks>
-    Private Shared Function FindAppenders(AppendName As String) As IEnumerable(Of IAppender)
-
-        'Get a list of the current loggers
-        Dim LoggerList() As ILog = LogManager.GetCurrentLoggers()
-        If LoggerList.GetLength(0) < 1 Then Return Nothing
-
-        'Create a List of appenders matching the criteria for each logger
-        Dim RetList As New List(Of IAppender)
-        For Each TestLogger As ILog In LoggerList
-            For Each TestAppender As IAppender In TestLogger.Logger.Repository.GetAppenders()
-                If TestAppender.Name = AppendName Then RetList.Add(TestAppender)
-            Next
-        Next
-
-        'Return the list of appenders, if any found
-        If RetList.Count > 0 Then
-            Return RetList
-        Else
-            Return Nothing
-        End If
-    End Function
 
     ''' <summary>
     ''' Sets the file logging level via an integer value (Overloaded)
     ''' </summary>
-    ''' <param name="InpLevel">Integer corresponding to level (1-5, 5 being most verbose</param>
-    ''' <remarks></remarks>
-    Public Shared Sub SetFileLogLevel(InpLevel As Integer)
+    ''' <param name="logLevel">Integer corresponding to level (1-5, 5 being most verbose</param>
+    Public Shared Sub SetFileLogLevel(logLevel As Integer)
 
-        Dim LogLevelEnumType As Type = GetType(LogLevels)
+        Dim LogLevelEnumType As Type = GetType(BaseLogger.LogLevels)
 
-        'Verify input level is a valid log level
-        If Not [Enum].IsDefined(LogLevelEnumType, InpLevel) Then
-            WriteLog(LoggerTypes.LogFile, LogLevels.ERROR, "Invalid value specified for level: " & InpLevel.ToString)
+        ' Verify input level is a valid log level
+        If Not [Enum].IsDefined(LogLevelEnumType, logLevel) Then
+            WriteLog(LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Invalid value specified for level: " & logLevel.ToString)
             Return
         End If
 
-        'Convert input integer into the associated enum
-        Dim Lvl = DirectCast([Enum].Parse(LogLevelEnumType, InpLevel.ToString), LogLevels)
-        SetFileLogLevel(Lvl)
+        ' Convert input integer into the associated enum
+        Dim logLevelEnum = DirectCast([Enum].Parse(LogLevelEnumType, logLevel.ToString), BaseLogger.LogLevels)
+
+        SetFileLogLevel(logLevelEnum)
 
     End Sub
-    '%date [%thread] %-5level %logger [%property{NDC}] - %message%newline"
 
     ''' <summary>
     ''' Sets file logging level based on enumeration (Overloaded)
     ''' </summary>
-    ''' <param name="InpLevel">LogLevels value defining level (Debug is most verbose)</param>
-    ''' <remarks></remarks>
-    Public Shared Sub SetFileLogLevel(InpLevel As LogLevels)
-
-        Dim LogRepo = DirectCast(m_FileLogger.Logger, Repository.Hierarchy.Logger)
-
-        Select Case InpLevel
-            Case LogLevels.DEBUG
-                LogRepo.Level = LogRepo.Hierarchy.LevelMap("DEBUG")
-            Case LogLevels.ERROR
-                LogRepo.Level = LogRepo.Hierarchy.LevelMap("ERROR")
-            Case LogLevels.FATAL
-                LogRepo.Level = LogRepo.Hierarchy.LevelMap("FATAL")
-            Case LogLevels.INFO
-                LogRepo.Level = LogRepo.Hierarchy.LevelMap("INFO")
-            Case LogLevels.WARN
-                LogRepo.Level = LogRepo.Hierarchy.LevelMap("WARN")
-        End Select
+    ''' <param name="logLevel">LogLevels value defining level (Debug is most verbose)</param>
+    Public Shared Sub SetFileLogLevel(logLevel As BaseLogger.LogLevels)
+        m_FileLogger.LogLevel = logLevel
     End Sub
+
+    ''' <summary>
+    ''' Configures the file logger
+    ''' </summary>
+    ''' <param name="logFileNameBase">Base name for log file</param>
+    ''' <param name="traceMode">When true, show additional debug messages at the console</param>
+    Public Shared Sub CreateFileLogger(logFileNameBase As String, Optional traceMode As Boolean = False)
+        If traceMode AndAlso Not BaseLogger.TraceMode Then
+            BaseLogger.TraceMode = True
+        End If
+
+        FileLogger.ChangeLogFileBaseName(logFileNameBase, appendDateToBaseName:=True)
+
+        ' This program determines when to log Or Not log based on internal logic
+        ' Set the LogLevel tracked by FileLogger to DEBUG so that all messages sent to this class are logged
+        SetFileLogLevel(BaseLogger.LogLevels.DEBUG)
+    End Sub
+
+    ''' <summary>
+    ''' Configures the database logger
+    ''' </summary>
+    ''' <param name="connStr">System.Data.SqlClient style connection string</param>
+    ''' <param name="moduleName">Module name used by logger</param>
+    ''' <param name="traceMode">When true, show additional debug messages at the console</param>
+    Public Shared Sub CreateDbLogger(connStr As String, moduleName As String, Optional traceMode As Boolean = False)
+        m_DbLogger.LogLevel = BaseLogger.LogLevels.INFO
+
+        If traceMode AndAlso Not BaseLogger.TraceMode Then
+            BaseLogger.TraceMode = True
+        End If
+
+        m_DbLogger.ChangeConnectionInfo(moduleName, connStr, "PostLogEntry", "type", "message", "postedBy", 128, 4096, 128)
+    End Sub
+
+    ''' <summary>
+    ''' Remove the default database logger that was created when the program first started
+    ''' </summary>
+    Public Shared Sub RemoveDefaultDbLogger()
+        m_DbLogger.RemoveConnectionInfo()
+    End Sub
+
+    ''' <summary>
+    ''' Delegate for event MessageLogged
+    ''' </summary>
+    Public Delegate Sub MessageLoggedEventHandler(message As String, logLevel As BaseLogger.LogLevels)
+
+    ''' <summary>
+    ''' This event is raised when a message is logged
+    ''' </summary>
+    Public Shared Event MessageLogged As MessageLoggedEventHandler
+
 #End Region
 
 End Class

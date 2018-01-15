@@ -5,6 +5,7 @@ Imports System.Text.RegularExpressions
 Imports System.IO
 Imports System.Data.OleDb
 Imports ADOX
+Imports PRISM.Logging
 Imports TableFunctions
 
 ''' <summary>
@@ -97,7 +98,7 @@ Public Class SqliteToAccess
                 mHandler(True, False, 0, "Export Cancelled by user")
             End If
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -148,7 +149,7 @@ Public Class SqliteToAccess
                 mHandler(True, False, 0, "Export Cancelled by user")
             End If
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -196,7 +197,7 @@ Public Class SqliteToAccess
                 mHandler(True, False, 0, "Import Cancelled by user")
             End If
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -230,7 +231,7 @@ Public Class SqliteToAccess
                 mHandler(True, False, 0, "Import Cancelled by user")
             End If
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -283,7 +284,7 @@ Public Class SqliteToAccess
                 mHandler(True, False, 0, "Import Cancelled by user")
             End If
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database " & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -319,7 +320,7 @@ Public Class SqliteToAccess
             _isActive = False
             mHandler(True, True, 100, "Finished creating function table in: " & mSqlitePath)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to create function table" & ex.Message)
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to create function table" & ex.Message)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -502,13 +503,13 @@ Public Class SqliteToAccess
                 CheckCancelled()
                 handler(False, True, CInt((count * 100.0R / tableNames.Count)), "Parsed table " & tname)
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "parsed table schema for [" & tname & "]")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "parsed table schema for [" & tname & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished parsing all tables in SQL Server schema")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished parsing all tables in SQL Server schema")
 
         ' Allow the user a chance to select which tables to convert
         If selectionHandler IsNot Nothing Then
@@ -712,7 +713,7 @@ Public Class SqliteToAccess
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
     Private Shared Sub CreateSQLiteTables(sqlitePath As String, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating SQLite tables...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating SQLite tables...")
 
         ' Connect to the newly created database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -725,20 +726,20 @@ Public Class SqliteToAccess
                 Try
                     AddSQLiteTable(conn, dt)
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "AddSQLiteTable failed: " & ex.Message)
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "AddSQLiteTable failed: " & ex.Message)
                     Throw
                 End Try
                 count += 1
                 CheckCancelled()
                 handler(False, True, CInt((count * 100.0R / schema.Count)), "Added table " & dt.TableName & " to the SQLite database")
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "added schema for SQLite table [" & dt.TableName & "]")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "added schema for SQLite table [" & dt.TableName & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished adding all table schemas for SQLite database")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished adding all table schemas for SQLite database")
     End Sub
 
     ''' <summary>
@@ -752,7 +753,7 @@ Public Class SqliteToAccess
     Private Shared Sub CopyAccessDBRowsToSQLiteDB(sqlitePath As String, AccessConnString As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         ' Connect to the Access database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -801,9 +802,9 @@ Public Class SqliteToAccess
                         tx.Commit()
 
                         handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
                     Catch ex As Exception
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
                         tx.Rollback()
                         Throw
                         ' catch
@@ -820,7 +821,7 @@ Public Class SqliteToAccess
     Private Shared Sub CopySqliteDBToSQLiteDB(sqlitePath As String, SqliteSourcePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         ' Connect to the Access database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -870,9 +871,9 @@ Public Class SqliteToAccess
                         tx.Commit()
 
                         handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
                     Catch ex As Exception
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
                         tx.Rollback()
                         Throw
                         ' catch
@@ -895,7 +896,7 @@ Public Class SqliteToAccess
 
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         delim = textParams(0).Chars(0)
         Boolean.TryParse(textParams(1), header)
@@ -954,9 +955,9 @@ Public Class SqliteToAccess
                 sr.Close()
 
                 handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
             Catch ex As Exception
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopyAccessDbRowsToSQLiteDb: Unexpected exception: " & ex.Message)
                 tx.Rollback()
                 Throw
                 ' catch
@@ -976,11 +977,11 @@ Public Class SqliteToAccess
     ''' <param name="schema">The schema of the SQL server database.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
     Private Shared Sub CreateAccessDatabase(AccessPath As String, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Creating Access database...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating Access database...")
 
         Dim cat = New Catalog()
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Access file was created successfully at [" & AccessPath & "]")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Access file was created successfully at [" & AccessPath & "]")
 
         cat.Create(AccessPath)
         'cat.ActiveConnection.close()
@@ -994,20 +995,20 @@ Public Class SqliteToAccess
                 Try
                     AddAccessTable(conn, dt)
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "CreateAccessDatabase failed: " & ex.Message)
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "CreateAccessDatabase failed: " & ex.Message)
                     Throw
                 End Try
                 count += 1
                 CheckCancelled()
                 handler(False, True, CInt((count * 100.0R / schema.Count)), "Added table " & dt.TableName & " to the Access database")
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "added schema for Access table [" & dt.TableName & "]")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "added schema for Access table [" & dt.TableName & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
 
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished adding all table schemas for Access database")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished adding all table schemas for Access database")
 
     End Sub
 
@@ -1089,7 +1090,7 @@ Public Class SqliteToAccess
     Private Shared Sub CopySQLiteDBRowsToAccessDB(sqlitePath As String, AccessConnString As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -1138,9 +1139,9 @@ Public Class SqliteToAccess
                         tx.Commit()
 
                         handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
                     Catch ex As Exception
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopySQLiteDbRowsToAccessDb: Unexpected exception: " & ex.Message)
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopySQLiteDbRowsToAccessDb: Unexpected exception: " & ex.Message)
                         tx.Rollback()
                         Throw
                         ' catch
@@ -1226,7 +1227,7 @@ Public Class SqliteToAccess
     Private Shared Sub CopySQLiteDBRowsToSQliteDB(fldDefinitionList As Dictionary(Of String, String), sourceTblName As String, functionList As List(Of SingleReturnFunction), sqlitePath As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -1295,9 +1296,9 @@ Public Class SqliteToAccess
                         tx.Commit()
 
                         handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
                     Catch ex As Exception
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopySQLiteDBRowsToSQliteDB: Unexpected exception: " & ex.Message)
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopySQLiteDBRowsToSQliteDB: Unexpected exception: " & ex.Message)
                         tx.Rollback()
                         Throw
                         ' catch
@@ -1406,7 +1407,7 @@ Public Class SqliteToAccess
 
         End Select
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "GetAccessDbTypeOfColumn: illegal db type found (" & cs.ColumnType & ")")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "GetAccessDbTypeOfColumn: illegal db type found (" & cs.ColumnType & ")")
         Throw New ApplicationException("GetAccessDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
     End Function
 
@@ -1509,7 +1510,7 @@ Public Class SqliteToAccess
                 Exit Select
             Case Else
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "CastValueForColumn: argument exception - illegal database type")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "CastValueForColumn: argument exception - illegal database type")
                 Throw New ArgumentException("CastValueForColumn: Illegal database type [" & [Enum].GetName(GetType(DbType), dt) & "]")
         End Select
         ' switch
@@ -1636,7 +1637,7 @@ Public Class SqliteToAccess
 
         End Select
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "GetDbTypeOfColumn: illegal db type found")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "GetDbTypeOfColumn: illegal db type found")
         Throw New ApplicationException("GetDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
     End Function
 
@@ -1694,7 +1695,7 @@ Public Class SqliteToAccess
         ' Prepare a CREATE TABLE DDL statement
         Dim stmt As String = BuildCreateTableQuery(dt)
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, vbLf & vbLf & stmt & vbLf & vbLf)
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, vbLf & vbLf & stmt & vbLf & vbLf)
 
         ' Execute the query in order to actually create the table.
         Dim cmd As New SQLiteCommand(stmt, conn)
@@ -1820,9 +1821,9 @@ Public Class SqliteToAccess
 
         Dim defval As String = StripParens(col.DefaultValue)
         defval = DiscardNational(defval)
-        'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, ("DEFAULT VALUE BEFORE [" & col.DefaultValue & "] AFTER [") + defval & "]")
+        'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, ("DEFAULT VALUE BEFORE [" & col.DefaultValue & "] AFTER [") + defval & "]")
         If defval <> String.Empty AndAlso defval.ToUpper().Contains("GETDATE") Then
-            'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "converted SQL Server GETDATE() to CURRENT_TIMESTAMP for column [" & col.ColumnName & "]")
+            'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "converted SQL Server GETDATE() to CURRENT_TIMESTAMP for column [" & col.ColumnName & "]")
             sb.Append(" DEFAULT (CURRENT_TIMESTAMP)")
         ElseIf defval <> String.Empty AndAlso IsValidDefaultValue(defval) Then
             sb.Append(" DEFAULT " & defval)
@@ -1927,13 +1928,13 @@ Public Class SqliteToAccess
                 CheckCancelled()
                 handler(False, True, CInt((count * 100.0R / tableNames.Count)), "Parsed table " & tname)
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "parsed table schema for [" & tname & "]")
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "parsed table schema for [" & tname & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished parsing all tables in SQL Server schema")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished parsing all tables in SQL Server schema")
 
         ' Allow the user a chance to select which tables to convert
         If selectionHandler IsNot Nothing Then
@@ -2239,7 +2240,7 @@ Public Class SqliteToAccess
     Private Shared Sub CopySQLiteDBRowsToTextFile(sqlitePath As String, textFileDirectory As String, delim As String, schema As IReadOnlyList(Of TableSchema), handler As SqlConversionHandler)
         CheckCancelled()
         handler(False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "preparing to insert tables ...")
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -2293,9 +2294,9 @@ Public Class SqliteToAccess
                     sw.Close()
                     CheckCancelled()
                     handler(False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "CopySQLiteDbRowsToAccessDb: Unexpected exception: " & ex.Message)
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopySQLiteDbRowsToAccessDb: Unexpected exception: " & ex.Message)
                     Throw
                     ' catch
                 End Try
