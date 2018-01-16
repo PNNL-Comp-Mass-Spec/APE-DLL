@@ -1616,10 +1616,12 @@ Public Class SqlServerToSQLite
             mFldDefinitions = New Dictionary(Of String, String)
         End If
         mFldDefinitions.Clear()
+
         If mCurrentFunctionList Is Nothing Then
             mCurrentFunctionList = New List(Of SingleReturnFunction)
         End If
         mCurrentFunctionList.Clear()
+
         res.Columns = New List(Of ColumnSchema)()
 
         res.TableName = NewTableName
@@ -1661,8 +1663,10 @@ Public Class SqlServerToSQLite
                 fnctn = Trim(rows(FunctionTableFields.wFunction))
                 flds = Trim(rows(FunctionTableFields.wFieldList))
                 colName = Trim(rows(FunctionTableFields.wNewColumnName))
+
                 ' parmList = Trim(rows(FunctionTableFields.wParameterList))
                 TmpFldFldTypeList = flds.Split(","c)
+
                 If fnctn <> TABLE_COLUMN Then
                     ReDim FieldListNames(TmpFldFldTypeList.Count - 1)
                     For j = 0 To TmpFldFldTypeList.Count - 1
@@ -1672,8 +1676,9 @@ Public Class SqlServerToSQLite
                         End If
                         FieldListNames(j) = FieldFieldType(0)
                     Next
+
                     Dim tf As New TblFunctions
-                    Dim newFunction As New SingleReturnFunction
+                    Dim newFunction As SingleReturnFunction = Nothing
                     For k = 0 To tf.AvailableFunctions.Count - 1
                         If tf.AvailableFunctions(k).Name = fnctn Then
                             'newFunction.NewFieldName = colName
@@ -1684,6 +1689,7 @@ Public Class SqlServerToSQLite
                             newFunction = Nothing
                         End If
                     Next
+
                     If Not newFunction Is Nothing Then
                         Dim fldList As New List(Of String)(FieldListNames.Length)
                         fldList.AddRange(FieldListNames)
@@ -1691,6 +1697,7 @@ Public Class SqlServerToSQLite
                         mCurrentFunction = newFunction
                         mCurrentFunctionList.Add(newFunction)
                     End If
+
                     Dim datatype As Type = mCurrentFunction.ReturnDataType
                     Dim col1 As New ColumnSchema()
                     col1.ColumnName = colName
