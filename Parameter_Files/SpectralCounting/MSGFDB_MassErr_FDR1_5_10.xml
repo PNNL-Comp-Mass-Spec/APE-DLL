@@ -1,0 +1,897 @@
+<MdartWorkflow>
+    <Title />
+    <WorkflowDescription />
+    <Steps>
+        <Step id="1">
+            <Source>MTS</Source>
+            <query>Select t_results_metadata.Job, t_factors.*
+From t_results_metadata Inner Join
+  t_factors On t_results_metadata.Dataset_ID = t_factors.Dataset_ID</query>
+            <TargetTable>t_factors_job</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add job to t_factors table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="2">
+            <Source>MTS</Source>
+            <query>Select t_factors_job.Alias, t_results.*
+From t_factors_job Inner Join
+  t_results On t_factors_job.Job = t_results.Job</query>
+            <TargetTable>t_results2</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add alias to t_results
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="3">
+            <Source>MTS</Source>
+            <query>Select 1 as corder, 'Raw' as Step, Count(*) as Count_Field
+From t_results
+</query>
+            <TargetTable>T_MAC_SpecCnt_Summary</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Build counts table for cyclops
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="4">
+            <Source>MTS</Source>
+            <query>Select *, (Length(Peptide)-4) As PeptideLength, 0 as Direction, abs(DelM_PPM) as abs_PPM
+from t_results2
+Where PeptideLength &gt; 6</query>
+            <TargetTable>t_results3</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>PeptideLength, abs_PPM, and Direction column and filter out length &lt;6</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="5">
+            <Source>MTS</Source>
+            <query>Insert into T_MAC_SpecCnt_Summary
+Select 2, 'length filter', Count(*) as Count_Field
+From t_results3
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add entry to counts table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="6">
+            <Source>MTS</Source>
+            <query>Update t_results3
+Set Direction = 1 where Protein Like 'REV_%'</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Update direction column to make reverse hits = 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="7">
+            <Source>MTS</Source>
+            <query>Select *
+From t_results3
+Where Direction = 0</query>
+            <TargetTable>t_results4</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Remove reverse hits (used generate optimal tables)</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="8">
+            <Source>MTS</Source>
+            <query>Select Peptide, NTT, Charge, abs_PPM, MSGF_SpecProb, Direction
+From t_results3
+</query>
+            <TargetTable>t_iterate</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make a small table to iterate over
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="9">
+            <Source>MTS</Source>
+            <query>Select Direction, Count(Distinct Peptide) as Cnt
+From t_iterate
+|Group by Direction|t_MSGFDB_iteration1|False</query>
+            <TargetTable>t_it1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Run the iteration table
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="10">
+            <Source>MTS</Source>
+            <query>Select ParamField, 
+sum(case when Direction = 0 then Cnt end) as forward, 
+sum(case when Direction = 1 then Cnt end) as reverse, 
+sum(Cnt) as sumTot 
+from t_it1
+group By ParamField</query>
+            <TargetTable>t_it2</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make a crosstab of iteration results
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="11">
+            <Source>MTS</Source>
+            <query>Update t_it2
+Set reverse = 0 where reverse is null</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add zeroes for nulls so that calculations will work</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="12">
+            <Source>MTS</Source>
+            <query>Update t_it2
+Set forward = 0 where forward is null</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add zeroes for nulls so that calculations will work</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="13">
+            <Source>MTS</Source>
+            <query>Select *, (reverse*1.0 / 1.0*forward)*100 as PercentFDR from t_it2</query>
+            <TargetTable>t_it3</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Calculate FDR</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="14">
+            <Source>MTS</Source>
+            <query>create index i3 on t_it3(ParamField)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="15">
+            <Source>MTS</Source>
+            <query>Select t_MSGFDB_iteration1.*, t_it3.*
+From t_MSGFDB_iteration1 Left Join
+  t_it3 On t_it3.ParamField = t_MSGFDB_iteration1.ref</query>
+            <TargetTable>t_it4</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Join iteration results table with the iteration parameters table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="16">
+            <Source>MTS</Source>
+            <query>Select *
+From t_it4|Order by forward desc, PercentFDR asc, MSGF_Specprob desc
+Limit 1;|t_MSGFDB_iteration2_1|False</query>
+            <TargetTable>t_it2_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Select parameters for FDR = 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="17">
+            <Source>MTS</Source>
+            <query>Select *
+From t_it4|Order by forward desc, PercentFDR asc, MSGF_Specprob desc
+Limit 1;|t_MSGFDB_iteration2_5|False</query>
+            <TargetTable>t_it2_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Select parameters for FDR = 5</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="18">
+            <Source>MTS</Source>
+            <query>Select *
+From t_it4|Order by forward desc, PercentFDR asc, MSGF_Specprob desc
+Limit 1;|t_MSGFDB_iteration2_10|False</query>
+            <TargetTable>t_it2_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Select parameters for FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="19">
+            <Source>MTS</Source>
+            <query>Select ParamField as ref, Charge, Charge_Operator, NTT,
+NTT_Operator, abs_PPM, abs_PPM_Operator, MSGF_SpecProb,
+MSGF_SpecProb_Operator
+From t_it2_1</query>
+            <TargetTable>t_pt_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make final parameter table for FDR = 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="20">
+            <Source>MTS</Source>
+            <query>Select ParamField as ref, Charge, Charge_Operator, NTT,
+NTT_Operator, abs_PPM, abs_PPM_Operator, MSGF_SpecProb,
+MSGF_SpecProb_Operator
+From t_it2_5</query>
+            <TargetTable>t_pt_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make final parameter table for FDR = 5</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="21">
+            <Source>MTS</Source>
+            <query>Select ParamField as ref, Charge, Charge_Operator, NTT,
+NTT_Operator, abs_PPM, abs_PPM_Operator, MSGF_SpecProb,
+MSGF_SpecProb_Operator
+From t_it2_10</query>
+            <TargetTable>t_pt_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make final parameter table for FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="22">
+            <Source>MTS</Source>
+            <query>Select* From t_results4||t_pt_1|False</query>
+            <TargetTable>t_optimal_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make optimized results table for FDR = 1 </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="23">
+            <Source>MTS</Source>
+            <query>Select* From t_results4||t_pt_5|False</query>
+            <TargetTable>t_optimal_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make optimized results table for FDR = 5</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="24">
+            <Source>MTS</Source>
+            <query>Select* From t_results4||t_pt_10|False</query>
+            <TargetTable>t_optimal_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Make optimized results table for FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>True</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="25">
+            <Source>MTS</Source>
+            <query>Insert into T_MAC_SpecCnt_Summary
+Select 3, '10% FDR', Count(*) as Count_Field
+From t_optimal_10</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add entry to counts table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="26">
+            <Source>MTS</Source>
+            <query>Insert into T_MAC_SpecCnt_Summary
+Select 4, '5% FDR', Count(*) as Count_Field
+From t_optimal_5</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add entry to counts table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="27">
+            <Source>MTS</Source>
+            <query>Insert into T_MAC_SpecCnt_Summary
+Select 3, '1% FDR', Count(*) as Count_Field
+From t_optimal_1
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add entry to counts table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="28">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein, Peptide,
+  Count(Peptide) As Spectral_Counts
+From t_optimal_1
+Group By  Alias, Peptide</query>
+            <TargetTable>t_forpepx_1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for peptide spectral counting crosstab, FDR = 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="29">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein, Peptide,
+  Count(Peptide) As Spectral_Counts
+From t_optimal_5
+Group By  Alias, Peptide</query>
+            <TargetTable>t_forpepx_5</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for peptide spectral counting crosstab, FDR = 5</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="30">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein, Peptide,
+  Count(Peptide) As Spectral_Counts
+From t_optimal_5
+Group By  Alias, Peptide</query>
+            <TargetTable>t_forpepx_10</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for peptide spectral counting crosstab, FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="31">
+            <Source>MTS</Source>
+            <query>t_forpepx_1, Alias, Column Heading, ;t_forpepx_1, Peptide, Row Heading, ;t_forpepx_1, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_pepx_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>spectral counting peptide crosstab for FDR =1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="32">
+            <Source>MTS</Source>
+            <query>t_forpepx_5, Alias, Column Heading, ;t_forpepx_5, Peptide, Row Heading, ;t_forpepx_5, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_pepx_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>spectral counting peptide crosstab for FDR =5 </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="33">
+            <Source>MTS</Source>
+            <query>t_forpepx_10, Alias, Column Heading, ;t_forpepx_10, Peptide, Row Heading, ;t_forpepx_10, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_pepx_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>spectral counting peptide crosstab for FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="34">
+            <Source>MTS</Source>
+            <query>Select Protein, Peptide
+From t_forpepx_1
+Group by Peptide
+</query>
+            <TargetTable>t_rowmetadata_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>row metadata for cyclops</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="35">
+            <Source>MTS</Source>
+            <query>Select Protein, Peptide
+From t_forpepx_5
+Group by Peptide</query>
+            <TargetTable>t_rowmetadata_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>row metadata for cyclops</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="36">
+            <Source>MTS</Source>
+            <query>Select Protein, Peptide
+From t_forpepx_10
+Group by Peptide</query>
+            <TargetTable>t_rowmetadata_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>row metadata for cyclops</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="37">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein,
+  Count(Protein) As Spectral_Counts
+From t_optimal_1
+Group By  Alias,  Protein</query>
+            <TargetTable>t_forprox_1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for protein spectral counting crosstab FDR = 1
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="38">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein,
+  Count(Protein) As Spectral_Counts
+From t_optimal_5
+Group By  Alias,  Protein</query>
+            <TargetTable>t_forprox_5</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for protein spectral counting crosstab FDR = 5
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="39">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein,
+  Count(Protein) As Spectral_Counts
+From t_optimal_10
+Group By  Alias,  Protein</query>
+            <TargetTable>t_forpox_10</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Prepare table for protein spectral counting crosstab FDR = 10
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="40">
+            <Source>MTS</Source>
+            <query>t_forprox_1, Alias, Column Heading, ;t_forprox_1, Protein, Row Heading, ;t_forprox_1, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_prox_1</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>protein spectral counting crosstab FDR = 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="41">
+            <Source>MTS</Source>
+            <query>t_forprox_5, Alias, Column Heading, ;t_forprox_5, Protein, Row Heading, ;t_forprox_5, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_prox_5</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>protein spectral counting crosstab FDR = 5</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="42">
+            <Source>MTS</Source>
+            <query>t_forpox_10, Alias, Column Heading, ;t_forpox_10, Protein, Row Heading, ;t_forpox_10, Spectral_Counts, Value, max;</query>
+            <TargetTable>t_prox_10</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>protein spectral counting crosstab FDR = 10</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="43">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="44">
+            <Source>MTS</Source>
+            <query>--Build Summary Table--</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="45">
+            <Source>MTS</Source>
+            <query>Select* 
+From t_optimal_5</query>
+            <TargetTable>t_forSummary</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="46">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein, Peptide, Direction, NTT
+From t_forSummary
+Where Protein Not Like "Contam%"
+</query>
+            <TargetTable>t_ids</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="47">
+            <Source>MTS</Source>
+            <query>Select Alias, count(Peptide) as PSMs
+From T_ids
+Group by Alias</query>
+            <TargetTable>t_psms</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="48">
+            <Source>MTS</Source>
+            <query>Select Alias, Count(Distinct Peptide) as Peptide_IDs
+From T_ids
+Group by Alias</query>
+            <TargetTable>t_ids_peptide</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="49">
+            <Source>MTS</Source>
+            <query>Select Alias, Count(Distinct Protein) as Protein_IDs
+From T_ids
+Group by Alias</query>
+            <TargetTable>t_ids_protein</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="50">
+            <Source>MTS</Source>
+            <query>Select Alias, Protein, Count(Distinct Peptide) as Peptides
+From T_ids
+Group by Alias, Protein</query>
+            <TargetTable>t_ids_pepcount</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="51">
+            <Source>MTS</Source>
+            <query>Select Alias, Count(Distinct Protein) as Protein_2IDs
+From T_ids_pepcount
+Where Peptides &gt;= 2
+Group by Alias</query>
+            <TargetTable>t_2ids_protein</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="52">
+            <Source>MTS</Source>
+            <query>Select t_psms.*, t_ids_peptide.Peptide_IDs, t_ids_protein.Protein_IDs,
+  t_2ids_protein.Protein_2IDs
+From t_psms Left Join
+  t_ids_peptide On t_psms.Alias = t_ids_peptide.Alias Left Join
+  t_ids_protein On t_psms.Alias = t_ids_protein.Alias Left Join
+  t_2ids_protein On t_psms.Alias = t_2ids_protein.Alias</query>
+            <TargetTable>t_summary_1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="53">
+            <Source>MTS</Source>
+            <query>Select Alias, Peptide, NTT
+From t_ids
+Group by Alias, Peptide</query>
+            <TargetTable>t_trypticity</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="54">
+            <Source>MTS</Source>
+            <query>Select Alias, count(NTT) as Tryptic
+From t_trypticity
+Where NTT = 2
+Group By Alias</query>
+            <TargetTable>t_tryptics</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="55">
+            <Source>MTS</Source>
+            <query>Select Alias, count(NTT) as PartTryptic
+From t_trypticity
+Where NTT = 1
+Group By Alias</query>
+            <TargetTable>t_partryptics</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="56">
+            <Source>MTS</Source>
+            <query>Select Alias, count(NTT) as NonTryptic
+From t_trypticity
+Where NTT = 0
+Group By Alias</query>
+            <TargetTable>t_nontryptics</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="57">
+            <Source>MTS</Source>
+            <query>Select Alias, count(peptide) as Contaminant_Counts
+From t_forSummary
+Where Protein Like 'contamin%'
+Group by Alias</query>
+            <TargetTable>t_contaminants</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="58">
+            <Source>MTS</Source>
+            <query>Select t_summary_1.*, t_tryptics.Tryptic, t_partryptics.PartTryptic,
+  t_nontryptics.NonTryptic, t_contaminants.Contaminant_Counts
+From t_summary_1 Left Join
+  t_tryptics On t_summary_1.Alias = t_tryptics.Alias Left Join
+  t_partryptics On t_summary_1.Alias = t_partryptics.Alias Left Join
+  t_nontryptics On t_summary_1.Alias = t_nontryptics.Alias Left Join
+  t_contaminants On t_summary_1.Alias = t_contaminants.Alias</query>
+            <TargetTable>t_summary_2</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="59">
+            <Source>MTS</Source>
+            <query>Select *, Substr(Peptide,3, (length(Peptide)-5)) As Peptide_s
+From T_ids</query>
+            <TargetTable>t_ids_peptide_s</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="60">
+            <Source>MTS</Source>
+            <query>Select *,  (Length(Peptide_s)- Length(REPLACE(Peptide_s, 'K', '''')) ) as Missed_ks,
+ (Length(Peptide_s)- Length(REPLACE(Peptide_s, 'R', '''')) ) as Missed_rs
+From t_ids_peptide_s</query>
+            <TargetTable>t_ids_petide_missed_rk</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="61">
+            <Source>MTS</Source>
+            <query>Select *, Missed_rs + Missed_ks as Missed_Cleavages
+From t_ids_petide_missed_rk</query>
+            <TargetTable>t_missed_cleavages</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="62">
+            <Source>MTS</Source>
+            <query>Select Alias, Peptide_IDs, Missed_Cleavages, (1.0*Missed_Cleavages) / (1.0*Peptide_IDs) as MIssed_Cleavages_per_peptide
+From (
+Select Alias, Count(Alias) as Peptide_IDs, Sum(Missed_Cleavages) as Missed_Cleavages
+From t_missed_cleavages
+Group by Alias 
+)</query>
+            <TargetTable>t_misses_per_peptide</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="63">
+            <Source>MTS</Source>
+            <query>Select Alias, No_Missed, W_Missed, ((1.0*W_Missed) / (No_Missed + W_MIssed)) *100 as Percent_w_Missed_Cleavages
+From (
+Select Alias,
+sum(case when Missed_Cleavages &gt; 0 then 1 end ) as W_Missed,
+sum(case when Missed_Cleavages = 0 then 1 end ) as No_Missed
+From t_missed_cleavages
+Group by Alias
+)</query>
+            <TargetTable>t_percent_missed</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="64">
+            <Source>MTS</Source>
+            <query>Select t_summary_2.*, t_percent_missed.Percent_w_Missed_Cleavages,
+  t_misses_per_peptide.MIssed_Cleavages_per_peptide
+From t_summary_2 Left Join
+  t_misses_per_peptide On t_summary_2.Alias = t_misses_per_peptide.Alias Left Join
+  t_percent_missed On t_summary_2.Alias = t_percent_missed.Alias</query>
+            <TargetTable>t_summary</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="65">
+            <Source>MTS</Source>
+            <query>Select * from t_summary</query>
+            <TargetTable>T_MAC_Trypticity_Summary</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="66">
+            <Source>MTS</Source>
+            <query>Select *
+From T_MAC_SpecCnt_Summary</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="67">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="68">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+    </Steps>
+</MdartWorkflow>

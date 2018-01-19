@@ -1,0 +1,509 @@
+<MdartWorkflow>
+    <Title>This is the Final</Title>
+    <WorkflowDescription>The counts should be working</WorkflowDescription>
+    <Steps>
+        <Step id="1">
+            <Source>MTS</Source>
+            <query>--CREATE INDEXES FOR TABLES FROM PEPTIDE TABLES FROM MTS</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="2">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_T_Proteins_Protein ON T_Proteins(Protein)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="3">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_Cluster_Protein ON Cluster(Protein)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="4">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_T_Peptides_Peptide ON T_Peptides(Peptide)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="5">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_T_Mass_Tag_to_Protein_Map_Mass_Tag_ID ON T_Mass_Tag_to_Protein_Map(Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="6">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_T_Mass_Tag_to_Protein_Map_Ref_ID ON T_Mass_Tag_to_Protein_Map(Ref_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="7">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_T_Mass_Tag_to_Protein_Map_Protein ON T_Mass_Tag_to_Protein_Map(Protein)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="8">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_T_Proteins_Protein_Ref_ID ON T_Proteins(Protein, Ref_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="9">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_T_Mass_Tag_to_Protein_Map_Protein_Ref_ID ON T_Mass_Tag_to_Protein_Map(Protein, Ref_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="10">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="11">
+            <Source>MTS</Source>
+            <query>--STARTING ANALYSIS HERE</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="12">
+            <Source>MTS</Source>
+            <query>CREATE TABLE nodes_temp(
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+cluster text,
+protein text,
+name text,
+entity text,
+uniquepeptides integer,
+spectra_count integer,
+protein_residue_count integer,
+mod_count integer,
+visible integer
+ );
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create the nodes temporary table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="13">
+            <Source>MDART</Source>
+            <query>Select 1 as field_order, c.Group_Num as Cluster, '''' as Protein, 'cluster_' || Group_Num as name, 'cluster' as entity, count(distinct m.Mass_Tag_ID) as uniquepeptides, sum(pt.Spectra_Count) as spectra_count, sum(p.Protein_Residue_Count) as protein_residue_count, sum(m.Mod_Count) as mod_count, 1 as Visible
+From T_Proteins p
+    Inner Join Cluster c On c.Protein = p.Protein 
+    Inner Join T_Mass_Tag_to_Protein_Map mp On mp.Ref_ID = p.Ref_ID
+    Inner Join T_Mass_Tags m On mp.Mass_Tag_ID = m.Mass_Tag_ID
+    Inner Join T_Peptides pt On pt.Mass_Tag_ID = m.Mass_Tag_ID
+Group By c.Group_Num
+</query>
+            <TargetTable>T_Temp</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the 'cluster' records, including peptide counts</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="14">
+            <Source>MTS</Source>
+            <query>Insert into T_Temp(field_order, Cluster, Protein, name, entity, uniquepeptides, Spectra_Count, protein_residue_count, mod_count, visible)
+Select 2 as field_order, c.Group_Num, p.Protein,  p.Protein || ' -- ' || p.Description as name, 'protein' as entity, 
+	count(distinct m.Mass_Tag_ID) as uniquepeptides, 
+	sum(Spectra_Count) as Spectra_Count, 
+	sum(p.Protein_Residue_Count) as protein_residue_count,
+	sum(m.Mod_Count) as mod_count, 
+	1 as visible
+from T_Proteins p
+  Join Cluster c On c.Protein = p.Protein 
+  Join T_Mass_Tag_to_Protein_Map mp on mp.Ref_ID = p.Ref_ID
+  Join T_Peptides pt on mp.Mass_Tag_ID = pt.Mass_Tag_ID
+  Join T_Mass_Tags m on pt.Mass_Tag_ID = m.Mass_Tag_ID
+group by c.Group_Num, p.Protein
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the 'protein' records, including peptide counts</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="15">
+            <Source>MTS</Source>
+            <query>Insert into T_Temp(field_order, Cluster, Protein, name, entity, uniquepeptides, Spectra_Count, protein_residue_count, mod_count, visible)
+Select 3 as field_order, c.Group_Num, p.Protein, pt.Peptide as name, 'peptide' as entity, 
+	count(distinct m.Mass_Tag_ID) as uniquepeptides, 
+	sum(Spectra_Count) as Spectra_Count, 
+	count(p.Protein_Residue_Count) as protein_residue_count, 
+	sum(m.Mod_Count) as mod_count, 
+	1 as visible
+from T_Proteins p
+  Join Cluster c On c.Protein = p.Protein 
+  Join T_Mass_Tag_to_Protein_Map mp on mp.Ref_ID = p.Ref_ID
+  Join T_Peptides pt on mp.Mass_Tag_ID = pt.Mass_Tag_ID
+  Join T_Mass_Tags m on pt.Mass_Tag_ID = m.Mass_Tag_ID
+group by  c.Group_Num, p.Protein, pt.Peptide
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This will get the peptide information for cluster peptide</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="16">
+            <Source>MTS</Source>
+            <query>Insert into nodes_temp(cluster, protein, name, entity, uniquepeptides, spectra_count, protein_residue_count, mod_count, visible)
+Select Cluster, Protein, name, entity, uniquepeptides, spectra_count, protein_residue_count, mod_count, visible
+From T_Temp
+Order By Cluster, Protein, field_order
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the nodes records into the nodes temp table to generate the unique id for each row</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="17">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_nodes_temp_protein ON nodes_temp(protein)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEX the protein field in the nodes_temp table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="18">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_nodes_temp_cluster ON nodes_temp(cluster)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="19">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="20">
+            <Source>MTS</Source>
+            <query>--CREATE REAL NODES TABLE</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="21">
+            <Source>MTS</Source>
+            <query>CREATE TABLE nodes(
+ id integer PRIMARY KEY,
+name text,
+entity text,
+uniquepeptides integer,
+spectra_count integer,
+protein_residue_count integer,
+mod_count integer,
+visible integer
+ );
+
+
+--protein_count integer,
+--Mod_Count integer,
+--ScanCount integer,
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create the final nodes table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="22">
+            <Source>MTS</Source>
+            <query>Insert into nodes(id, name, entity, uniquepeptides, spectra_count, protein_residue_count, mod_count, visible)
+Select 0, 'root', 'cluster', count(distinct m.Mass_Tag_ID) as uniquepeptides, sum(pt.Spectra_Count) as spectra_count, sum(p.Protein_Residue_Count) as protein_residue_count, sum(m.Mod_Count) as mod_count, 1 as Visible
+From T_Proteins p
+    Inner Join Cluster c On c.Protein = p.Protein 
+    Inner Join T_Mass_Tag_to_Protein_Map mp On mp.Ref_ID = p.Ref_ID
+    Inner Join T_Mass_Tags m On mp.Mass_Tag_ID = m.Mass_Tag_ID
+    Inner Join T_Peptides pt On pt.Mass_Tag_ID = m.Mass_Tag_ID
+union
+Select id, name, entity, uniquepeptides, spectra_count, protein_residue_count, mod_count, visible
+from nodes_temp
+order by id</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add the root record and all the records from the temporary nodes table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="23">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="24">
+            <Source>MTS</Source>
+            <query>--BUILD EDGES TABLE</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="25">
+            <Source>MTS</Source>
+            <query>Select protein, 0 as source, 1 as target, 1 as visible
+from nodes_temp
+where entity = 'cluster' and name = 'root'
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INSERT the root cluster record</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="26">
+            <Source>MTS</Source>
+            <query>Select cluster, protein, 0 as source, id as target, 1 as visible
+from nodes_temp
+where entity = 'cluster' and name &lt;&gt; 'root'
+</query>
+            <TargetTable>T_Temp_edges</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create and Insert the cluster records</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="27">
+            <Source>MTS</Source>
+            <query>Insert into T_Temp_edges(cluster, protein, source, target, visible)
+Select nt.cluster, nt.protein, p.id, nt.id, 1
+from nodes_temp nt
+join (
+Select cluster, protein, id
+from nodes_temp
+where entity = 'cluster' 
+) p on  nt.cluster = p.cluster
+and entity = 'protein' 
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the cluster to protein records</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="28">
+            <Source>MTS</Source>
+            <query>Insert into T_Temp_edges(cluster, protein, source, target, visible)
+Select nt.cluster, nt.protein, p.id, nt.id, 1
+from nodes_temp nt
+join (
+Select protein, id
+from nodes_temp
+where entity = 'protein' 
+) p on nt.protein = p.protein
+and entity = 'peptide' 
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the peptides to protein records</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="29">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="30">
+            <Source>MTS</Source>
+            <query>--CREATE EDGES TABLE
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="31">
+            <Source>MTS</Source>
+            <query>CREATE TABLE edges(
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+source integer,
+target integer,
+visible integer
+ );
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create the final edges table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="32">
+            <Source>MTS</Source>
+            <query>Insert into edges(source, target, visible)
+Select source, target, visible from T_Temp_edges
+order by cluster, protein, source, target</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Insert the data from into the final edges table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="33">
+            <Source>MDART</Source>
+            <query>Drop Table nodes_temp</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="34">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_edges_source ON edges(source)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="35">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_edges_target ON edges(target)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="36">
+            <Source>MDART</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+    </Steps>
+</MdartWorkflow>

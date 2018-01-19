@@ -1,0 +1,150 @@
+<MdartWorkflow>
+    <Title />
+    <WorkflowDescription />
+    <Steps>
+        <Step id="1">
+            <Source>APE</Source>
+            <query>-- CREATE INDICES</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="2">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_factors_Dataset_ID ON t_factors(Dataset_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>InitialIndices</WorkflowGroup>
+        </Step>
+        <Step id="3">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_results_metadata_Job ON t_results_metadata(Job)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>InitialIndices</WorkflowGroup>
+        </Step>
+        <Step id="4">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_results_metadata_Dataset_ID ON t_results_metadata(Dataset_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>InitialIndices</WorkflowGroup>
+        </Step>
+        <Step id="5">
+            <Source>APE</Source>
+            <query>CREATE INDEX idx_t_results_Job ON t_results(Job)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>InitialIndices</WorkflowGroup>
+        </Step>
+        <Step id="6">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="7">
+            <Source>APE</Source>
+            <query>Select 
+	t_factors.Alias as Alias, 
+	t_factors.Fraction as Fraction, 
+	t_results.Protein as Protein, 
+	t_results.Peptide as Peptide, 
+	CAST(t_results.MSGFDB_SpecProb as double) as MSGFDB_SpecProb, 
+	CAST(t_results.PValue as double) as PValue, 
+	CAST(t_results.FDR as double) as FDR, 
+	CAST(t_results.PepFDR as double) as PepFDR, 
+	CAST(t_results.Scan as double) as Scan, 
+	CAST(t_results.Charge as double) as Charge 
+From t_factors Inner Join
+  t_results_metadata On t_results_metadata.Dataset_ID = t_factors.Dataset_ID
+  Inner Join
+  t_results On t_results.Job = t_results_metadata.Job</query>
+            <TargetTable>T01_MasterTable</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Consolidating information for analysis</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>MainWorkflow</WorkflowGroup>
+        </Step>
+        <Step id="8">
+            <Source>APE</Source>
+            <query>Select *
+From T01_MasterTable
+Where T01_MasterTable.FDR &lt;= 0.01</query>
+            <TargetTable>T_FilteredPeptides</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filter T01_MasterTable for 1% FDR</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup>MainWorkflow</WorkflowGroup>
+        </Step>
+        <Step id="9">
+            <Source>APE</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="10">
+            <Source>APE</Source>
+            <query>SELECT "1" AS "ID", "Original" AS Step, COUNT(*) AS UniquePeptides from
+(
+	SELECT Peptide FROM T01_MasterTable GROUP BY Peptide
+)</query>
+            <TargetTable>T_Online2DLC_Summary</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="11">
+            <Source>APE</Source>
+            <query>INSERT INTO T_Online2DLC_Summary (ID, STEP, UniquePeptides)
+SELECT "2", "1% FDR", COUNT(*) FROM
+(
+	SELECT Peptide FROM T_FilteredPeptides GROUP BY Peptide
+)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+    </Steps>
+</MdartWorkflow>

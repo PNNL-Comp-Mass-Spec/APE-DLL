@@ -1,0 +1,1138 @@
+<MdartWorkflow>
+    <Title>120323_NotClustered10perFDR_05UP_Clustered1ppm</Title>
+    <WorkflowDescription>UP&gt;0.5&amp;FDR&lt;.1 for each dataset &amp; &lt; 1ppm in @ least one run </WorkflowDescription>
+    <Steps>
+        <Step id="1">
+            <Source>MTS</Source>
+            <query>-- STEP 1.  Combine all data into one table</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create a table which includes all Viper Data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="2">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select 	MD_File  
+	from T_Match_Making_Description
+	group by 	MD_File
+)
+</query>
+            <TargetTable>MS_Analyses</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This step counts how many MS analyses are in your SQL database.  Just hitting the lightning bolt will give you the number.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="3">
+            <Source>MTS</Source>
+            <query>Select T_Match_Making_Description.MD_File As MD_File,
+  T_Match_Making_Description.MD_Date As MD_Date, T_FTICR_UMC_Results.*
+From T_Match_Making_Description Inner Join
+  T_FTICR_UMC_Results On T_Match_Making_Description.MD_ID =
+    T_FTICR_UMC_Results.MD_ID</query>
+            <TargetTable>a_FirstTable1</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Link the files of interest (from Match_Making_Description) to FTICR_UMC_Results table to make First Table 1</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="4">
+            <Source>MTS</Source>
+            <query>Select a_FirstTable1.MD_File, a_FirstTable1.MD_Date,
+  a_FirstTable1.UMC_Results_ID, a_FirstTable1.MD_ID, a_FirstTable1.UMC_Ind,
+  a_FirstTable1.Member_Count, a_FirstTable1.Member_Count_Used_For_Abu,
+  a_FirstTable1.UMC_Score, a_FirstTable1.Scan_First, a_FirstTable1.Scan_Last,
+  a_FirstTable1.Scan_Max_Abundance, a_FirstTable1.Class_Mass,
+  a_FirstTable1.Monoisotopic_Mass_Min, a_FirstTable1.Monoisotopic_Mass_Max,
+  a_FirstTable1.Monoisotopic_Mass_StDev, a_FirstTable1.Monoisotopic_Mass_MaxAbu,
+  a_FirstTable1.Class_Abundance, a_FirstTable1.Abundance_Min,
+  a_FirstTable1.Abundance_Max, a_FirstTable1.Class_Stats_Charge_Basis,
+  a_FirstTable1.Charge_State_Min, a_FirstTable1.Charge_State_Max,
+  a_FirstTable1.Charge_State_MaxAbu, a_FirstTable1.Fit_Average,
+  a_FirstTable1.Fit_Min, a_FirstTable1.Fit_Max, a_FirstTable1.Fit_StDev,
+  a_FirstTable1.ElutionTime, a_FirstTable1.Expression_Ratio,
+  a_FirstTable1.FPR_Type_ID, a_FirstTable1.MassTag_Hit_Count,
+  a_FirstTable1.Pair_UMC_Ind, a_FirstTable1.InternalStd_Hit_Count,
+  a_FirstTable1.Expression_Ratio_StDev,
+  a_FirstTable1.Expression_Ratio_Charge_State_Basis_Count,
+  a_FirstTable1.Expression_Ratio_Member_Basis_Count,
+  T_FTICR_UMC_ResultDetails.Mass_Tag_ID, T_FTICR_UMC_ResultDetails.Match_State,
+  T_FTICR_UMC_ResultDetails.Expected_NET,
+  T_FTICR_UMC_ResultDetails.Mass_Tag_Mods,
+  T_FTICR_UMC_ResultDetails.Mass_Tag_Mod_Mass,
+  T_FTICR_UMC_ResultDetails.Matching_Member_Count,
+  T_FTICR_UMC_ResultDetails.MassErrorPPM, T_FTICR_UMC_ResultDetails.NETError,
+  T_FTICR_UMC_ResultDetails.Uniqueness_Probability,
+  T_FTICR_UMC_ResultDetails.FDR_Threshold
+From a_FirstTable1 Inner Join
+  T_FTICR_UMC_ResultDetails On a_FirstTable1.UMC_Results_ID =
+    T_FTICR_UMC_ResultDetails.UMC_Results_ID</query>
+            <TargetTable>b_FirstTable2</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Link First Table 1 with FTICR_UMC_ResultDetails
+Note:  Table b_FirstTable2 contains all unfiltered data.  All subsequent steps will filter this original data to retain only UMCs which confidently match MTs in the mass tag database.  If your Viper peakmatching parameter file included a 11Da shift to determine a FDR, after each filtering step you can use a preexisting query to calculate the false discovery rate (FDR) - see steps 6, 13, 24, 34 and 53. </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="5">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select 	Mass_Tag_ID, 
+		Mass_Tag_Mods 
+	from b_FirstTable2
+	group by 	Mass_Tag_ID, 
+		Mass_Tag_Mods
+)
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Checking the total number of MTs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="6">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT( Mass_Tag_Mods) as cntMods
+from b_FirstTable2
+group by Mass_Tag_Mods</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check FDR on redundant IDs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="7">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="8">
+            <Source>MTS</Source>
+            <query>-- STEP 2.  Filter Each Dataset</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="9">
+            <Source>MTS</Source>
+            <query>Select b_FirstTable2.Uniqueness_Probability As Uniqueness_Probability,
+  b_FirstTable2.FDR_Threshold As FDR_Threshold, abs(b_FirstTable2.MassErrorPPM)
+  As ABSMassErrorPPM, abs(b_FirstTable2.NETError) As ABSNETError,
+  b_FirstTable2.Mass_Tag_Mods As Mass_Tag_Mods, b_FirstTable2.MD_File As
+  MD_File, b_FirstTable2.MD_Date As MD_Date, b_FirstTable2.UMC_Results_ID As
+  UMC_Results_ID, b_FirstTable2.MD_ID As MD_ID, b_FirstTable2.UMC_Ind As
+  UMC_Ind, b_FirstTable2.Member_Count As Member_Count,
+  b_FirstTable2.Member_Count_Used_For_Abu As Member_Count_Used_For_Abu,
+  b_FirstTable2.UMC_Score As UMC_Score, b_FirstTable2.Scan_First As Scan_First,
+  b_FirstTable2.Scan_Last As Scan_Last, b_FirstTable2.Scan_Max_Abundance As
+  Scan_Max_Abundance, b_FirstTable2.Class_Mass As Class_Mass,
+  b_FirstTable2.Monoisotopic_Mass_Min As Monoisotopic_Mass_Min,
+  b_FirstTable2.Monoisotopic_Mass_Max As Monoisotopic_Mass_Max,
+  b_FirstTable2.Monoisotopic_Mass_StDev As Monoisotopic_Mass_StDev,
+  b_FirstTable2.Monoisotopic_Mass_MaxAbu As Monoisotopic_Mass_MaxAbu,
+  b_FirstTable2.Class_Abundance As Class_Abundance, b_FirstTable2.Abundance_Min
+  As Abundance_Min, b_FirstTable2.Abundance_Max As Abundance_Max,
+  b_FirstTable2.Class_Stats_Charge_Basis As Class_Stats_Charge_Basis,
+  b_FirstTable2.Charge_State_Min As Charge_State_Min,
+  b_FirstTable2.Charge_State_Max As Charge_State_Max,
+  b_FirstTable2.Charge_State_MaxAbu As Charge_State_MaxAbu,
+  b_FirstTable2.Fit_Average As Fit_Average, b_FirstTable2.Fit_Min As Fit_Min,
+  b_FirstTable2.Fit_Max As Fit_Max, b_FirstTable2.Fit_StDev As Fit_StDev,
+  b_FirstTable2.ElutionTime As ElutionTime, b_FirstTable2.Expression_Ratio As
+  Expression_Ratio, b_FirstTable2.FPR_Type_ID As FPR_Type_ID,
+  b_FirstTable2.MassTag_Hit_Count As MassTag_Hit_Count,
+  b_FirstTable2.Pair_UMC_Ind As Pair_UMC_Ind,
+  b_FirstTable2.InternalStd_Hit_Count As InternalStd_Hit_Count,
+  b_FirstTable2.Expression_Ratio_StDev As Expression_Ratio_StDev,
+  b_FirstTable2.Expression_Ratio_Charge_State_Basis_Count As
+  Expression_Ratio_Charge_State_Basis_Count,
+  b_FirstTable2.Expression_Ratio_Member_Basis_Count As
+  Expression_Ratio_Member_Basis_Count, b_FirstTable2.Mass_Tag_ID As Mass_Tag_ID,
+  b_FirstTable2.Match_State As Match_State, b_FirstTable2.Expected_NET
+  As Expected_NET, b_FirstTable2.Mass_Tag_Mod_Mass As Mass_Tag_Mod_Mass,
+  b_FirstTable2.Matching_Member_Count As Matching_Member_Count,
+  b_FirstTable2.MassErrorPPM As MassErrorPPM, b_FirstTable2.NETError As NETError
+From b_FirstTable2
+Where b_FirstTable2.Uniqueness_Probability &gt; 0.5 And
+  b_FirstTable2.FDR_Threshold &lt; .1 And abs(b_FirstTable2.MassErrorPPM) &lt; 6
+  And abs(b_FirstTable2.NETError) &lt; 10000 
+Order By b_FirstTable2.Uniqueness_Probability</query>
+            <TargetTable>b2_FilterMassErrorPPM</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Primary Filter. Filter All Observations by STAC.  </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="10">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods from b2_FilterMassErrorPPM
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the number of MTs passing through this step.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="11">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT( Mass_Tag_Mods) as cntMods
+from b2_FilterMassErrorPPM
+group by Mass_Tag_Mods
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check FDR on redundant IDs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="12">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="13">
+            <Source>MTS</Source>
+            <query>-- STEP 3.  Filter by Min and Max Values for each MassTag</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>In this workflow a mass tag must have a minimum absolute mass error less than 1 ppm</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="14">
+            <Source>MTS</Source>
+            <query>Select b2_FilterMassErrorPPM.Mass_Tag_ID As Mass_Tag_ID,
+  b2_FilterMassErrorPPM.Mass_Tag_Mods As Mass_Tag_Mods,
+  Min(b2_FilterMassErrorPPM.MassErrorPPM) As MinAbsMassErrorPPM,
+  Min(b2_FilterMassErrorPPM.NETError) As MinAbsNETError,
+  Max(b2_FilterMassErrorPPM.Uniqueness_Probability) As
+  MaxUniqueness_Probability, Min(b2_FilterMassErrorPPM.FDR_Threshold) As MinFDR
+From b2_FilterMassErrorPPM
+Group By b2_FilterMassErrorPPM.Mass_Tag_ID, b2_FilterMassErrorPPM.Mass_Tag_Mods
+Order By Max(b2_FilterMassErrorPPM.Uniqueness_Probability),
+  Min(b2_FilterMassErrorPPM.FDR_Threshold) Desc</query>
+            <TargetTable>c_max_match_scores_for_MTs</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Create a table which contains the MinAbsMassErrorPPM, MinAbsNETError, MaxUniqueness_Probability, and MinFDR
+
+
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="15">
+            <Source>MTS</Source>
+            <query>Select c_max_match_scores_for_MTs.Mass_Tag_ID As Mass_Tag_ID,
+  c_max_match_scores_for_MTs.Mass_Tag_Mods As Mass_Tag_Mods,
+  c_max_match_scores_for_MTs.MinAbsMassErrorPPM As MinAbsMassErrorPPM,
+  c_max_match_scores_for_MTs.MinAbsNETError As MinAbsNETError,
+  c_max_match_scores_for_MTs.MaxUniqueness_Probability As
+  MaxUniqueness_Probability, c_max_match_scores_for_MTs.MinFDR As MinFDR
+From c_max_match_scores_for_MTs
+Group By c_max_match_scores_for_MTs.Mass_Tag_ID,
+  c_max_match_scores_for_MTs.Mass_Tag_Mods,
+  c_max_match_scores_for_MTs.MinAbsMassErrorPPM,
+  c_max_match_scores_for_MTs.MinAbsNETError,
+  c_max_match_scores_for_MTs.MaxUniqueness_Probability,
+  c_max_match_scores_for_MTs.MinFDR
+Having c_max_match_scores_for_MTs.MaxUniqueness_Probability &gt; 0 And
+  c_max_match_scores_for_MTs.MinFDR &lt; 10000 And c_max_match_scores_for_MTs.MinAbsMassErrorPPM &lt; 10000 And c_max_match_scores_for_MTs.MinAbsNETError &lt;10000</query>
+            <TargetTable>c2_MTs_passing_threshold_on_max_scores</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Secondary filter of identifications.
+Imply threshold on MinAbsMassErrorPPM, MinAbsNETError, MaxUniqueness_Probability, and MinFDR</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="16">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_b2_FilterMassErrorPPM_Mass_Tag_ID_Mass_Tag_Mods ON b2_FilterMassErrorPPM( Mass_Tag_ID, Mass_Tag_Mods);
+-- CREATE INDEX idx_b2_FilterMassErrorPPM_Mass_Tag_ID ON b2_FilterMassErrorPPM( Mass_Tag_ID);
+-- CREATE INDEX idx_b2_FilterMassErrorPPM_Mass_Tag_Mods ON b2_FilterMassErrorPPM( Mass_Tag_Mods);
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING b2_FilterMassErrorPPM</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="17">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_c2_MTs_passing_threshold_on_max_scores_Mass_Tag_ID_Mass_Tag_Mods ON c2_MTs_passing_threshold_on_max_scores( Mass_Tag_ID, Mass_Tag_Mods);
+-- CREATE INDEX idx_c2_MTs_passing_threshold_on_max_scores_Mass_Tag_ID ON c2_MTs_passing_threshold_on_max_scores( Mass_Tag_ID);
+-- CREATE INDEX idx_c2_MTs_passing_threshold_on_max_scores_Mass_Tag_Mods ON c2_MTs_passing_threshold_on_max_scores( Mass_Tag_Mods);
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING c2_MTs_passing_threshold_on_max_scores</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="18">
+            <Source>MTS</Source>
+            <query>Select b2_FilterMassErrorPPM.*
+From b2_FilterMassErrorPPM Inner Join
+  c2_MTs_passing_threshold_on_max_scores On b2_FilterMassErrorPPM.Mass_Tag_ID =
+    c2_MTs_passing_threshold_on_max_scores.Mass_Tag_ID And
+    b2_FilterMassErrorPPM.Mass_Tag_Mods =
+    c2_MTs_passing_threshold_on_max_scores.Mass_Tag_Mods</query>
+            <TargetTable>c3_step2_filtered</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Use the MaxOf / MinOf matches table to filter the MTs in the main working table</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="19">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from c3_step2_filtered
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the number of MTs passing</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="20">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT( Mass_Tag_Mods) as cntMods
+from c3_step2_filtered
+group by Mass_Tag_Mods
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the FDR on redundant IDs.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="21">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT(Mass_Tag_Mods) as cntMods from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from c3_step2_filtered
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+group by Mass_Tag_Mods
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>[N14 MT_MOD/1] are false hits; (N14) are correct hits 
+FDR=[2*false/total)
+Check the FDR on non-redundant IDs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="22">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="23">
+            <Source>MTS</Source>
+            <query>-- STEP 4.  Filter data by observation count (how many datasets does the MT need to be observed in...)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>If your FDR is too high change step 27 (where cntMT &gt;= 0).  For example if you have 3 technical replicates change where cntMT &gt;= 3 and see how this effects your FDR in step 33.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="24">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_ID, Mass_Tag_Mods from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods, COUNT(Mass_Tag_ID) as cntMT from
+	(
+		select MD_File, Mass_Tag_ID, Mass_Tag_Mods
+		from c3_step2_filtered
+		group by MD_File, Mass_Tag_ID, Mass_Tag_Mods
+	) 
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+where cntMT &gt;= 0
+</query>
+            <TargetTable>d1_MTs_passing_min_obs_count</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>MT observed in &gt;=___ datasets</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="25">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_d1_MTs_passing_min_obs_count_Mass_Tag_ID_Mass_Tag_Mods ON d1_MTs_passing_min_obs_count( Mass_Tag_ID, Mass_Tag_Mods);
+-- CREATE INDEX idx_d1_MTs_passing_min_obs_count_Mass_Tag_ID ON d1_MTs_passing_min_obs_count( Mass_Tag_ID);
+-- CREATE INDEX idx_d1_MTs_passing_min_obs_count_Mass_Tag_Mods ON d1_MTs_passing_min_obs_count( Mass_Tag_Mods);
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING d1_MTs_passing_min_obs_count</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="26">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_c3_step2_filtered_Mass_Tag_ID_Mass_Tag_Mods ON c3_step2_filtered( Mass_Tag_ID, Mass_Tag_Mods);
+-- CREATE INDEX idx_c3_step2_filtered_Mass_Tag_ID ON c3_step2_filtered( Mass_Tag_ID);
+-- CREATE INDEX idx_c3_step2_filtered_Mass_Tag_Mods ON c3_step2_filtered( Mass_Tag_Mods);
+
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING c3_step2_filtered</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="27">
+            <Source>MTS</Source>
+            <query>SELECT c3_step2_filtered.* 
+FROM c3_step2_filtered INNER JOIN d1_MTs_passing_min_obs_count ON 
+	(
+		(c3_step2_filtered.Mass_Tag_ID = d1_MTs_passing_min_obs_count.Mass_Tag_ID)
+		AND
+		(c3_step2_filtered.Mass_Tag_Mods = d1_MTs_passing_min_obs_count.Mass_Tag_Mods)
+	)
+
+</query>
+            <TargetTable>d2_step3_filtered</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filter the main working table to only retain the MTs which passed the observation filters</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="28">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from d2_step3_filtered
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the number of MTs passing the filter</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="29">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT( Mass_Tag_Mods) as cntMods
+from d2_step3_filtered
+group by Mass_Tag_Mods
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the FDR on redundant IDs.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="30">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT(Mass_Tag_Mods) as cntMods from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from d2_step3_filtered
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+group by Mass_Tag_Mods
+
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>[N14 MT_MOD/1] are false hits; (N14) are correct hits 
+FDR=[2*false/total)
+Check the FDR on non-redundant IDs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="31">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="32">
+            <Source>MTS</Source>
+            <query>-- STEP 5.  Filter Viper expression ratio (ER) data.  </query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>This step is meant for labeled data, but it will not affect unlabeled data since the ER column is always contained in the table it is just contains zero values in unlabeled datasets.    </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="33">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_d2_step3_filtered_Expression_Ratio ON d2_step3_filtered(Expression_Ratio)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING d2_step3_filtered</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="34">
+            <Source>MTS</Source>
+            <query>SELECT *, Expression_Ratio AS ER
+FROM d2_step3_filtered
+WHERE (((d2_step3_filtered.Expression_Ratio)&lt;=100 And (d2_step3_filtered.Expression_Ratio)&gt;=0))
+ORDER By ER ASC</query>
+            <TargetTable>e_FilterER</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Filter out extreme expression ratios or  from b_FirstTable2.  values filtered were greater than 100 or equal to -1E307</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="35">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_e_FilterER ON e_FilterER (MD_File, UMC_Ind, Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e_FilterER</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="36">
+            <Source>MTS</Source>
+            <query>SELECT MD_File, UMC_Ind, Mass_Tag_ID, Max( Expression_Ratio_Member_Basis_Count) AS MaxER_Basis_Count
+FROM e_FilterER
+GROUP BY MD_File, UMC_Ind, Mass_Tag_ID
+</query>
+            <TargetTable>e2_PairInd_Redundancy</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Remove Duplicate Pairs 1a - create a table to remove pair redundancy by keeping the pair which has the maximum Expression_Ratio_Member_Basis_Count </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="37">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_e2_PairInd_Redundancy ON e2_PairInd_Redundancy (MD_File, UMC_Ind, Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e2_PairInd_Redundancy</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="38">
+            <Source>MTS</Source>
+            <query>Select e_FilterER.*
+From e_FilterER Inner Join
+  e2_PairInd_Redundancy On e_FilterER.MD_File = e2_PairInd_Redundancy.MD_File
+    And e_FilterER.UMC_Ind = e2_PairInd_Redundancy.UMC_Ind And
+    e_FilterER.Mass_Tag_ID = e2_PairInd_Redundancy.Mass_Tag_ID And
+    e_FilterER.Expression_Ratio_Member_Basis_Count =
+    e2_PairInd_Redundancy.MaxER_Basis_Count</query>
+            <TargetTable>e3_Filter_PairRedundancy</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Remove Duplicate Pairs 1b - Filter main table using Maximum Expression_Ratio_Member_Basis_Count</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="39">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_e3_Filter_PairRedundancy ON e3_Filter_PairRedundancy (MD_File, UMC_Ind, Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e3_Filter_PairRedundancy</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="40">
+            <Source>MTS</Source>
+            <query>SELECT MD_File, UMC_Ind, Mass_Tag_ID, Min( Expression_Ratio_StDev) AS MinER_StDev
+FROM e3_Filter_PairRedundancy
+GROUP BY MD_File, UMC_Ind, Mass_Tag_ID
+</query>
+            <TargetTable>e4_MinER_StDev</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Remove Duplicate Pairs 2a - create a table to remove pair redundancy by keeping the pair which has the lowest Expression_Ratio_StDev </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="41">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_e4_MinER_StDev ON e4_MinER_StDev (MD_File, UMC_Ind, Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e4_MinER_StDev</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="42">
+            <Source>MTS</Source>
+            <query>Select e3_Filter_PairRedundancy.*
+From e3_Filter_PairRedundancy Inner Join
+  e4_MinER_StDev On e3_Filter_PairRedundancy.MD_File = e4_MinER_StDev.MD_File
+    And e3_Filter_PairRedundancy.UMC_Ind = e4_MinER_StDev.UMC_Ind And
+    e3_Filter_PairRedundancy.Mass_Tag_ID = e4_MinER_StDev.Mass_Tag_ID And
+    e3_Filter_PairRedundancy.Expression_Ratio_StDev = e4_MinER_StDev.MinER_StDev</query>
+            <TargetTable>e5_Filter_MinER_StDev</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Remove Duplicate Pairs 2b - Filter main table using Minimum Expression_Ratio_StDev</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="43">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="44">
+            <Source>MTS</Source>
+            <query>-- STEP 6.  Filter out Split UMCs or if IMS data Keep the most abundant conformer for each MassTag</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="45">
+            <Source>MTS</Source>
+            <query>CREATE INDEX e5_Filter_MinER_StDev_2 ON e5_Filter_MinER_StDev (UMC_Results_ID);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e5_Filter_MinER_StDev</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="46">
+            <Source>MTS</Source>
+            <query>Select e5_Filter_MinER_StDev.Mass_Tag_ID As Mass_Tag_ID,
+  e5_Filter_MinER_StDev.MD_ID As MD_ID, Count(e5_Filter_MinER_StDev.Mass_Tag_ID)
+  As CountOfMass_Tag_ID, Max(e5_Filter_MinER_StDev.Abundance_Max) As
+  MaxOfMax_Abundance
+From e5_Filter_MinER_StDev
+Group By e5_Filter_MinER_StDev.Mass_Tag_ID, e5_Filter_MinER_StDev.MD_ID
+Order By Count(e5_Filter_MinER_StDev.Mass_Tag_ID) Desc</query>
+            <TargetTable>f_SplitUMCs</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>find out how many UMC are split.  This occurs when a peptide is highly abundant and Viper splits it into multiple UMCs (I think because it elutes for a long time and the software gets confused about the net elution time covering a large range).  For this we want to count the Mass Tag IDs for each MS run (MD_ID).  We also want the Max Class Abundance (this will be the area of the elution peak) so we can filter with this later.  For later steps I found the Max_Class_Abundance (apex of the peak) appeared to be more reproducible we might want to switch it... although it does not seem to affect the data much  </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="47">
+            <Source>MTS</Source>
+            <query>CREATE INDEX e_FilterER_Index02  ON e_FilterER (Mass_Tag_ID, Abundance_Max, MD_ID);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING e_FilterER</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="48">
+            <Source>MTS</Source>
+            <query>CREATE INDEX f_SplitUMCs_Index02  ON f_SplitUMCs (Mass_Tag_ID, MaxOfMax_Abundance, MD_ID);</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING f_SplitUMCs</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="49">
+            <Source>MTS</Source>
+            <query>SELECT e_FilterER.*
+
+FROM f_SplitUMCs 
+
+INNER JOIN 
+	e_FilterER ON (f_SplitUMCs.Mass_Tag_ID = e_FilterER.Mass_Tag_ID) 
+	AND 
+	(f_SplitUMCs.MaxOfMax_Abundance = e_FilterER.Abundance_Max) 
+	AND 
+	(f_SplitUMCs.MD_ID = e_FilterER.MD_ID) ;
+</query>
+            <TargetTable>g_Filter_SplitUMCs</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>we are going to filter the table with all the information to remove split UMCs - so we only retain the one with the highest Max Class Abundance </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="50">
+            <Source>MTS</Source>
+            <query>select count(*) from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from g_Filter_SplitUMCs
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the number of MTs passing the filter</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="51">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT( Mass_Tag_Mods) as cntMods
+from g_Filter_SplitUMCs
+group by Mass_Tag_Mods
+</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Check the FDR on redundant IDs.</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="52">
+            <Source>MTS</Source>
+            <query>select Mass_Tag_Mods, COUNT(Mass_Tag_Mods) as cntMods from 
+(
+	select Mass_Tag_ID, Mass_Tag_Mods
+	from g_Filter_SplitUMCs
+	group by Mass_Tag_ID, Mass_Tag_Mods
+)
+group by Mass_Tag_Mods
+</query>
+            <TargetTable>FDR_final</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>THIS IS THE FINAL FDR
+[N14 MT_MOD/1] are false hits; (N14) are correct hits 
+FDR=[2*false/total)
+Check the FDR on non-redundant IDs
+</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="53">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="54">
+            <Source>MTS</Source>
+            <query>-- STEP 7.  Add Peptide and PeptideEX annotation AND remove the "False Peptides" which contain the 11Da Mass Tag modification (have Retain Mass_Tag_Mass greater than zero)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="55">
+            <Source>MTS</Source>
+            <query>Select g_Filter_SplitUMCs.*, T_Mass_Tags.Peptide, T_Mass_Tags.PeptideEx
+From T_Mass_Tags 
+Inner Join g_Filter_SplitUMCs 
+On T_Mass_Tags.Mass_Tag_ID = g_Filter_SplitUMCs.Mass_Tag_ID
+Where g_Filter_SplitUMCs.Mass_Tag_Mod_Mass = 0</query>
+            <TargetTable>h_AddPeptides</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Add peptide annotation
+Remove 11Da False peptides (Retain Mass_Tag_Mass=0)</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="56">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="57">
+            <Source>MTS</Source>
+            <query>-- STEP 8.  Create initial Peptide Crosstab tables</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="58">
+            <Source>MTS</Source>
+            <query>CREATE INDEX h_AddPeptides_Index01 ON h_AddPeptides(PeptideEx, Peptide)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING h_AddPeptides: PeptideEx, Peptide</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="59">
+            <Source>MDART</Source>
+            <query>CREATE INDEX idx_h_AddPeptides_Mass_Tag_ID ON h_AddPeptides(Mass_Tag_ID)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING h_AddPeptides: Mass_Tag_ID</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="60">
+            <Source>MTS</Source>
+            <query>h_AddPeptides, MD_File, Column Heading, ;h_AddPeptides, PeptideEx, Row Heading, ;h_AddPeptides, Mass_Tag_ID, Row Heading, ;h_AddPeptides, Peptide, Row Heading, ;h_AddPeptides, Abundance_Max, Value, max;</query>
+            <TargetTable>i2_AbundanceMAX_maxPeptideCrosstab</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>peptide pivot table
+row peptide/peptideEx/MTID, column MD_ID, value Max abundance (peak apex)</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="61">
+            <Source>MTS</Source>
+            <query>h_AddPeptides, MD_File, Column Heading, ;h_AddPeptides, Peptide, Row Heading, ;h_AddPeptides, PeptideEx, Row Heading, ;h_AddPeptides, MassErrorPPM, Value, avg;</query>
+            <TargetTable>i_MassError</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>peptide pivot table
+with MassErrors for each dataset</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="62">
+            <Source>MTS</Source>
+            <query>h_AddPeptides, MD_File, Column Heading, ;h_AddPeptides, Peptide, Row Heading, ;h_AddPeptides, PeptideEx, Row Heading, ;h_AddPeptides, NETError, Value, avg;</query>
+            <TargetTable>i_NetError</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>peptide pivot table
+with NetErrors for each dataset</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="63">
+            <Source>MTS</Source>
+            <query>h_AddPeptides, MD_File, Column Heading, ;h_AddPeptides, PeptideEx, Row Heading, ;h_AddPeptides, Peptide, Row Heading, ;h_AddPeptides, Expression_Ratio, Value, avg;</query>
+            <TargetTable>i_ER_Crosstab</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>pivot table
+row peptide, column MD_ID, value expression ratio</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="64">
+            <Source>MTS</Source>
+            <query>h_AddPeptides, MD_File, Column Heading, ;h_AddPeptides, Peptide, Row Heading, ;h_AddPeptides, PeptideEx, Row Heading, ;h_AddPeptides, Expression_Ratio_StDev, Value, avg;</query>
+            <TargetTable>i_ER_StDev_Crosstab</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>True</PivotTable>
+            <Description>pivot table
+ER STDev</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="65">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="66">
+            <Source>MTS</Source>
+            <query>-- STEP 9.  add protein IPIs From Mass Tag to Protein Map to initial Cross tab tables</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="67">
+            <Source>MTS</Source>
+            <query>CREATE INDEX T_Mass_Tag_to_Protein_Map_Index01 ON T_Mass_Tag_to_Protein_Map (Peptide_Sequence)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING T_Mass_Tag_to_Protein_Map</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="68">
+            <Source>MTS</Source>
+            <query>CREATE INDEX idx_i2_AbundanceMAX_maxPeptideCrosstab_PeptideEx ON i2_AbundanceMAX_maxPeptideCrosstab(PeptideEx)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING i2_AbundanceMAX_maxCrosstab_PeptideEx </Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="69">
+            <Source>MTS</Source>
+            <query>CREATE INDEX i_ER_Crosstab_Index2 ON i_ER_Crosstab (PeptideEx)</query>
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>INDEXING i_ER_Crosstab</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="70">
+            <Source>MTS</Source>
+            <query>Select i2_AbundanceMAX_maxPeptideCrosstab.*, T_Mass_Tag_to_Protein_Map.Protein
+From i2_AbundanceMAX_maxPeptideCrosstab Inner Join
+  T_Mass_Tag_to_Protein_Map On i2_AbundanceMAX_maxPeptideCrosstab.Mass_Tag_ID =
+    T_Mass_Tag_to_Protein_Map.Mass_Tag_ID</query>
+            <TargetTable>i3_AbundanceMAX_maxCrosstab_PROTEIN</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Final Output Table for Max Abundance data (apex of the peak)</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="71">
+            <Source>MTS</Source>
+            <query>Select i_ER_Crosstab.*, T_Mass_Tag_to_Protein_Map.Protein As Protein
+From i_ER_Crosstab Inner Join
+  T_Mass_Tag_to_Protein_Map On i_ER_Crosstab.PeptideEx =
+    T_Mass_Tag_to_Protein_Map.Peptide_Sequence
+</query>
+            <TargetTable>i2_ER_Crosstab_PROTEIN</TargetTable>
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Final Output Table for ratio data</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="72">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="73">
+            <Source>MTS</Source>
+            <query>Select i3_AbundanceMAX_maxCrosstab_PROTEIN.*, T_Mass_Tags.Mod_Count,
+  T_Mass_Tags.Mod_Description
+From i3_AbundanceMAX_maxCrosstab_PROTEIN Inner Join
+  T_Mass_Tags On i3_AbundanceMAX_maxCrosstab_PROTEIN.Mass_Tag_ID =
+    T_Mass_Tags.Mass_Tag_ID</query>
+            <TargetTable>i4_ModDesc_Peptide_Protein_Crosstab</TargetTable>
+            <KeepTargetTable>True</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description>Final Output Table for Max Abundance data (apex of the peak) with peptide modifications attached</Description>
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="74">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="75">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="76">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+        <Step id="77">
+            <Source>MTS</Source>
+            <query />
+            <TargetTable />
+            <KeepTargetTable>False</KeepTargetTable>
+            <PivotTable>False</PivotTable>
+            <Description />
+            <FunctionTable>False</FunctionTable>
+            <IterationTable>False</IterationTable>
+            <WorkflowGroup />
+        </Step>
+    </Steps>
+</MdartWorkflow>
