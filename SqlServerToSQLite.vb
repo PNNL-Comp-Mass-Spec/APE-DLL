@@ -152,7 +152,7 @@ Public Class SqlServerToSQLite
 
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database: " & ex.Message)
+            LogUtilities.ShowError("Failed to convert SQL Server database to SQLite database", ex)
             _isActive = False
             UpdateProgress(handler, True, False, 100, ex.Message)
             ' catch
@@ -179,7 +179,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             UpdateProgress(handler, True, True, 100, "Finished generating MTS Cache database: " & sqlitePath)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to generate SQLite database" & ex.Message)
+            LogUtilities.ShowError("Failed to generate SQLite database", ex)
             _isActive = False
             UpdateProgress(handler, True, False, 100, ex.Message)
             ' catch
@@ -236,7 +236,7 @@ Public Class SqlServerToSQLite
 
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to convert SQL Server database to SQLite database: " & ex.Message)
+            LogUtilities.ShowError("Failed to convert SQL Server database to SQLite database", ex)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -281,7 +281,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             mHandler(True, True, 100, "Finished generating MTS Cache database: " & mSqlitePath)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to generate SQLite database" & ex.Message)
+            LogUtilities.ShowError("Failed to generate SQLite database", ex)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -326,7 +326,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             mHandler(True, True, 100, "Workflow complete.")
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to run workflow: " & ex.Message)
+            LogUtilities.ShowError("Failed to run workflow", ex)
             _isActive = False
             Dim msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
             mHandler(True, False, 100, msg & ex.Message)
@@ -355,7 +355,7 @@ Public Class SqlServerToSQLite
             UpdateProgress(handler, True, True, 100, "Workflow complete.")
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to run workflow: " & ex.Message)
+            LogUtilities.ShowError("Failed to run workflow", ex)
             _isActive = False
             Dim msg = "Workflow failed on Step: " & mStep & " - Executing SQL: " & mSQL
             UpdateProgress(handler, True, False, 100, msg & ex.Message)
@@ -382,7 +382,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             UpdateProgress(handler, True, True, 100, "Create file: " & NewFilename & " complete.")
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to create file: " & ex.Message)
+            LogUtilities.ShowError("Failed to create file", ex)
             _isActive = False
             UpdateProgress(handler, True, False, 100, ex.Message)
             ' catch
@@ -400,7 +400,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             UpdateProgress(handler, True, True, 100, "Compacting Cache Database: " & sqlitePath & " complete.")
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to create file: " & ex.Message)
+            LogUtilities.ShowError("Failed to create file", ex)
             _isActive = False
             UpdateProgress(handler, True, False, 100, ex.Message)
             ' catch
@@ -439,7 +439,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             mHandler(True, True, 100, "Finished creating iteration table in: " & mSqlitePath)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to create iteration table" & ex.Message)
+            LogUtilities.ShowError("Failed to create iteration table", ex)
             _isActive = False
             mHandler(True, False, 100, ex.Message)
             ' catch
@@ -460,7 +460,7 @@ Public Class SqlServerToSQLite
             _isActive = False
             UpdateProgress(handler, True, True, 100, "Finished creating iteration table in: " & sqlitePath)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "Failed to create iteration table" & ex.Message)
+            LogUtilities.ShowError("Failed to create iteration table", ex)
             _isActive = False
             UpdateProgress(handler, True, False, 100, ex.Message)
             ' catch
@@ -715,18 +715,18 @@ Public Class SqlServerToSQLite
 
                 UpdateProgress(handler, False, True, 0, "Compacting database: " & sqlitePath)
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Compacting database: " & sqlitePath)
+                LogUtilities.ShowMessage("Compacting database: " & sqlitePath)
                 ' Execute the query in order to actually compact the database.
                 Dim cmd As New SQLiteCommand(sql, conn)
                 cmd.ExecuteNonQuery()
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Finished compacting database: " & sqlitePath)
+                LogUtilities.ShowMessage("Finished compacting database: " & sqlitePath)
                 conn.Close()
             End Using
 
             UpdateProgress(handler, False, True, 100, "Finished compacting database: " & sqlitePath)
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "The following error occured while compacting database: " & sqlitePath & " - " & ex.Message)
+            LogUtilities.ShowError("The following error occured while compacting database: " & sqlitePath & " - ", ex)
             Throw
         End Try
     End Sub
@@ -740,14 +740,14 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Sub PerformCopyFile(originalFile As String, newFile As String, handler As SqlConversionHandler)
         UpdateProgress(handler, False, True, 0, "Creating File: " & newFile)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Creating File: " & newFile)
+        LogUtilities.ShowMessage("Creating File: " & newFile)
 
         File.Copy(originalFile, newFile, True)
 
         UpdateProgress(handler, False, True, 100, "Finished creating File: " & newFile)
         CheckCancelled()
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Finished creating File: " & newFile)
+        LogUtilities.ShowMessage("Finished creating File: " & newFile)
 
     End Sub
 
@@ -807,11 +807,11 @@ Public Class SqlServerToSQLite
 
                         If Not String.IsNullOrEmpty(wfStep.TargetTable) AndAlso tblList.Contains(tableNameLCase) AndAlso Not (sql.ToLower.StartsWith("update") Or sql.ToLower.StartsWith("delete")) Then
                             UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Dropping temporary table for Step " & wfStep.StepNo)
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+                            LogUtilities.ShowMessage("Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
                             sql = "Drop Table " & wfStep.TargetTable
                             Dim cmdDrop As New SQLiteCommand(sql, conn)
                             cmdDrop.ExecuteNonQuery()
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+                            LogUtilities.ShowMessage("Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
                             tblList.Remove(tableNameLCase)
                         End If
                         CheckCancelled()
@@ -842,7 +842,7 @@ Public Class SqlServerToSQLite
                             If String.IsNullOrEmpty(sql) Then
                                 Continue For
                             ElseIf sql = NUM_FIELDS_EXCEEDED_MESSAGE Then
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.WARN, "Pivot query would return over 1000 fields: " & sql)
+                                LogUtilities.ShowWarning("Pivot query would return over 1000 fields: " & sql)
                                 Continue For
                             End If
 
@@ -880,18 +880,18 @@ Public Class SqlServerToSQLite
                             UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Running Step " & wfStep.StepNo & " to " & endStep)
                             CheckCancelled()
 
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Starting step: " & wfStep.StepNo & " Query: " & sql)
+                            LogUtilities.ShowMessage("Starting step: " & wfStep.StepNo & " Query: " & sql)
 
                             ' Execute the query in order to actually create the table.
                             If SkipQuery Then
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Query skipped: " & wfStep.StepNo)
+                                LogUtilities.ShowMessage("Query skipped: " & wfStep.StepNo)
                             Else
                                 Console.WriteLine()
                                 Console.WriteLine("=== Workflow Step " & wfStep.StepNo & " ===")
                                 Console.WriteLine(sql)
                                 Dim cmd As New SQLiteCommand(sql, conn)
                                 cmd.ExecuteNonQuery()
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Finished step: " & wfStep.StepNo)
+                                LogUtilities.ShowMessage("Finished step: " & wfStep.StepNo)
                             End If
 
                         End If
@@ -917,14 +917,14 @@ Public Class SqlServerToSQLite
                             If Not kTrgtTble Then
 
                                 UpdateProgress(handler, False, True, CInt((100.0R * iCurrentStepNum / Workflow.Count)), "Cleaning up database for Step " & wfStep.StepNo)
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+                                LogUtilities.ShowMessage("Removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
                                 sql = "Drop Table " & wfStep.TargetTable
                                 Dim cmdDrop As New SQLiteCommand(sql, conn)
                                 cmdDrop.ExecuteNonQuery()
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+                                LogUtilities.ShowMessage("Finished removing temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
                                 tblList.Remove(tableNameLCase)
                             Else
-                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, "Keeping temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
+                                LogUtilities.ShowMessage("Keeping temp table: " & wfStep.TargetTable & " from step: " & wfStep.StepNo)
                             End If
 
                             CheckCancelled()
@@ -936,7 +936,9 @@ Public Class SqlServerToSQLite
             conn.Close()
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "The following error occured while running workflow step: " & mStep & " - " & ex.Message & "; Sql: " & mSQL)
+            LogUtilities.ShowError("The following error occured while running workflow step: " & mStep & " - ", ex)
+            LogUtilities.ShowWarning("  SQL: " & mSQL)
+
             Try
                 If Not conn Is Nothing Then
                     conn.Close()
@@ -1080,7 +1082,7 @@ Public Class SqlServerToSQLite
     Private Shared Sub GetSQLiteData(sqlText As String, ByRef labels() As String, ByRef x As Double(), ByRef List As PointPairList, plotType As String, sqliteConn As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to load plotting data...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Preparing to load plotting data...")
+        LogUtilities.ShowDebug("Preparing to load plotting data...")
 
         Dim SQLreader As SQLiteDataReader = Nothing
 
@@ -1115,7 +1117,7 @@ Public Class SqlServerToSQLite
             labels = lbl
             x = yval
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "dlgPlots:GetSQLiteSchema - The following error occurred: " & ex.Message)
+            LogUtilities.ShowError("dlgPlots:GetSQLiteSchema - The following error occurred", ex)
             ' Close the SQL Reader
             If Not SQLreader Is Nothing Then
                 SQLreader.Close()
@@ -1260,7 +1262,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
+        LogUtilities.ShowDebug("preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -1354,9 +1356,9 @@ Public Class SqlServerToSQLite
                     CheckCancelled()
 
                     UpdateProgress(handler, False, True, CInt((100.0R * counter / 10)), "Finished running all iterations ")
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished running all iterations")
+                    LogUtilities.ShowDebug("finished running all iterations")
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopySQLiteDBRowsToSQliteDB: Unexpected exception: " & ex.Message)
+                    LogUtilities.ShowError("CopySQLiteDBRowsToSQliteDB: Unexpected exception", ex)
                     Throw
                     ' catch
                 End Try
@@ -1380,7 +1382,7 @@ Public Class SqlServerToSQLite
                 CopySQLiteDBRowsToSQliteDB(mFldDefinitions, mSourceTableName, mCurrentFunctionList, conn, lsTs, sqlitePath, handler)
             End If
         Else
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "No table was specified function table.")
+            LogUtilities.ShowError("No table was specified calling RunCreateDataTableFromFunctionList")
         End If
     End Sub
 
@@ -1392,7 +1394,7 @@ Public Class SqlServerToSQLite
 
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
+        LogUtilities.ShowDebug("preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -1475,9 +1477,9 @@ Public Class SqlServerToSQLite
                     tx.Commit()
 
                     UpdateProgress(handler, False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                    LogUtilities.ShowDebug("finished inserting all rows for table [" & schema(i).TableName & "]")
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "CopySQLiteDBRowsToSQliteDB: Unexpected exception: " & ex.Message)
+                    LogUtilities.ShowError("CopySQLiteDBRowsToSQliteDB: Unexpected exception", ex)
                     tx.Rollback()
                     Throw
                     ' catch
@@ -1576,7 +1578,7 @@ Public Class SqlServerToSQLite
     End Function
 
     Private Shared Sub CreateSQLiteTables(conn As SQLiteConnection, schema As IReadOnlyCollection(Of TableSchema), handler As SqlConversionHandler)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating SQLite tables...")
+        LogUtilities.ShowDebug("Creating SQLite tables...")
 
         ' Create all tables in the new database
         Dim count = 0
@@ -1584,18 +1586,18 @@ Public Class SqlServerToSQLite
             Try
                 AddSQLiteTable(conn, dt)
             Catch ex As Exception
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "AddSQLiteTable failed: " & ex.Message)
+                LogUtilities.ShowError("AddSQLiteTable failed", ex)
                 Throw
             End Try
             count += 1
             CheckCancelled()
             UpdateProgress(handler, False, True, CInt((count * 100.0R / schema.Count)), "Added table " & dt.TableName & " to the SQLite database")
 
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "added schema for SQLite table [" & dt.TableName & "]")
+            LogUtilities.ShowDebug("added schema for SQLite table [" & dt.TableName & "]")
             ' foreach
         Next
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished adding all table schemas for SQLite database")
+        LogUtilities.ShowDebug("finished adding all table schemas for SQLite database")
     End Sub
 
 
@@ -1834,7 +1836,7 @@ Public Class SqlServerToSQLite
                     If Not String.IsNullOrEmpty(sqlTerms(i).ToString) Then
                         pivotDefItems = sqlTerms(i).ToString.Split(","c)
                         If pivotDefItems.Count < 3 Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.WARN, "Pivot definition does not contain 3 entries: " & sqlTerms(i))
+                            LogUtilities.ShowWarning("Pivot definition does not contain 3 entries: " & sqlTerms(i))
                         Else
                             If Trim(pivotDefItems(crosstabFields.wCrosstab)) = VALUE_KEYWORD Then
                                 valueField = Trim(pivotDefItems(crosstabFields.wField))
@@ -1851,7 +1853,7 @@ Public Class SqlServerToSQLite
                 Next
 
                 If String.IsNullOrEmpty(fldList) Then
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.WARN, "Pivot definition did not contain '" & ROW_HEADING & "': " & pivotDefinition)
+                    LogUtilities.ShowWarning("Pivot definition did not contain '" & ROW_HEADING & "': " & pivotDefinition)
                     Return String.Empty
                 End If
 
@@ -1874,7 +1876,7 @@ Public Class SqlServerToSQLite
                 End Using
 
                 If String.IsNullOrEmpty(caseQry) Then
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.WARN, "No results were returned by query: " & qry)
+                    LogUtilities.ShowWarning("No results were returned by query: " & qry)
                     Return String.Empty
                 End If
 
@@ -1890,7 +1892,7 @@ Public Class SqlServerToSQLite
             End If
 
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "An error has occurred: " & ex.Message)
+            LogUtilities.ShowError("An error has occurred", ex)
             Throw
         End Try
 
@@ -1909,7 +1911,7 @@ Public Class SqlServerToSQLite
     ''' <remarks></remarks>
     Private Shared Sub CreateMTSCacheIndex(tableName As String, fieldNames As String, indexName As String, sqlitePath As String, handler As SqlConversionHandler)
         UpdateProgress(handler, False, True, 0, "Creating Index " & indexName & " for table: " & tableName)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating Index " & indexName & " for table: " & tableName)
+        LogUtilities.ShowDebug("Creating Index " & indexName & " for table: " & tableName)
 
         '    ' Connect to the SQLite database next
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
@@ -1939,7 +1941,7 @@ Public Class SqlServerToSQLite
     Private Shared Sub CopyTableRowsToSQLiteDB(ds As DataSet, sqlitePath As String, schema As IReadOnlyList(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
+        LogUtilities.ShowDebug("preparing to insert tables ...")
 
         '    ' Connect to the SQLite database next
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, password)
@@ -1985,9 +1987,9 @@ Public Class SqlServerToSQLite
                     tx.Commit()
 
                     UpdateProgress(handler, False, True, CInt((100.0R * i / schema.Count)), "Finished inserting for " & schema(i).TableName)
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                    LogUtilities.ShowDebug("finished inserting all rows for table [" & schema(i).TableName & "]")
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "unexpected exception: " & ex.Message)
+                    LogUtilities.ShowError("unexpected exception", ex)
                     tx.Rollback()
                     Throw
                     ' catch
@@ -2022,7 +2024,7 @@ Public Class SqlServerToSQLite
     Private Shared Sub CopySqlServerRowsToSQLiteDB(sqlConnString As String, sqlitePath As String, schema As IReadOnlyList(Of TableSchema), password As String, handler As SqlConversionHandler)
         CheckCancelled()
         UpdateProgress(handler, False, True, 0, "Preparing to insert tables...")
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "preparing to insert tables ...")
+        LogUtilities.ShowDebug("preparing to insert tables ...")
 
         ' Connect to the SQL Server database
         Using ssconn As New SqlConnection(sqlConnString)
@@ -2039,7 +2041,7 @@ Public Class SqlServerToSQLite
                     Try
                         Dim tableQuery As String = BuildSqlServerTableQuery(schema(i))
                         Dim query As New SqlCommand(tableQuery, ssconn)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Starting to insert all rows for table [" & schema(i).TableName & "]")
+                        LogUtilities.ShowDebug("Starting to insert all rows for table [" & schema(i).TableName & "]")
                         Using reader As SqlDataReader = query.ExecuteReader()
 
                             Dim columnDataTypes As List(Of DbType) = Nothing
@@ -2071,9 +2073,9 @@ Public Class SqlServerToSQLite
                         tx.Commit()
 
                         UpdateProgress(handler, False, True, CInt((100.0R * i / schema.Count)), "Finished inserting rows for table " & schema(i).TableName)
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished inserting all rows for table [" & schema(i).TableName & "]")
+                        LogUtilities.ShowDebug("finished inserting all rows for table [" & schema(i).TableName & "]")
                     Catch ex As Exception
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "unexpected exception: " & ex.Message)
+                        LogUtilities.ShowError("unexpected exception", ex)
                         tx.Rollback()
                         Throw
                         ' catch
@@ -2139,7 +2141,7 @@ Public Class SqlServerToSQLite
 
         Catch ex As Exception
             workflow = Nothing
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "frmWorkflow:ReadWorkflowExNew - Error saving settings to XML Settings file: " & ex.Message)
+            LogUtilities.ShowError("frmWorkflow:ReadWorkflowExNew - Error saving settings to XML Settings file", ex)
         Finally
             If Not (xmlReader Is Nothing) Then
                 xmlReader.Close()
@@ -2242,7 +2244,7 @@ Public Class SqlServerToSQLite
                 Exit Select
             Case Else
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "argument exception - illegal database type")
+                LogUtilities.ShowError("argument exception - illegal database type calling CastValueForColumn: " & dt.ToString())
                 Throw New ArgumentException("Illegal database type [" & [Enum].GetName(GetType(DbType), dt) & "]")
         End Select
         ' switch
@@ -2378,7 +2380,7 @@ Public Class SqlServerToSQLite
             Return DbType.[Double]
         End If
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "GetDbTypeOfColumn: illegal db type found")
+        LogUtilities.ShowError("GetDbTypeOfColumn: illegal db type found in GetDbTypeOfColumn: " & cs.ColumnType)
         Throw New ApplicationException("GetDbTypeOfColumn: Illegal DB type found (" & cs.ColumnType & ")")
     End Function
 
@@ -2410,11 +2412,11 @@ Public Class SqlServerToSQLite
     ''' <param name="password">The password to use for encrypting the DB or null if non is needed.</param>
     ''' <param name="handler">A handle for progress notifications.</param>
     Private Shared Sub CreateSQLiteDatabase(sqlitePath As String, schema As IReadOnlyCollection(Of TableSchema), password As String, handler As SqlConversionHandler)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating SQLite database...")
+        LogUtilities.ShowDebug("Creating SQLite database...")
 
         ' Create the SQLite database file
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "SQLite file was created successfully at [" & sqlitePath & "]")
+        LogUtilities.ShowDebug("SQLite file was created successfully at [" & sqlitePath & "]")
 
         ' Connect to the newly created database
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, password)
@@ -2427,20 +2429,20 @@ Public Class SqlServerToSQLite
                 Try
                     AddSQLiteTable(conn, dt)
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "AddSQLiteTable failed: " & ex.Message)
+                    LogUtilities.ShowError("AddSQLiteTable failed", ex)
                     Throw
                 End Try
                 count += 1
                 CheckCancelled()
                 UpdateProgress(handler, False, True, CInt((count * 100.0R / schema.Count)), "Added table " & dt.TableName & " to the SQLite database")
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "added schema for SQLite table [" & dt.TableName & "]")
+                LogUtilities.ShowDebug("added schema for SQLite table [" & dt.TableName & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished adding all table schemas for SQLite database")
+        LogUtilities.ShowDebug("finished adding all table schemas for SQLite database")
     End Sub
 
     ''' <summary>
@@ -2448,14 +2450,14 @@ Public Class SqlServerToSQLite
     ''' </summary>
     ''' <param name="sqlitePath">The path to the generated DB file.</param>
     Private Shared Sub CreateSQLiteDatabaseOnly(sqlitePath As String)
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "Creating SQLite database...")
+        LogUtilities.ShowDebug("Creating SQLite database...")
 
         ' Create the SQLite database file if it doesn't exist
         If Not File.Exists(sqlitePath) Then
             SQLiteConnection.CreateFile(sqlitePath)
         End If
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "SQLite file was created successfully at [" & sqlitePath & "]")
+        LogUtilities.ShowDebug("SQLite file was created successfully at [" & sqlitePath & "]")
 
     End Sub
 
@@ -2479,20 +2481,20 @@ Public Class SqlServerToSQLite
                 Try
                     AddSQLiteTable(conn, dt)
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "AddSQLiteTable failed: " & ex.Message)
+                    LogUtilities.ShowError("AddSQLiteTable failed", ex)
                     Throw
                 End Try
                 count += 1
                 CheckCancelled()
                 UpdateProgress(handler, False, True, CInt((count * 100.0R / schema.Count)), "Added table " & dt.TableName & " to the SQLite database")
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "added schema for SQLite table [" & dt.TableName & "]")
+                LogUtilities.ShowDebug("added schema for SQLite table [" & dt.TableName & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
         ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished adding all table schemas for SQLite database")
+        LogUtilities.ShowDebug("finished adding all table schemas for SQLite database")
     End Sub
 
     ''' <summary>
@@ -2504,7 +2506,7 @@ Public Class SqlServerToSQLite
         ' Prepare a CREATE TABLE DDL statement
         Dim stmt As String = BuildCreateTableQuery(dt)
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.INFO, vbLf & vbLf & stmt & vbLf & vbLf)
+        LogUtilities.ShowMessage(vbLf & vbLf & stmt & vbLf & vbLf)
 
         ' Execute the query in order to actually create the table.
         Dim cmd As New SQLiteCommand(stmt, conn)
@@ -2626,9 +2628,9 @@ Public Class SqlServerToSQLite
 
         Dim defval As String = StripParens(col.DefaultValue)
         defval = DiscardNational(defval)
-        'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, ("DEFAULT VALUE BEFORE [" & col.DefaultValue & "] AFTER [") + defval & "]")
+        'LogUtilities.ShowDebug(("DEFAULT VALUE BEFORE [" & col.DefaultValue & "] AFTER [") + defval & "]")
         If defval <> String.Empty AndAlso defval.ToUpper().Contains("GETDATE") Then
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "converted SQL Server GETDATE() to CURRENT_TIMESTAMP for column [" & col.ColumnName & "]")
+            LogUtilities.ShowDebug("converted SQL Server GETDATE() to CURRENT_TIMESTAMP for column [" & col.ColumnName & "]")
             sb.Append(" DEFAULT (CURRENT_TIMESTAMP)")
         ElseIf defval <> String.Empty AndAlso IsValidDefaultValue(defval) Then
             sb.Append(" DEFAULT " & defval)
@@ -2733,13 +2735,13 @@ Public Class SqlServerToSQLite
                 CheckCancelled()
                 UpdateProgress(handler, False, True, CInt((count * 100.0R / tableNames.Count)), "Parsed table " & tname)
 
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "parsed table schema for [" & tname & "]")
+                LogUtilities.ShowDebug("parsed table schema for [" & tname & "]")
                 ' foreach
             Next
             conn.Close()
         End Using
-        ' using
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.DEBUG, "finished parsing all tables in SQL Server schema")
+
+        LogUtilities.ShowDebug("finished parsing all tables in SQL Server schema")
 
         ' Allow the user a chance to select which tables to convert
         If selectionHandler IsNot Nothing Then
@@ -3780,7 +3782,7 @@ Public Class SqlServerToSQLite
                         tblcolumn.DefaultValue = column.DefaultValue.ToString()
                         tblcolumn.ColumnType = GetFieldType(column.DataType.ToString())
                         If String.IsNullOrEmpty(tblcolumn.ColumnType) Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, BaseLogger.LogLevels.ERROR, "column is empty for : " & column.DataType.ToString())
+                            LogUtilities.ShowError("column is empty for : " & column.DataType.ToString())
                         End If
                         tblcolumnslist.Add(tblcolumn)
                     Next

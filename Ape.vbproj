@@ -95,10 +95,10 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="clsLogTools.vb" />
     <Compile Include="clsXMLSchema.vb" />
     <Compile Include="ColumnSchema.vb" />
     <Compile Include="IndexSchema.vb" />
+    <Compile Include="LogUtilities.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="SqliteToAccess.vb" />
     <Compile Include="SqlServerToSQLite.vb" />
