@@ -47,7 +47,7 @@ Public Class SqlServerToSQLite
     Public Shared mCreateResultDb As Boolean
     Public Shared mCompactDb As Boolean
     Public Shared mHandler As SqlConversionHandler
-    Public Shared mWorflowStepList As String
+    Public Shared mWorkflowStepList As String
 
     Public Shared mCreateSeparateTable As Boolean
     Public Shared mIterationTblName As String
@@ -132,8 +132,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler">A handler delegate for progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler that allows the user to select which
     ''' tables to convert</param>
-    ''' <remarks>The method continues asynchronously in the background and the caller returned
-    ''' immediatly.</remarks>
+    ''' <remarks>The method executes asynchronously in the background and the thus control is quickly returned to the caller</remarks>
     Public Shared Sub ConvertSqlServerToSQLiteDatabase(sqlServerConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean)
         ' Clear cancelled flag
         _cancelled = False
@@ -198,8 +197,7 @@ Public Class SqlServerToSQLite
     ''' <param name="handler">A handler delegate for progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler that allows the user to select which
     ''' tables to convert</param>
-    ''' <remarks>The method continues asynchronously in the background and the caller returned
-    ''' immediatly.</remarks>
+    ''' <remarks>The method executes asynchronously in the background and the thus control is quickly returned to the caller</remarks>
     Public Shared Sub ConvertSqlServerToSQLiteDatabaseUI(sqlServerConnString As String, sqlitePath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler, createTriggers As Boolean)
         ' Clear cancelled flag
         _cancelled = False
@@ -292,17 +290,17 @@ Public Class SqlServerToSQLite
     ''' <summary>
     '''
     ''' </summary>
-    ''' <param name="WorflowStepList"></param>
+    ''' <param name="WorkflowStepList"></param>
     ''' <param name="WorkFlow"></param>
     ''' <param name="originalSqlitePath"></param>
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub StartWorkflowUI(WorflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
+    Public Shared Sub StartWorkflowUI(WorkflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
-        mWorflowStepList = WorflowStepList
+        mWorkflowStepList = WorkflowStepList
         mWorkflow = WorkFlow
         mOriginalSqlitePath = originalSqlitePath
         mSqlitePath = sqlitePath
@@ -322,7 +320,7 @@ Public Class SqlServerToSQLite
     Shared Sub FunctionWF(state As Object)
         Try
             _isActive = True
-            ExecuteWorkflow(mWorflowStepList, mWorkflow, mOriginalSqlitePath, mSqlitePath, mCreateResultDb, mCompactDb, mHandler)
+            ExecuteWorkflow(mWorkflowStepList, mWorkflow, mOriginalSqlitePath, mSqlitePath, mCreateResultDb, mCompactDb, mHandler)
             _isActive = False
             mHandler(True, True, 100, "Workflow complete.")
         Catch ex As Exception
@@ -338,19 +336,19 @@ Public Class SqlServerToSQLite
     ''' <summary>
     '''
     ''' </summary>
-    ''' <param name="WorflowStepList"></param>
+    ''' <param name="WorkflowStepList"></param>
     ''' <param name="WorkFlow"></param>
     ''' <param name="originalSqlitePath"></param>
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
-    Public Shared Sub StartWorkflow(WorflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
+    Public Shared Sub StartWorkflow(WorkflowStepList As String, WorkFlow As String, originalSqlitePath As String, sqlitePath As String, CreateResultDb As Boolean, CompactDb As Boolean, handler As SqlConversionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
         Try
             _isActive = True
-            ExecuteWorkflow(WorflowStepList, WorkFlow, originalSqlitePath, sqlitePath, CreateResultDb, CompactDb, handler)
+            ExecuteWorkflow(WorkflowStepList, WorkFlow, originalSqlitePath, sqlitePath, CreateResultDb, CompactDb, handler)
             _isActive = False
             UpdateProgress(handler, True, True, 100, "Workflow complete.")
 

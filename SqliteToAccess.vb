@@ -19,7 +19,7 @@ Public Class SqliteToAccess
     Public Shared mSqliteSourcePath As String
     Public Shared mSqlitePath As String
     Public Shared mTextFileDirectory As String
-    Public Shared mDelim As String
+    Public Shared mDelimiter As String
     Public Shared mPassword As String
     Public Shared mHandler As SqlConversionHandler
     Public Shared mSelectionHandler As SqlTableSelectionHandler
@@ -64,15 +64,14 @@ Public Class SqliteToAccess
     ''' <param name="handler">A handler delegate for progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler that allows the user to select which
     ''' tables to convert</param>
-    ''' <remarks>The method continues asynchronously in the background and the caller returned
-    ''' immediatly.</remarks>
-    Public Shared Sub ConvertSQLiteToTextFile(sqlitePath As String, textFileDirectory As String, delim As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler)
+    ''' <remarks>The method executes asynchronously in the background and the thus control is quickly returned to the caller</remarks>
+    Public Shared Sub ConvertSQLiteToTextFile(sqlitePath As String, textFileDirectory As String, delimiter As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler)
         ' Clear cancelled flag
         _cancelled = False
 
         mSqlitePath = sqlitePath
         mTextFileDirectory = textFileDirectory
-        mDelim = delim
+        mDelimiter = delimiter
         mPassword = password
         mHandler = handler
         mSelectionHandler = selectionHandler
@@ -116,8 +115,7 @@ Public Class SqliteToAccess
     ''' <param name="handler">A handler delegate for progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler that allows the user to select which
     ''' tables to convert</param>
-    ''' <remarks>The method continues asynchronously in the background and the caller returned
-    ''' immediatly.</remarks>
+    ''' <remarks>The method executes asynchronously in the background and the thus control is quickly returned to the caller</remarks>
     Public Shared Sub ConvertSQLiteToAccessDatabase(sqlitePath As String, accessDbPath As String, password As String, handler As SqlConversionHandler, selectionHandler As SqlTableSelectionHandler)
         ' Clear cancelled flag
         _cancelled = False
@@ -348,7 +346,7 @@ Public Class SqliteToAccess
         If sqlSchema IsNot Nothing Then
 
             ' Copy all rows from SQLite tables to the newly text files
-            CopySQLiteDBRowsToTextFile(sqlitePath, textFileDirectory, mDelim, sqlSchema, handler)
+            CopySQLiteDBRowsToTextFile(sqlitePath, textFileDirectory, mDelimiter, sqlSchema, handler)
             Return True
         Else
             Return False
@@ -496,12 +494,12 @@ Public Class SqliteToAccess
             ' using
             ' Next step is to use OleDB APIs to query the schema of each table.
             Dim count = 0
-            For Each tname As String In tableNames
-                Dim ts As TableSchema = CreateAccessTableSchema(conn, tname)
+            For Each tableName As String In tableNames
+                Dim ts As TableSchema = CreateAccessTableSchema(conn, tableName)
                 tables.Add(ts)
                 count += 1
                 CheckCancelled()
-                handler(False, True, CInt((count * 100.0R / tableNames.Count)), "Parsed table " & tname)
+                handler(False, True, CInt((count * 100.0R / tableNames.Count)), "Parsed table " & tableName)
 
                 LogUtilities.ShowDebug("parsed table schema for [" & tableName & "]")
                 ' foreach
