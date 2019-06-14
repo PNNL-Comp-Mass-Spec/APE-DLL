@@ -60,6 +60,8 @@ Public Class SqliteToAccess
     ''' the SQLite database.
     ''' </summary>
     ''' <param name="sqlitePath">The path to the SQLite database file that needs to get created.</param>
+    ''' <param name="textFileDirectory"></param>
+    ''' <param name="delimiter"></param>
     ''' <param name="password">The password to use or NULL if no password should be used to encrypt the DB</param>
     ''' <param name="handler">A handler delegate for progress notifications.</param>
     ''' <param name="selectionHandler">The selection handler that allows the user to select which
@@ -81,7 +83,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    '''
+    ''' Convert SQLite Database to Text File
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -131,7 +133,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    '''
+    ''' Convert SQLite Database to Access Database
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -179,7 +181,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    '''
+    ''' Convert Access Database to SQLite Database
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -217,6 +219,10 @@ Public Class SqliteToAccess
 
     End Sub
 
+    ''' <summary>
+    ''' Convert Sqlite Database to SQLite Database
+    ''' </summary>
+    ''' <param name="state"></param>
     Shared Sub FunctionCSTSD(state As Object)
         Dim result As Boolean
         Try
@@ -266,7 +272,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    '''
+    ''' Convert Text File Database to SQLite Database
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
@@ -307,7 +313,7 @@ Public Class SqliteToAccess
     End Sub
 
     ''' <summary>
-    '''
+    ''' Run Create Data Table From Functio List
     ''' </summary>
     ''' <param name="state"></param>
     ''' <remarks></remarks>
