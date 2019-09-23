@@ -697,17 +697,18 @@ Public Class SqlServerToSQLite
     End Sub
 
     ''' <summary>
-    '''
+    ''' Compact the database using vacuum
     ''' </summary>
     ''' <param name="sqlitePath"></param>
     ''' <param name="handler"></param>
     ''' <remarks></remarks>
     Private Shared Sub CompactSQLiteDatabase(sqlitePath As String, handler As SqlConversionHandler)
-        Dim sql As String
+
+        Const sql = "vacuum"
         Dim sqliteConnString As String = CreateSQLiteConnectionString(sqlitePath, Nothing)
 
         Try
-            sql = "vacuum """ & sqlitePath & """"
+
             Using conn = New SQLiteConnection(sqliteConnString, True)
                 conn.Open()
 
@@ -724,7 +725,7 @@ Public Class SqlServerToSQLite
             UpdateProgress(handler, False, True, 100, "Finished compacting database: " & sqlitePath)
 
         Catch ex As Exception
-            LogUtilities.ShowError("The following error occured while compacting database: " & sqlitePath & " - ", ex)
+            LogUtilities.ShowError(String.Format("The following error occured while compacting database {0} - ", sqlitePath), ex)
             Throw
         End Try
     End Sub
